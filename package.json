@@ -1,0 +1,50 @@
+{
+  "name": "dsh-warm-minimal",
+  "version": "0.1.0",
+  "description": "DSH 温暖极简模式：会话创建即写入一条高质量首轮轨迹（we / let's 思维链、无 let me），真实输入从第二轮开始，AGENTS.md、运行时上下文与技能目录自然注入第二轮。",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "cordis.patch.yml",
+    "presets",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "setup:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "agent-preset",
+    "reasoning-style",
+    "warm-start",
+    "minimal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sch246/dsh-warm-minimal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sch246/dsh-warm-minimal/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
