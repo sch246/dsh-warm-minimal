@@ -39,6 +39,13 @@ cp -r presets/warm-minimal ~/.dsh/.agent-presets/
 
 `DSH_HOME` / `DSH_PROFILE` 环境变量在两个方式里都生效。
 
+> 故障排查：如果 `github:` 安装卡在 `git ls-remote git@github.com:...`（pnpm 把 GitHub 解析成 SSH，而本机没有对应 SSH 通路），改用 HTTPS clone + 本地路径安装：
+> ```bash
+> git clone https://github.com/sch246/dsh-warm-minimal.git
+> cd dsh-warm-minimal
+> dsh plugin --profile web add .
+> ```
+
 ## 使用
 
 重启后新建会话，在 preset 选择器里选 **「温暖极简模式」**，直接发第一条消息即可。
