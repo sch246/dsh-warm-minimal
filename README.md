@@ -3,7 +3,7 @@
 [![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-4c7dff)](https://github.com/deepseek-ai/deepseek-harness)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset：会话创建时即写入一条高质量首轮轨迹（`we` / `let's` 思维链、无 `let me`），用户的真实输入从第二轮开始——AGENTS.md、运行时上下文与技能目录因此自然注入第一次真实请求，开局保持极简。
+**温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset：新会话先保持官方空白启动界面；用户发送第一条真实消息后，插件在 agent loop 唤醒前同步写入一条高质量首轮轨迹（`we` / `let's` 思维链、无 `let me`），真实输入随后作为第二轮执行。
 
 - 首轮推理以 `We need to confirm the current working directory first.` 开头；
 - 首轮唯一工具调用是 `pwsh Get-Location`，结果为会话真实工作目录；
@@ -58,7 +58,7 @@ cp -r presets/warm-minimal ~/.dsh/.agent-presets/
 dsh-warm-minimal/
 ├── package.json              # dsh.bundle.patch 声明；main -> index.mjs
 ├── cordis.patch.yml          # bundle 层：profile boot 挂载 bootstrap-seed-host
-├── index.mjs                 # host 半身：会话创建即写入首轮
+├── index.mjs                 # host 半身：首条真实消息入 inbox 后写入首轮
 ├── presets/warm-minimal/
 │   ├── preset.yml            # 选择器展示文案
 │   ├── agent.cordis.yml      # standard 底子 + reasoning-style 的组合
@@ -72,8 +72,8 @@ dsh-warm-minimal/
 
 ## 工作原理
 
-- **bundle 行在 profile boot 挂载**：`cordis.patch.yml` 把本包自身插为一行 `bootstrap-seed-host`。它必须在任何会话创建前就绪，因为 preset 自身的插件要到 agent 创建时才挂载，赶不上会话创建那一刻。
-- **seed 写的是 durable session events**：`turn/start → user/message → assistant/message（推理 + tool-call）→ tool/call → tool/result → "Ready." → step/end → turn/end`，并按事件类型要求携带 `surfaceOp`。模型上下文与 API transcript 都能看到这一轮；真实输入因此是第二轮，`agent-instructions`（AGENTS.md）、运行时上下文快照与 skill catalog 落在第二轮。
+- **bundle 行在 profile boot 挂载**：`cordis.patch.yml` 把本包自身插为一行 `bootstrap-seed-host`。它监听同步的 `agent/inbox/inserted`：创建会话不会写历史，第一条真实用户消息进入 inbox 后才触发 seed，随后 agent loop 才被唤醒。
+- **seed 写的是 durable session events**：`turn/start → user/message → assistant/message（推理 + tool-call）→ tool/call → tool/result → "Ready." → step/end → turn/end`，并按事件类型要求携带稳定 `id`、合法 `role` 与 `surfaceOp`。模型上下文与 API transcript 都能看到这一轮；真实输入因此是第二轮，`agent-instructions`（AGENTS.md）、运行时上下文快照与 skill catalog 落在第二轮。
 - **来源可辨**：种子消息 `source = { kind: 'plugin', plugin: 'dsh-warm-minimal' }`，不伪装成真实用户消息；评估/回放可按 source 过滤。
 - **风格提示**：`reasoning-style.mjs` 以 `systemPrompt.section(order: 0)` 注入 [oh-we-need](https://github.com/scp3500/oh-we-need) 规范（MIT，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）。
 

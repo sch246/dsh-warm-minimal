@@ -1,7 +1,7 @@
 {
   "name": "dsh-warm-minimal",
   "version": "0.1.0",
-  "description": "DSH 温暖极简模式：会话创建即写入一条高质量首轮轨迹（we / let's 思维链、无 let me），真实输入从第二轮开始，AGENTS.md、运行时上下文与技能目录自然注入第二轮。",
+  "description": "DSH 温暖极简模式：首条真实消息发送后写入一条高质量首轮轨迹（we / let's 思维链、无 let me），空白会话保持官方启动界面。",
   "type": "module",
   "main": "index.mjs",
   "exports": {
@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "setup": "bash scripts/setup.sh",
-    "setup:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1"
+    "setup:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "test": "node --test"
   },
   "keywords": [
     "dsh",

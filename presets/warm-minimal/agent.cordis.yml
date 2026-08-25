@@ -3,9 +3,10 @@
 #
 # The persona stays the one-sentence RL-aligned identity. `reasoning-style`
 # injects the oh-we-need style section above every other section. The fake
-# first round is written by the dsh-warm-minimal bundle row at profile boot
-# (host plane), so the user's real input is always round 2 — where
-# agent-instructions, runtime context and the skill catalog inject normally.
+# first round is written by the dsh-warm-minimal bundle row after the first
+# real user message enters the inbox (host plane), so a new session stays
+# empty and that real input executes as round 2 — where agent-instructions,
+# runtime context and the skill catalog inject normally.
 #
 # Base roster follows the official `standard` preset. This file is an
 # AGENT-PLANE composition: the roster mounts it ONCE under a standing scope,
@@ -26,7 +27,7 @@
     text: You are a helpful software engineer assistant.
 
 # AGENTS.md lands on the first REAL request (round 2), because the bundle
-# writes round 1 at session creation.
+# writes round 1 synchronously after that input enters the inbox.
 - id: agent-instructions
   name: '@deepseek-ai/dsh-agent-instructions'
   config:
