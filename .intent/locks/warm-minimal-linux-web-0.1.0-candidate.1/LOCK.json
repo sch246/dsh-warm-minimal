@@ -1,0 +1,77 @@
+{
+  "kind": "realization",
+  "id": "dsh-warm-minimal-linux-web",
+  "revision": "0.1.0-candidate.1",
+  "status": "candidate",
+  "protocol": {
+    "id": "meta-intent",
+    "revision": "0.2"
+  },
+  "package": {
+    "id": "dsh-warm-minimal",
+    "revision": "0.1.0-draft.3"
+  },
+  "state": {
+    "revision": "0.1.0-draft.3",
+    "entry": {
+      "path": "inputs/state/STATE.json",
+      "digest": "sha256:a4a79e3141bc4c702bf3a02b9f8cbbf63927c9b8c1ac533498f44fb370474233"
+    },
+    "document": {
+      "path": "inputs/state/STATE.md",
+      "digest": "sha256:f45deaa38633c6e08dcd96473be0f2094987a497df708b601ab3a4d7a4d21f41"
+    }
+  },
+  "logs": [
+    {
+      "path": "../../logs/2026-08-26-reverse-engineering-and-workspace-correction.md",
+      "digest": "sha256:4381c2804ca89fd54ac67211c40682c1fe76c69e263dba859c3ff489949f7b69"
+    },
+    {
+      "path": "../../logs/2026-08-26-chat-visibility-and-debug-order.md",
+      "digest": "sha256:9277a5cdb853a1b0d440eb67868756132bb20b1f3dd4226bf27d953fa7d6009b"
+    },
+    {
+      "path": "../../logs/2026-08-26-host-realization-ownership.md",
+      "digest": "sha256:55c3d32047f2740210282f05a2756bce4e87be1a1efdcea2c7fa7d96a1d84dd2"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "artifacts/acceptance.md",
+      "digest": "sha256:cfc76950af27bcfc986ff950f7fb8cd6b04e67cf45e21977032e9e48585180af"
+    },
+    {
+      "path": "artifacts/install.md",
+      "digest": "sha256:787bce5954f6cba7f077305718d50d2d56293b72830c9d6fbbd3eb759efe5837"
+    }
+  ],
+  "target": {
+    "kind": "git",
+    "uri": "https://github.com/sch246/dsh-warm-minimal.git",
+    "commit": "0fd5761fcc44d3f8dfe0cb41a098cbca8f9af2b3",
+    "paths": [
+      "cordis.patch.yml",
+      "index.mjs",
+      "package.json",
+      "presets/warm-minimal",
+      "realization",
+      "scripts"
+    ]
+  },
+  "acceptance": {
+    "status": "incomplete",
+    "evidence": [
+      {
+        "id": "candidate-predeployment-tests",
+        "artifact": "artifacts/acceptance.md",
+        "result": "unit, focused projection, package, type, catalog, and structural checks recorded; live lifecycle remains pending"
+      },
+      {
+        "id": "candidate-lifecycle-procedure",
+        "artifact": "artifacts/install.md",
+        "result": "baseline-bound install and drift-aware uninstall procedure retained"
+      }
+    ]
+  }
+}
