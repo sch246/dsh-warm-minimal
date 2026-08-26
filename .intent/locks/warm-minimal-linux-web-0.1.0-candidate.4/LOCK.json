@@ -51,7 +51,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:da333bb8356624ded84157b567428c8488d71dd27b7480933571fac82f8bf239"
+      "digest": "sha256:fbd773b4afe4d7679a191ebe0aace0e7a679eb502ade0d8ccc6eae38961628fd"
     },
     {
       "path": "artifacts/install.md",
@@ -93,6 +93,11 @@
         "id": "minimal-donor-equivalence-red-green",
         "artifact": "artifacts/acceptance.md",
         "result": "old seed and composition failed independently; candidate.4 matches donor fields, equals official minimal composition bytes, and passes all 8 plugin tests"
+      },
+      {
+        "id": "candidate4-live-deployment",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.4 receipt installed; linked web profile restarted healthy; official minimal composition runtime test passed"
       }
     ]
   }

@@ -10,11 +10,13 @@ Observed on 2026-08-26:
 - `npm pack --dry-run` succeeds and does not include the raw donor session or its real directory listing.
 - Candidate.3's previously verified Chat hiding, Trajectory ordering, and baseline-bound reversible Harness compatibility patch remain unchanged.
 - Harness has no package-created commit or fork.
+- Controlled upgrade removed candidate.3 through its matching receipt, then installed candidate.4. The new receipt reports revision `0.1.0-candidate.4` and the expected five owned compatibility paths.
+- The installed user preset composition is byte-for-byte equal to the official target minimal composition, and the `web` profile loads this package through `link:/root/dsh-warm-minimal`.
+- Harness's official minimal-composition runtime test passed: one exact persona section, tools `bash` and `str_replace_editor`, and no compaction service.
+- `dsh-web` was restarted successfully, returned to `active`, listened on `127.0.0.1:3082`, and served the production HTML.
 
 Still required before acceptance:
 
-- Upgrade the live `web` profile from candidate.3 to candidate.4 and verify the receipt revision.
-- Restart Web so the linked plugin and replaced preset composition are mounted.
 - In a new warm-minimal session, inspect the first real provider request: exact one-sentence system prompt, exactly two tools, and no repository/runtime/skills/compaction contexts.
 - Observe exactly one donor-template warm-up in Trajectory, none in ordinary Chat, and the current session workspace in its tool result.
 - Obtain explicit user acceptance.
