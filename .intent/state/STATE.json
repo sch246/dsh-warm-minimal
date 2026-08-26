@@ -1,7 +1,7 @@
 {
   "$schema": "meta-intent/0.2/state",
   "id": "dsh-warm-minimal",
-  "revision": "0.1.0-draft.5",
+  "revision": "0.1.0-draft.6",
   "status": "draft",
   "document": "STATE.md",
   "logs": [
@@ -9,7 +9,8 @@
     "../logs/2026-08-26-chat-visibility-and-debug-order.md",
     "../logs/2026-08-26-host-realization-ownership.md",
     "../logs/2026-08-26-trajectory-turn-order-regression.md",
-    "../logs/2026-08-26-runtime-preset-scope-correction.md"
+    "../logs/2026-08-26-runtime-preset-scope-correction.md",
+    "../logs/2026-08-26-minimal-template-authority.md"
   ],
   "protocol": {
     "id": "meta-intent",
@@ -33,17 +34,10 @@
       "uri": "https://github.com/deepseek-ai/deepseek-harness.git",
       "revision": "b642a10626a950cc95c2d6f839810cb01fe599fe",
       "scope": "observed-session-and-preset-api"
-    },
-    {
-      "id": "style.oh-we-need",
-      "kind": "prompt-source",
-      "uri": "https://github.com/scp3500/oh-we-need",
-      "license": "MIT",
-      "scope": "reasoning-style-input"
     }
   ],
   "activeLocks": [],
   "candidateLocks": [
-    "../locks/warm-minimal-linux-web-0.1.0-candidate.3/LOCK.json"
+    "../locks/warm-minimal-linux-web-0.1.0-candidate.4/LOCK.json"
   ]
 }

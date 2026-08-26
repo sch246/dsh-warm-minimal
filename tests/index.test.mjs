@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import { describe, it } from 'node:test'
 import { apply } from '../index.mjs'
+
+const DONOR_REASONING = 'We need respond in Chinese likely. User says: 检查当前工作目录，确认后仅回复 Ready. Means check current working directory, after confirming reply only "Ready." We should run pwd and maybe ls. The instruction says "仅回复 Ready." But tool call needed. Let\'s run pwd and ls to inspect. Then final reply exactly "Ready." Perhaps with tool use first, no commentary? We can do bash pwd and ls. Then final "Ready."'
 
 function harness() {
   let inserted
@@ -56,7 +59,7 @@ describe('dsh-warm-minimal timing', () => {
     assert.match(value.events[5].data.message.id, /^seed-/)
     assert.equal(
       value.events[5].data.message.content[0].content[0].text,
-      'Path\n----\n/work/project',
+      '/work/project',
     )
   })
 
@@ -97,6 +100,31 @@ describe('dsh-warm-minimal timing', () => {
     assert.equal(switchedToWarm.events.filter(event => event.type === 'turn/start').length, 1)
   })
 
+  it('copies the fixed donor round and varies only its workspace result', () => {
+    const { inserted } = harness()
+    const value = session()
+    inserted({ agent: { session: value }, message: { source: { kind: 'user' } } })
+
+    const seededUser = value.events.find(event => event.type === 'user/message')
+    assert.equal(seededUser.data.content[0].text, '检查当前工作目录，确认后仅回复 Ready.')
+    assert.equal(seededUser.data.source.form, 'warmup')
+
+    const assistantMessages = value.events
+      .filter(event => event.type === 'assistant/message')
+      .map(event => event.data.message)
+    assert.equal(assistantMessages[0].content[0].text, DONOR_REASONING)
+    const seededCall = assistantMessages[0].content[1]
+    assert.equal(seededCall.type, 'tool-call')
+    assert.match(seededCall.id, /^seed_/)
+    assert.equal(seededCall.name, 'bash')
+    assert.equal(seededCall.arguments, '{"command": "pwd && ls -la"}')
+    assert.deepEqual(assistantMessages[1].content, [{ type: 'text', text: 'Ready.' }])
+
+    const toolResult = value.events.find(event => event.type === 'tool/result')
+    assert.equal(toolResult.data.message.content[0].content[0].text, '/work/project')
+    assert.equal(value.events.some(event => event.type === 'context/message'), false)
+  })
+
   it('does not invent a workspace when session metadata has no usable cwd', () => {
     const { inserted, warnings } = harness()
     const missing = session()
@@ -112,6 +140,31 @@ describe('dsh-warm-minimal timing', () => {
     assert.equal(warnings.length, 2)
     for (const warning of warnings) {
       assert.match(warning, /session header does not contain a working directory/)
+    }
+  })
+})
+
+describe('warm-minimal preset composition', () => {
+  it('is minimal-equivalent: complete fixed prompt, two tools, no extra contexts', async () => {
+    const preset = await readFile(new URL('../presets/warm-minimal/agent.cordis.yml', import.meta.url), 'utf8')
+
+    assert.match(preset, /text: You are a helpful software engineer assistant\./)
+    assert.match(preset, /complete: true/)
+    assert.match(preset, /includeRuntimeContext: false/)
+    assert.match(preset, /@deepseek-ai\/dsh-tool-bash-persistent/)
+    assert.match(preset, /@deepseek-ai\/dsh-tool-pwsh-persistent/)
+    assert.match(preset, /@deepseek-ai\/dsh-tool-str-replace-editor/)
+
+    for (const forbidden of [
+      '@deepseek-ai/dsh-agent-instructions',
+      '@deepseek-ai/dsh-skill-filesystem',
+      '@deepseek-ai/dsh-tool-skill',
+      '@deepseek-ai/dsh-tool-jobs',
+      '@deepseek-ai/dsh-tool-goal',
+      '@deepseek-ai/dsh-plan-mode',
+      'reasoning-style.mjs',
+    ]) {
+      assert.equal(preset.includes(forbidden), false, `unexpected minimal component: ${forbidden}`)
     }
   })
 })

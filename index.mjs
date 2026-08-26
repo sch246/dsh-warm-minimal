@@ -1,13 +1,13 @@
 /**
- * dsh-warm-minimal host half: fake a high-quality first round after the first
- * real user message enters a blank warm-minimal session.
+ * dsh-warm-minimal host half: prepend the selected minimal donor round after
+ * the first real user message enters a blank warm-minimal session.
  *
  * This plugin mounts through the bundle layer at profile boot, so it is live
  * before any user input arrives. A new session therefore keeps the official
  * empty state. The first real user message enters the inbox, this plugin
- * synchronously writes a canonical round 1 (we / let's reasoning, one
- * truthful pwsh tool call, a short ready reply), and only then may the agent
- * loop wake and record the real input as round 2.
+ * synchronously writes canonical round 1 (fixed donor reasoning, one synthetic
+ * bash trace, a short ready reply), and only then may the agent loop wake and
+ * record the real input as round 2.
  *
  * Zero external imports on purpose: bundle rows resolve bare specifiers from
  * the profile, where `@deepseek-ai/*` packages are not directly installed.
@@ -16,16 +16,13 @@
 /** Cordis plugin name used by loader diagnostics. */
 export const name = 'dsh-warm-minimal'
 
-/** Reasonable defaults, overridable from the bundle row config. */
-const DEFAULT_USER_TEXT = 'Get ready. First confirm the current working directory.'
-const DEFAULT_READY_TEXT = 'Ready.'
+/** Fixed model-visible donor fields. Only the tool result workspace varies. */
+const SEED_USER_TEXT = '检查当前工作目录，确认后仅回复 Ready.'
+const SEED_READY_TEXT = 'Ready.'
+const SEED_TOOL_ARGUMENTS = '{"command": "pwd && ls -la"}'
 
-/** First-round reasoning style: first sentence opens with `we need to`, no `let me`. */
-const SEED_REASONING = [
-  'We need to confirm the current working directory first.',
-  "Let's check where we are before doing anything.",
-  'We need one concrete step at a time, and we should wait for the task before touching files.',
-].join('\n')
+/** Assistant reasoning copied from the user-selected minimal donor session. */
+const SEED_REASONING = 'We need respond in Chinese likely. User says: 检查当前工作目录，确认后仅回复 Ready. Means check current working directory, after confirming reply only "Ready." We should run pwd and maybe ls. The instruction says "仅回复 Ready." But tool call needed. Let\'s run pwd and ls to inspect. Then final reply exactly "Ready." Perhaps with tool use first, no commentary? We can do bash pwd and ls. Then final "Ready."'
 
 /** The seed is an injection, never treated as a real user message. */
 const SEED_SOURCE = {
@@ -57,21 +54,14 @@ function resolveSessionPreset(session) {
 /**
  * Write the fake first round into one not-yet-started session.
  * @param session - durable session; must not contain a turn yet.
- * @param config - text overrides from the bundle row.
  */
-function seedRound(session, config = {}) {
-  const userText = config.userText ?? DEFAULT_USER_TEXT
-  const readyText = config.readyText ?? DEFAULT_READY_TEXT
+function seedRound(session) {
   const cwd = session.header?.cwd
   if (typeof cwd !== 'string' || cwd.trim().length === 0) {
     throw new Error('session header does not contain a working directory')
   }
   const callId = `seed_${session.id.replaceAll('-', '').slice(0, 8)}_1`
-  const argumentsJson = JSON.stringify({
-    command: 'Get-Location',
-    description: 'Confirm the working directory',
-  })
-  const resultText = `Path\n----\n${cwd}`
+  const resultText = cwd
 
   session.append('turn/start', { turn: 1 })
   session.append('step/start', { turn: 1, step: 1 })
@@ -79,7 +69,7 @@ function seedRound(session, config = {}) {
   session.append('user/message', {
     id: `seed-${callId}-user`,
     role: 'user',
-    content: [{ type: 'text', text: userText }],
+    content: [{ type: 'text', text: SEED_USER_TEXT }],
     source: SEED_SOURCE,
   }, { surfaceOp: 'append' })
   session.append('assistant/message', {
@@ -90,7 +80,7 @@ function seedRound(session, config = {}) {
       role: 'assistant',
       content: [
         { type: 'reasoning', text: SEED_REASONING },
-        { type: 'tool-call', id: callId, name: 'pwsh', arguments: argumentsJson },
+        { type: 'tool-call', id: callId, name: 'bash', arguments: SEED_TOOL_ARGUMENTS },
       ],
       source: SEED_MODEL_SOURCE,
     },
@@ -99,8 +89,8 @@ function seedRound(session, config = {}) {
     turn: 1,
     step: 1,
     callId,
-    name: 'pwsh',
-    arguments: argumentsJson,
+    name: 'bash',
+    arguments: SEED_TOOL_ARGUMENTS,
   })
   session.append('tool/result', {
     turn: 1,
@@ -123,7 +113,7 @@ function seedRound(session, config = {}) {
     message: {
       id: `seed-${callId}-assistant-2`,
       role: 'assistant',
-      content: [{ type: 'text', text: readyText }],
+      content: [{ type: 'text', text: SEED_READY_TEXT }],
       source: SEED_MODEL_SOURCE,
     },
   }, { surfaceOp: 'append' })
@@ -137,16 +127,15 @@ function seedRound(session, config = {}) {
  * synchronous, so the durable seed becomes round 1 and the triggering input
  * becomes round 2 without showing seed content on the empty-session screen.
  * @param ctx - Cordis context carrying this bundle's scope.
- * @param config - bundle row config.
  */
-export function apply(ctx, config = {}) {
+export function apply(ctx) {
   ctx.effect(() => ctx.root.on('agent/inbox/inserted', ({ agent, message: input }) => {
     if (input.source?.kind !== 'user') return
     const session = agent.session
     if (resolveSessionPreset(session) !== 'warm-minimal') return
     if (session.events.some((event) => event.type === 'turn/start')) return
     try {
-      seedRound(session, config)
+      seedRound(session)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       ctx.logger.warn(`dsh-warm-minimal: failed to seed ${session.id}: ${message}`)

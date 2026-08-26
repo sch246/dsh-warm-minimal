@@ -11,5 +11,3 @@
 - insert:
     - id: bootstrap-seed-host
       name: dsh-warm-minimal
-      config:
-        userText: Get ready. First confirm the current working directory.

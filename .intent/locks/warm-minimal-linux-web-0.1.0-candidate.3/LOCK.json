@@ -2,7 +2,7 @@
   "kind": "realization",
   "id": "dsh-warm-minimal-linux-web",
   "revision": "0.1.0-candidate.3",
-  "status": "candidate",
+  "status": "failed",
   "protocol": {
     "id": "meta-intent",
     "revision": "0.2"
@@ -47,7 +47,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:3e735f0ff70b10ea82474299fa233d2d8a3c41700ddb73bc02b07ae19ddccf50"
+      "digest": "sha256:7897a500fc49f9edb8eff2d2339833bdb767c1cdd180e4aa2656e12cdd5e5c55"
     },
     {
       "path": "artifacts/install.md",
@@ -68,7 +68,7 @@
     ]
   },
   "acceptance": {
-    "status": "incomplete",
+    "status": "failed",
     "evidence": [
       {
         "id": "trajectory-turn-order-red-green",
@@ -84,6 +84,11 @@
         "id": "runtime-preset-scope-red-green",
         "artifact": "artifacts/acceptance.md",
         "result": "candidate.2 reproduced stale-header injection; candidate.3 passed both runtime-switch directions and all 6 plugin tests"
+      },
+      {
+        "id": "live-minimal-context-equivalence",
+        "artifact": "artifacts/acceptance.md",
+        "result": "failed WARM-006: standard-derived prompt contexts, skills, and tools remained visible"
       }
     ]
   }

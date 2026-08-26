@@ -11,10 +11,8 @@ Observed on 2026-08-26:
 - Controlled upgrade removed candidate.2 through its matching receipt, then installed candidate.3. The new host receipt reports revision `0.1.0-candidate.3` and the expected five owned compatibility paths.
 - The `web` profile retains `dsh-warm-minimal` as `link:/root/dsh-warm-minimal`, so the restarted service loads the candidate.3 runtime preset resolver directly from this package.
 - `dsh-web` was restarted successfully, returned to `active`, listened on `127.0.0.1:3082`, and served the production HTML.
+- User review rejected candidate.3's model-context scope: it remained standard-derived, so the real request received extra runtime context, repository instructions, skills, compaction, and a broad tool catalog instead of matching the official minimal preset.
 
-Still required before acceptance:
+Failure disposition:
 
-- In a new blank session created as warm-minimal but switched to another preset before the first message, observe no synthetic warm-up.
-- In a new blank session whose effective preset is warm-minimal, observe exactly one warm-up in Trajectory and none in ordinary Chat.
-- Exercise live-profile uninstall/reinstall without losing unrelated worktree or profile changes.
-- Obtain explicit user acceptance.
+- Candidate.3 is failed and retained as evidence. It must not be accepted or selected as current.
