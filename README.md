@@ -25,7 +25,7 @@ DSH_REPO=/path/to/deepseek-harness bash scripts/setup.sh
 
 脚本做三件事：对 `DSH_REPO` 施加 lock-declared host patch 并在目标仓库 `.git/` 中记录 ownership receipt；把 `presets/warm-minimal` 复制进 `<dsh home>/.agent-presets/`；若 `dsh` 在 PATH 上，自动执行 `dsh plugin --profile web add .` 把本包注册为 bundle。之后在 Harness 根目录执行 `pnpm run build` 并**重启 dsh web**。
 
-安装器默认拒绝认领已存在但没有 receipt 的 patch，也拒绝覆盖无 ownership marker 的同名 preset。只有在确认它们确实来自旧版安装后，迁移时才分别设置 `DSH_WARM_ADOPT_HOST_PATCH=1` 和 `DSH_WARM_ADOPT_PRESET=1`。
+安装器默认拒绝认领已存在但没有 receipt 的 patch，也拒绝覆盖无 ownership marker 或已发生内容漂移的同名 preset。只有在确认它们确实来自旧版安装后，迁移时才分别设置 `DSH_WARM_ADOPT_HOST_PATCH=1` 和 `DSH_WARM_ADOPT_PRESET=1`；只有审查过 package-owned preset 的差异后，升级时才可设置 `DSH_WARM_REPLACE_DRIFTED_PRESET=1`。
 
 ### 状态与卸载
 

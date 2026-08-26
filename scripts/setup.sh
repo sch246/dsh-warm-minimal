@@ -33,6 +33,12 @@ if [ -e "$DEST" ] && [ ! -f "$DEST/.dsh-warm-minimal-owned" ] && [ "${DSH_WARM_A
   echo "set DSH_WARM_ADOPT_PRESET=1 only after verifying it belongs to this package" >&2
   exit 1
 fi
+if [ -f "$DEST/.dsh-warm-minimal-owned" ] && ! diff -qr "$SRC" "$DEST" >/dev/null \
+  && [ "${DSH_WARM_REPLACE_DRIFTED_PRESET:-0}" != "1" ]; then
+  echo "package-owned preset has drifted; refusing to overwrite later edits: $DEST" >&2
+  echo "set DSH_WARM_REPLACE_DRIFTED_PRESET=1 only after reviewing the diff" >&2
+  exit 1
+fi
 
 HOST_PATCH_ARGS=(install --repo "$DSH_REPO_DIR")
 if [ "${DSH_WARM_ADOPT_HOST_PATCH:-0}" = "1" ]; then

@@ -39,7 +39,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:cfc76950af27bcfc986ff950f7fb8cd6b04e67cf45e21977032e9e48585180af"
+      "digest": "sha256:31c5af5abee16ba42bf4db809812fc4362de3c630f64ec1997878754716374ea"
     },
     {
       "path": "artifacts/install.md",
