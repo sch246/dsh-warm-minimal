@@ -11,9 +11,15 @@ Observed on 2026-08-26 before live deployment:
 - `npm pack --dry-run` succeeds and includes neither donor transcript data nor a Harness realization patch.
 - Implementation identity is Git commit `b1b61a25afc44401a705e05c15713ec56d2b3d1a`.
 
+Live deployment evidence on 2026-08-26:
+
+- The installed web-profile dependency remains `link:/root/dsh-warm-minimal`, and the package-owned installed preset remains byte-for-byte equal to official minimal.
+- A full Harness host, client, and web-frontend build completed after candidate.4's patch removal.
+- `dsh-web` restarted successfully, reports `active`, listens on `127.0.0.1:3082`, and serves the production HTML.
+- All five formerly patched Harness paths have no Git diff and no host-patch ownership receipt remains.
+
 Still required before acceptance:
 
-- Install candidate.5 into the live web profile, rebuild once to remove candidate.4's previously compiled host patch, restart `dsh-web`, and verify service health.
 - In a new warm-minimal session, observe the native bootstrap followed by the original request in ordinary Chat and Trajectory, with one exact system sentence, exactly two Linux tools, no extra contexts, and the current session workspace.
 - Exercise clean package uninstall/reinstall or otherwise obtain equivalent ownership evidence.
 - Obtain explicit user acceptance.

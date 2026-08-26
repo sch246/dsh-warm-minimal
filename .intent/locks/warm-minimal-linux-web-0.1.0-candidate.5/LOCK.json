@@ -55,7 +55,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:4cfa2235f1c9a34e2c45a9f05889a5852476892365dd538b4846fd8306bba999"
+      "digest": "sha256:1bcad5c076988b1be62ad251913ecc6e39de13d38f74ab3bd21881ddbd8cb411"
     },
     {
       "path": "artifacts/install.md",
@@ -96,6 +96,11 @@
         "id": "minimal-composition-equivalence",
         "artifact": "artifacts/acceptance.md",
         "result": "warm-minimal agent composition is byte-for-byte equal to official minimal on the selected target"
+      },
+      {
+        "id": "candidate5-live-deployment",
+        "artifact": "artifacts/acceptance.md",
+        "result": "zero-patch Harness rebuild completed; linked profile restarted active and served production HTML on 127.0.0.1:3082"
       }
     ]
   }
