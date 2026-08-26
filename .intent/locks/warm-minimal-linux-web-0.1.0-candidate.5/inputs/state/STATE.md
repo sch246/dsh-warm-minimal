@@ -1,0 +1,69 @@
+# DSH warm-minimal
+
+Status: draft reconstruction from the existing implementation plus the user's workspace, native-bootstrap, visible-Chat, runtime preset-scope, minimal composition, and zero-host-modification corrections. Those corrections are explicit; other product semantics below are the best fact-aligned projection of the implementation and documentation and remain draft until accepted by the user. The acceptance criteria are target-specific behavior for DeepSeek Harness, not additions to the intent-package protocol.
+
+## Intent
+
+Provide an optional DeepSeek Harness agent preset that preserves the official empty new-session screen, behaves like the official minimal preset, and runs one real bootstrap turn through the normal agent loop immediately before it handles the first real user request. The bootstrap asks the selected model to inspect the actual workspace and reply ready; the package does not replay or fabricate the donor session's assistant/tool transcript.
+
+The model-facing composition is minimal: one complete system sentence, no additional prompt/context sections, and exactly the official minimal preset's platform shell plus `str_replace_editor`. Chat and Trajectory display the bootstrap as an ordinary native turn; folding is delegated to a future independent plugin.
+
+## Acceptance criteria
+
+- `WARM-001`: Creating or opening a blank session with the preset produces no durable warm-up events and leaves the official empty-session interface unchanged.
+- `WARM-002`: The first inbox message whose source is a real user synchronously adds exactly one warm-up round before the agent loop handles that message; the real message is consequently handled as round two. This applies only when the effective preset at insertion time is exactly `warm-minimal`: the most recent successful runtime preset selection overrides the session's creation header. Plugin-originated input, other effective presets, and later user messages do not add another warm-up round.
+- `WARM-003`: The bootstrap is a normal agent-loop turn initiated by the fixed user-role instruction `检查当前工作目录，确认后仅回复 Ready.`. The selected real model produces reasoning, tool calls, and final output; configured minimal tools execute normally. The package does not append fabricated assistant/tool events. Ordinary Chat and Trajectory both show the resulting native turn without package-owned hiding, reordering, or folding behavior.
+- `WARM-003A`: Native persistence and projections retain their normal causal order: initial system prompt, bootstrap USER, model ASSISTANT, executed TOOL, final ASSISTANT, then the original real request as the next turn. The package requires no Trajectory-specific ordering realization.
+- `WARM-004`: Workspace confirmation comes from the actually executed minimal shell in the current session workspace. The package neither substitutes a host process directory nor constructs a synthetic tool result. Bootstrap failure must not discard the original user message.
+- `WARM-005`: The donor session is a behavioral oracle for the desired native shape, not byte-exact runtime content. Model reasoning, command choice, tool output, and final wording may vary according to the selected provider while the fixed bootstrap instruction and minimal composition remain stable.
+- `WARM-006`: On every real provider request, the complete system prompt is exactly `You are a helpful software engineer assistant.` and the model-visible tool catalog contains exactly the official minimal preset's two tools (`bash` and `str_replace_editor` on the selected Linux target). Repository instructions, runtime-context snapshots, skill catalogs, compaction context, and other standard-mode prompt or tool contributions are absent.
+- `WARM-007`: Installation adds only the package-owned `warm-minimal` preset and bundle registration. The selected realization modifies no DeepSeek Harness source files. Reinstallation does not create duplicate effective behavior. Uninstall removes only effects proven to be package-owned and stops on drift rather than overwriting later edits; unrelated presets, profile configuration, sessions, source edits, and repository history remain unchanged.
+- `WARM-008`: The bootstrap `UserMessage.id` begins with `dsh-warm-minimal:bootstrap:`. This namespaced, provider-hidden durable marker lets a future independent folding plugin identify the turn without altering message text, source projection, or Harness schemas.
+
+## Resources
+
+- The target runtime is DeepSeek Harness. Revision `b642a10626a950cc95c2d6f839810cb01fe599fe` supplied the observed session metadata and system-prompt variable behavior during reconstruction; it is evidence, not a permanent compatibility ceiling.
+- The existing public `dsh-warm-minimal` implementation at revision `06fa6d385545215f543479aee9e4013a428965fc` is the reverse-engineering baseline, not semantic authority or an accepted realization.
+- The user-generated local session `session-26c57c2e-5ff3-49fd-afd1-c40c468ef9d4` is evidence for the desired native interaction shape. Its raw tool output contains unrelated machine details and must remain local rather than becoming a package artifact.
+- DSH owns session persistence, agent execution, and transcript lifecycle. The package submits the bootstrap and held real input through that lifecycle and must not create a separate hidden session store.
+
+## Constraints and permissions
+
+- The session workspace may appear in the local DSH transcript because workspace confirmation is part of the warm-up. Do not transmit or publish session logs merely to install, validate, or maintain this package.
+- Treat the normal agent loop and its shell working directory as the authority for the current session workspace. A host process working directory, plugin checkout path, static machine path, or guessed fallback is not an acceptable substitute.
+- Preserve truthful provenance: the bootstrap is an actual user-role input generated by this package, and all assistant/tool messages are generated by the selected model and executed tools. Its namespaced message ID records package origin without changing provider-visible content.
+- Preserve unrelated profile entries and presets. Replacement of the package-owned `warm-minimal` preset directory is allowed during an authorized upgrade only when that directory is wholly package-owned.
+- The selected realization must use public plugin, preset, inbox, and agent-loop seams and must not modify DeepSeek Harness source files. A future state revision would be required before considering a host patch.
+- Installing into or restarting a live DSH profile, publishing, pushing, changing remotes, or changing external services requires authority for that operation.
+- Supported realizations must honor the runtime requirements they declare; the reconstruction baseline declares Node.js `^22.19.0 || >=24.0.0`.
+
+## Non-goals
+
+- Replacing the official DSH empty-session experience or expanding the official minimal capability set.
+- Replaying or fabricating a fixed donor assistant response, tool call, or tool result.
+- Creating a general prompt framework, session recorder, workspace manager, or alternative agent loop.
+- Hard-coding one repository, machine, user name, or DSH checkout as the workspace.
+- Shipping task-specific build, fix, or weak-request warm-up templates in this revision.
+- Adding repository instructions, runtime-context snapshots, skills, compaction, background-job, goal, plan, delegation, or other standard-mode components to this minimal composition.
+- Maintaining a fork or feature branch of DeepSeek Harness for package-owned compatibility changes.
+- Reproducing the current implementation byte-for-byte when a future realization can satisfy the same acceptance criteria more safely.
+
+## Implementation hints
+
+- The reconstruction baseline mounts a host-plane bundle listener before user input and listens synchronously to `agent/inbox/inserted`.
+- On the selected target, the official persistent shell reads `agent.session.header.cwd` when spawning its PTY. Using that native shell is the workspace binding; the plugin must not calculate or inject a directory itself.
+- A namespaced bootstrap message ID, a `turn/start` guard, and per-session in-flight state are useful mechanisms for idempotence, attribution, and restoration ordering.
+- Keeping bootstrap orchestration separate from the preset's model-facing composition avoids duplicating process-global services.
+
+## Known tensions and decisions
+
+- The user explicitly requires the confirmed workspace to be the current session's workspace. The baseline implementation read `session.cwd` and fell back to `process.cwd()`; the selected replacement instead relies on the official persistent shell's checked `session.header.cwd → PTY cwd` path.
+- After comparing the donor and reconstructed displays, the user selected ordinary native Chat visibility for this package. Folding is a future independent plugin concern; this package supplies only a durable provider-hidden message-ID marker for that integration.
+- The user corrected the realization boundary twice: package behavior belongs to this package's state and lock, while the selected replacement must require zero Harness source modifications rather than carrying a package-owned host patch.
+- Live evidence invalidated candidate `0.1.0-candidate.1`: assigning the prompt to `request.turn` was necessary but insufficient because a global-first prompt index still reordered whole turn sections. The replacement must test the complete two-turn display order, not isolated cell ownership.
+- Live evidence also invalidated candidate `0.1.0-candidate.2`: it scoped injection using the immutable creation header even though DSH records later successful mode selection in the session event log. Runtime selection is authoritative for whether this optional mode may inject; Trajectory must not hide already-persisted scope violations.
+- The user then invalidated candidate `0.1.0-candidate.3` semantically: its standard-derived composition exposed extra prompt contexts, instructions, skills, and tools. The replacement is anchored to the official minimal composition and uses the donor session only as a native-behavior oracle.
+- The selected Linux donor uses `bash`; a future non-Linux realization must preserve minimal-preset equivalence while binding the platform shell and must record that realization-specific template difference instead of silently labeling PowerShell as Bash.
+- The setup scripts mark the package-owned preset and refuse unowned replacement, but clean candidate.5 uninstall has not yet been exercised end to end against the live profile. `WARM-007` therefore remains incomplete.
+- No accepted realization lock is selected. Candidates `0.1.0-candidate.1`, `0.1.0-candidate.2`, `0.1.0-candidate.3`, and `0.1.0-candidate.4` failed live or semantic acceptance and are retained only as historical evidence; candidate.5 is the current replacement candidate.
+- The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; the local `locks/` area contains only realizations of `dsh-warm-minimal` itself.

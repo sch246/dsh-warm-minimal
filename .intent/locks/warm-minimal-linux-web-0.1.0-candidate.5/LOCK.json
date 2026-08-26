@@ -1,0 +1,102 @@
+{
+  "kind": "realization",
+  "id": "dsh-warm-minimal-linux-web",
+  "revision": "0.1.0-candidate.5",
+  "status": "candidate",
+  "protocol": {
+    "id": "meta-intent",
+    "revision": "0.2"
+  },
+  "package": {
+    "id": "dsh-warm-minimal",
+    "revision": "0.1.0-draft.7"
+  },
+  "state": {
+    "revision": "0.1.0-draft.7",
+    "entry": {
+      "path": "inputs/state/STATE.json",
+      "digest": "sha256:a902f11b7afb76e6493b3baaf9073cfe2af0923ab4d11ddfe8e49321c2e07eb3"
+    },
+    "document": {
+      "path": "inputs/state/STATE.md",
+      "digest": "sha256:b8b9c8018d092ec6ac25349cd8b5503f5ab30e7901cc6c17d34116c79e76d289"
+    }
+  },
+  "logs": [
+    {
+      "path": "../../logs/2026-08-26-reverse-engineering-and-workspace-correction.md",
+      "digest": "sha256:4381c2804ca89fd54ac67211c40682c1fe76c69e263dba859c3ff489949f7b69"
+    },
+    {
+      "path": "../../logs/2026-08-26-chat-visibility-and-debug-order.md",
+      "digest": "sha256:9277a5cdb853a1b0d440eb67868756132bb20b1f3dd4226bf27d953fa7d6009b"
+    },
+    {
+      "path": "../../logs/2026-08-26-host-realization-ownership.md",
+      "digest": "sha256:55c3d32047f2740210282f05a2756bce4e87be1a1efdcea2c7fa7d96a1d84dd2"
+    },
+    {
+      "path": "../../logs/2026-08-26-trajectory-turn-order-regression.md",
+      "digest": "sha256:0e1bc0642ef1bc72d6b06ed1c37e8bd4bb961f5c3b02ba36af33a8c9ae8a1e5f"
+    },
+    {
+      "path": "../../logs/2026-08-26-runtime-preset-scope-correction.md",
+      "digest": "sha256:f587db7a449cd6630ea339208926d4ec15c6ef08311b72b12e1615ee24cdb9ad"
+    },
+    {
+      "path": "../../logs/2026-08-26-minimal-template-authority.md",
+      "digest": "sha256:799bfdd8772608083cd83babf46cbdfb0c20415e04196015b0feab06d8e1564e"
+    },
+    {
+      "path": "../../logs/2026-08-26-native-bootstrap-and-visible-chat.md",
+      "digest": "sha256:18781393e0779f6029fbe47969334e6a097c6c1237c21d2f64c8ad9a79399488"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "artifacts/acceptance.md",
+      "digest": "sha256:4cfa2235f1c9a34e2c45a9f05889a5852476892365dd538b4846fd8306bba999"
+    },
+    {
+      "path": "artifacts/install.md",
+      "digest": "sha256:c508776c98f2b22e8b596522ebd5d835c7a4a623acd79c95238610953e23409b"
+    }
+  ],
+  "target": {
+    "kind": "git",
+    "uri": "https://github.com/sch246/dsh-warm-minimal.git",
+    "commit": "b1b61a25afc44401a705e05c15713ec56d2b3d1a",
+    "paths": [
+      "cordis.patch.yml",
+      "index.mjs",
+      "package.json",
+      "presets/warm-minimal",
+      "scripts"
+    ]
+  },
+  "acceptance": {
+    "status": "incomplete",
+    "evidence": [
+      {
+        "id": "native-bootstrap-unit-suite",
+        "artifact": "artifacts/acceptance.md",
+        "result": "6/6 tests pass for native bootstrap ordering, restoration, scope, idempotence, and official-minimal composition"
+      },
+      {
+        "id": "zero-host-patch-migration",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.4 receipt removed cleanly and all five formerly owned Harness paths match their Git baseline"
+      },
+      {
+        "id": "session-workspace-shell-path",
+        "artifact": "artifacts/acceptance.md",
+        "result": "official persistent bash passes owner.session.header.cwd through terminal spawn to subprocess cwd"
+      },
+      {
+        "id": "minimal-composition-equivalence",
+        "artifact": "artifacts/acceptance.md",
+        "result": "warm-minimal agent composition is byte-for-byte equal to official minimal on the selected target"
+      }
+    ]
+  }
+}
