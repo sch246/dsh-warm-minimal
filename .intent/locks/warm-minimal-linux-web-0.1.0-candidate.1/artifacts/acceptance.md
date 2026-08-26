@@ -21,3 +21,7 @@ Still required before acceptance:
 - Observe ordinary Chat hiding the warm-up and Trajectory retaining it with the initial system prompt on the real request turn.
 - Exercise the live-profile uninstall/reinstall path without losing unrelated worktree or profile changes.
 - Obtain explicit user acceptance of this realization.
+
+## Live rejection
+
+The user exercised the deployed candidate and observed the real request turn before the earlier synthetic warm-up turn. Durable session evidence proved the stored order was correct and the candidate Trajectory layout reordered it. Candidate `0.1.0-candidate.1` therefore failed `WARM-003A` and must not be accepted or reused as last-good.

@@ -1,0 +1,87 @@
+diff --git a/packages/client/ui-trajectory/tests/layout.client.spec.tsx b/packages/client/ui-trajectory/tests/layout.client.spec.tsx
+index ec8924505f..667037a0f8 100644
+--- a/packages/client/ui-trajectory/tests/layout.client.spec.tsx
++++ b/packages/client/ui-trajectory/tests/layout.client.spec.tsx
+@@ -56,6 +56,82 @@ describe('TrajectoryTurn', () => {
+ })
+ 
+ describe('deriveTrajectoryLayout', () => {
++  it('keeps a synthetic warmup turn before the real request whose initial prompt is globally first', () => {
++    const nodes = [
++      {
++        kind: 'context', seq: 6, time: 6_000,
++        content: [{ type: 'text', text: 'Get ready.' }],
++        source: { kind: 'plugin', plugin: 'fixture', form: 'warmup' },
++      },
++      {
++        kind: 'assistant', seq: 10, time: 10_000, turn: 1, step: 1,
++        blocks: [{ kind: 'text', text: 'Ready.' }],
++      },
++      {
++        kind: 'user', seq: 16, time: 16_000,
++        content: [{ type: 'text', text: '你好' }], source: null,
++      },
++      {
++        kind: 'context', seq: 17, time: 17_000,
++        content: [{ type: 'text', text: 'workspace instructions' }], source: null,
++      },
++      {
++        kind: 'assistant', seq: 134, time: 134_000, turn: 2, step: 1,
++        blocks: [{ kind: 'text', text: '你好！' }],
++      },
++    ] as unknown as ConversationSnapshot['nodes']
++    const requests = [{
++      purpose: 'assistant', startSeq: 22, turn: 2, step: 1,
++      startedAt: 22_000, completedAt: 134_000, status: 'complete',
++      prompt: {
++        config: { provider: 'test', model: 'test' },
++        system: 'system prompt', tools: [],
++      },
++      promptChange: { seq: 22, time: 22_000, kind: 'initial' },
++    }] as unknown as readonly RequestView[]
++
++    const turns = deriveTrajectoryLayout({
++      nodes, partial: null, runningCalls: [], requests,
++    })
++
++    expect(turns.map(turn => turn.turn)).toEqual([1, 2])
++    expect(turns[0]?.groups.flatMap(group => group.cells).map(cell => cell.previewMarkdown)).toEqual([
++      'Get ready.', 'Ready.',
++    ])
++    expect(turns[1]?.groups.flatMap(group => group.cells).map(cell => cell.kind)).toEqual([
++      'system', 'user', 'context', 'message',
++    ])
++  })
++
++  it('uses a recorded context location before following-assistant inference', () => {
++    const nodes = [
++      {
++        kind: 'context', seq: 3, time: 3_000,
++        content: [{ type: 'text', text: 'durable turn one context' }], source: null,
++      },
++      {
++        kind: 'assistant', seq: 4, time: 4_000, turn: 2, step: 1,
++        blocks: [{ kind: 'text', text: 'turn two' }],
++      },
++    ] as unknown as ConversationSnapshot['nodes']
++    const data = { get: () => undefined }
++    const turn = {
++      turn: 1, start: undefined, end: undefined, status: 'closed' as const, steps: [], data,
++    }
++    const eventLocations = new Map<number, ConversationLocation>([[
++      3, { kind: 'turn', turn },
++    ]])
++
++    const turns = deriveTrajectoryLayout({
++      nodes, eventLocations, partial: null, runningCalls: [],
++    })
++
++    expect(turns.map(candidate => candidate.turn)).toEqual([1, 2])
++    expect(turns[0]?.groups[0]?.cells[0]).toMatchObject({
++      kind: 'context', previewMarkdown: 'durable turn one context',
++    })
++  })
++
+   it('expands assistant blocks, hangs usage on Message, and folds call+result into Tool', () => {
+     const nodes = [
+       { kind: 'user', seq: 1, time: 1_000, content: [{ type: 'text', text: 'hello' }], source: null },

@@ -67,7 +67,7 @@ index c60bbf79f1..5a7f7795de 100644
      if (context.state === undefined) return null
      return chatNode(context, context.state.kind, context.state.seq, context.state)
 diff --git a/packages/client/ui-trajectory/src/client/layout.ts b/packages/client/ui-trajectory/src/client/layout.ts
-index 265d5ba034..c4b7b41b8d 100644
+index 265d5ba034..a21b334a2b 100644
 --- a/packages/client/ui-trajectory/src/client/layout.ts
 +++ b/packages/client/ui-trajectory/src/client/layout.ts
 @@ -279,7 +279,7 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
@@ -79,7 +79,68 @@ index 265d5ba034..c4b7b41b8d 100644
          : enclosingPromptTurn(nodes, change.seq, partial)
        pushMessage(turn, {
          absTime: finiteTime(change.time),
-@@ -915,20 +915,6 @@ function enclosingPromptTurn(
+@@ -352,9 +352,9 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+     }
+     const { node, nodeIndex: i } = entry
+     if (node.kind === 'user') {
+-      // user/message has no turn on the wire; enclose it in the next assistant
+-      // (or partial) turn, else open the turn after the last assistant.
+-      const turn = enclosingUserTurn(followingAssistants[i], partial, lastAssistantTurn)
++      const turn = enclosingInputTurn(
++        eventLocations?.get(node.seq), followingAssistants[i], partial, lastAssistantTurn,
++      )
+       pushMessage(turn, {
+         absTime: finiteTime(node.time),
+         cell: {
+@@ -400,7 +400,9 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+       continue
+     }
+     if (node.kind === 'context') {
+-      const turn = enclosingUserTurn(followingAssistants[i], partial, lastAssistantTurn)
++      const turn = enclosingInputTurn(
++        eventLocations?.get(node.seq), followingAssistants[i], partial, lastAssistantTurn,
++      )
+       pushMessage(turn, {
+         absTime: finiteTime(node.time),
+         cell: {
+@@ -607,10 +609,16 @@ function toTurnModel(
+   return { turn, groups }
+ }
+ 
+-/** Chronological section position from the fold's monotonically assigned cell indexes. */
++/**
++ * Chronological section position from durable cells. An initial system prompt
++ * is globally folded first so it leads inside its request turn, but it must not
++ * pull that whole turn ahead of an earlier durable turn.
++ */
+ function firstCellIndex(turn: TrajectoryTurnModel): number {
++  const cells = turn.groups.flatMap(group => group.cells)
++  const durable = cells.filter(cell => cell.kind !== 'system')
+   return Math.min(
+-    ...turn.groups.flatMap(group => group.cells.map(cell => cell.index)),
++    ...(durable.length > 0 ? durable : cells).map(cell => cell.index),
+     Number.POSITIVE_INFINITY,
+   )
+ }
+@@ -867,6 +875,17 @@ function enclosingUserTurn(
+   return 1
+ }
+ 
++/** Prefer the durable location; adjacency inference is only a history fallback. */
++function enclosingInputTurn(
++  location: ConversationLocation | undefined,
++  followingAssistant: AssistantMessageNode | undefined,
++  partial: ConversationSnapshot['partial'],
++  lastAssistantTurn: number | null,
++): number {
++  if (location?.kind === 'turn' || location?.kind === 'step') return location.turn.turn
++  return enclosingUserTurn(followingAssistant, partial, lastAssistantTurn)
++}
++
+ function steeringPlacement(
+   followingAssistant: AssistantMessageNode | undefined,
+   partial: ConversationSnapshot['partial'],
+@@ -915,20 +934,6 @@ function enclosingPromptTurn(
    return partial?.turn ?? 1
  }
  

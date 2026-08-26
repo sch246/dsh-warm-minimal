@@ -1,7 +1,7 @@
 {
   "$schema": "dsh-warm-minimal/host-patch-v1",
   "id": "deepseek-harness-warmup-projection",
-  "revision": "0.1.0-candidate.1",
+  "revision": "0.1.0-candidate.2",
   "target": {
     "kind": "git",
     "uri": "https://github.com/deepseek-ai/deepseek-harness.git",
@@ -15,5 +15,6 @@
     ]
   },
   "patch": "deepseek-harness.patch",
+  "validationPatch": "deepseek-harness-regression.patch",
   "receipt": "dsh-warm-minimal/host-patch.json"
 }
