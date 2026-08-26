@@ -1,13 +1,13 @@
 # dsh-warm-minimal bundle layer.
 #
-# One host-plane row, mounted at profile boot: the seed plugin must be live
-# before the first real user message enters a warm-minimal session. It leaves
-# a newly created session empty, then writes the fake round synchronously
-# before the first input wakes the agent loop. The preset itself is copied into
-# <dsh home>/.agent-presets by scripts/setup.sh / scripts/setup.ps1.
+# One host-plane row, mounted at profile boot: the bootstrap plugin must be live
+# before the first real user message enters a warm-minimal session. It leaves a
+# new session empty, holds that input, runs one real minimal agent-loop turn,
+# then restores the held input. The preset itself is copied into <dsh home>/
+# .agent-presets by scripts/setup.sh / scripts/setup.ps1.
 #
 # The row points at this package itself (package.json `main` -> index.mjs).
 
 - insert:
-    - id: bootstrap-seed-host
+    - id: native-bootstrap-host
       name: dsh-warm-minimal

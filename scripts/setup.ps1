@@ -8,13 +8,9 @@ $ErrorActionPreference = "Stop"
 $RepoDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $DshHome = if ($env:DSH_HOME) { $env:DSH_HOME } else { Join-Path $env:USERPROFILE ".dsh" }
 $Profile = if ($env:DSH_PROFILE) { $env:DSH_PROFILE } else { "web" }
-$DshRepo = $env:DSH_REPO
 $Src = Join-Path $RepoDir "presets\warm-minimal"
 $Dest = Join-Path $DshHome ".agent-presets\warm-minimal"
 
-if (-not $DshRepo) {
-    throw "set DSH_REPO to the DeepSeek Harness checkout"
-}
 if (-not (Test-Path (Join-Path $Src "agent.cordis.yml"))) {
     throw "preset source not found: $Src"
 }
@@ -32,10 +28,6 @@ if ((Test-Path (Join-Path $Dest ".dsh-warm-minimal-owned")) -and $env:DSH_WARM_R
         throw "package-owned preset has drifted; refusing to overwrite later edits: $Dest; set DSH_WARM_REPLACE_DRIFTED_PRESET=1 only after reviewing the diff"
     }
 }
-
-$HostPatchArgs = @((Join-Path $RepoDir "scripts\host-patch.mjs"), "install", "--repo", $DshRepo)
-if ($env:DSH_WARM_ADOPT_HOST_PATCH -eq "1") { $HostPatchArgs += "--adopt" }
-& node @HostPatchArgs
 
 # Package-owned upgrades replace only the marked preset directory.
 Remove-Item -Recurse -Force $Dest -ErrorAction SilentlyContinue
@@ -57,4 +49,4 @@ if ($Dsh) {
 }
 
 Write-Host ""
-Write-Host "Build and restart dsh web, then pick the warm-minimal preset in the preset picker."
+Write-Host "Restart dsh web, then pick the warm-minimal preset in the preset picker."

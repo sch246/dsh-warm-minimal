@@ -3,15 +3,30 @@ import { readFile } from 'node:fs/promises'
 import { describe, it } from 'node:test'
 import { apply } from '../index.mjs'
 
-const DONOR_REASONING = 'We need respond in Chinese likely. User says: 检查当前工作目录，确认后仅回复 Ready. Means check current working directory, after confirming reply only "Ready." We should run pwd and maybe ls. The instruction says "仅回复 Ready." But tool call needed. Let\'s run pwd and ls to inspect. Then final reply exactly "Ready." Perhaps with tool use first, no commentary? We can do bash pwd and ls. Then final "Ready."'
+const BOOTSTRAP_TEXT = '检查当前工作目录，确认后仅回复 Ready.'
+
+function deferred() {
+  let resolve
+  let reject
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
+function nextTask() {
+  return new Promise(resolve => setImmediate(resolve))
+}
 
 function harness() {
   let inserted
   const warnings = []
   const ctx = {
     root: {
-      on(event, listener) {
+      on(event, listener, options) {
         assert.equal(event, 'agent/inbox/inserted')
+        assert.deepEqual(options, { global: true })
         inserted = listener
         return () => {}
       },
@@ -25,127 +40,158 @@ function harness() {
 }
 
 function session(preset = 'warm-minimal') {
-  const value = {
+  return {
     id: 'session-12345678-aaaa-bbbb-cccc-123456789abc',
-    header: { agentPreset: preset, cwd: '/work/project' },
+    header: { agentPreset: preset },
     events: [],
-    append(type, data, options) {
-      value.events.push({ type, data, options })
-    },
   }
-  return value
 }
 
-describe('dsh-warm-minimal timing', () => {
-  it('keeps a new session empty until the first real user message enters the inbox', () => {
+function userMessage(id, text) {
+  return {
+    id,
+    role: 'user',
+    content: [{ type: 'text', text }],
+    source: { kind: 'user' },
+  }
+}
+
+function agentHarness(inserted, value, idle = deferred()) {
+  const pending = new Set()
+  const removed = []
+  const followed = []
+  const agent = {
+    session: value,
+    inbox: {
+      remove(id) {
+        if (!pending.delete(id)) return false
+        removed.push(id)
+        return true
+      },
+    },
+    followup(message) {
+      followed.push(message)
+      pending.add(message.id)
+      inserted({ agent, message })
+    },
+    whenIdle() { return idle.promise },
+  }
+  return {
+    agent,
+    idle,
+    removed,
+    followed,
+    insert(message) {
+      pending.add(message.id)
+      inserted({ agent, message })
+    },
+  }
+}
+
+describe('dsh-warm-minimal native bootstrap', () => {
+  it('holds the first real input, runs a marked native bootstrap, then restores the input', async () => {
     const { inserted } = harness()
     const value = session()
-    assert.deepEqual(value.events, [])
+    const runner = agentHarness(inserted, value)
+    const original = userMessage('user-1', '你好')
 
-    inserted({ agent: { session: value }, message: { source: { kind: 'plugin' } } })
     assert.deepEqual(value.events, [])
+    runner.insert(original)
 
-    inserted({ agent: { session: value }, message: { source: { kind: 'user' } } })
-    assert.deepEqual(value.events.map(event => event.type), [
-      'turn/start', 'step/start', 'user/message', 'assistant/message',
-      'tool/call', 'tool/result', 'assistant/message', 'step/end', 'turn/end',
-    ])
-    assert.equal(value.events[2].data.role, 'user')
-    assert.match(value.events[2].data.id, /^seed-/)
-    assert.equal(value.events[2].data.source.form, 'warmup')
-    assert.equal(value.events[3].data.message.role, 'assistant')
-    assert.match(value.events[3].data.message.id, /^seed-/)
-    assert.equal(value.events[5].data.message.role, 'user')
-    assert.match(value.events[5].data.message.id, /^seed-/)
-    assert.equal(
-      value.events[5].data.message.content[0].content[0].text,
-      '/work/project',
-    )
+    assert.deepEqual(runner.removed, ['user-1'])
+    assert.equal(runner.followed.length, 1)
+    const bootstrap = runner.followed[0]
+    assert.match(bootstrap.id, /^dsh-warm-minimal:bootstrap:/)
+    assert.equal(bootstrap.role, 'user')
+    assert.deepEqual(bootstrap.source, { kind: 'user' })
+    assert.deepEqual(bootstrap.content, [{ type: 'text', text: BOOTSTRAP_TEXT }])
+
+    runner.idle.resolve()
+    await nextTask()
+
+    assert.deepEqual(runner.followed, [bootstrap, original])
+    assert.equal(runner.removed.includes(bootstrap.id), false)
   })
 
-  it('seeds only once and only for the warm-minimal preset', () => {
+  it('preserves arrival order for user inputs received during bootstrap', async () => {
     const { inserted } = harness()
-    const warm = session()
-    const standard = session('standard')
-    const input = { source: { kind: 'user' } }
+    const runner = agentHarness(inserted, session())
+    const first = userMessage('user-1', '第一条')
+    const second = userMessage('user-2', '第二条')
 
-    inserted({ agent: { session: standard }, message: input })
-    assert.deepEqual(standard.events, [])
+    runner.insert(first)
+    runner.insert(second)
 
-    inserted({ agent: { session: warm }, message: input })
-    const seededEventCount = warm.events.length
-    inserted({ agent: { session: warm }, message: input })
-    assert.equal(warm.events.filter(event => event.type === 'turn/start').length, 1)
-    assert.equal(warm.events.length, seededEventCount)
+    assert.deepEqual(runner.removed, ['user-1', 'user-2'])
+    assert.equal(runner.followed.length, 1)
+
+    runner.idle.resolve()
+    await nextTask()
+
+    assert.deepEqual(runner.followed.slice(1), [first, second])
   })
 
-  it('uses the latest runtime preset selection instead of the creation header', () => {
+  it('restores held input when the native bootstrap fails', async () => {
+    const { inserted, warnings } = harness()
+    const runner = agentHarness(inserted, session())
+    const original = userMessage('user-1', '仍然处理我')
+
+    runner.insert(original)
+    runner.idle.reject(new Error('provider unavailable'))
+    await nextTask()
+
+    assert.deepEqual(runner.followed.slice(1), [original])
+    assert.equal(warnings.length, 1)
+    assert.match(warnings[0], /bootstrap failed.*provider unavailable/)
+  })
+
+  it('uses the latest effective preset and never bootstraps a started session', () => {
     const { inserted } = harness()
-    const input = { source: { kind: 'user' } }
 
     const switchedAway = session('warm-minimal')
     switchedAway.events.push({
       type: 'agent-preset/selected',
       data: { agentPreset: 'standard' },
     })
-    inserted({ agent: { session: switchedAway }, message: input })
-    assert.equal(switchedAway.events.some(event => event.type === 'turn/start'), false)
+    const away = agentHarness(inserted, switchedAway)
+    away.insert(userMessage('away', '普通模式'))
+    assert.deepEqual(away.removed, [])
+    assert.deepEqual(away.followed, [])
 
     const switchedToWarm = session('standard')
     switchedToWarm.events.push({
       type: 'agent-preset/selected',
       data: { agentPreset: 'warm-minimal' },
     })
-    inserted({ agent: { session: switchedToWarm }, message: input })
-    assert.equal(switchedToWarm.events.filter(event => event.type === 'turn/start').length, 1)
+    const warm = agentHarness(inserted, switchedToWarm)
+    warm.insert(userMessage('warm', '切换后'))
+    assert.deepEqual(warm.removed, ['warm'])
+    assert.equal(warm.followed.length, 1)
+
+    const started = session()
+    started.events.push({ type: 'turn/start', data: { turn: 1 } })
+    const later = agentHarness(inserted, started)
+    later.insert(userMessage('later', '后续消息'))
+    assert.deepEqual(later.removed, [])
+    assert.deepEqual(later.followed, [])
   })
 
-  it('copies the fixed donor round and varies only its workspace result', () => {
+  it('ignores plugin-originated input', () => {
     const { inserted } = harness()
-    const value = session()
-    inserted({ agent: { session: value }, message: { source: { kind: 'user' } } })
-
-    const seededUser = value.events.find(event => event.type === 'user/message')
-    assert.equal(seededUser.data.content[0].text, '检查当前工作目录，确认后仅回复 Ready.')
-    assert.equal(seededUser.data.source.form, 'warmup')
-
-    const assistantMessages = value.events
-      .filter(event => event.type === 'assistant/message')
-      .map(event => event.data.message)
-    assert.equal(assistantMessages[0].content[0].text, DONOR_REASONING)
-    const seededCall = assistantMessages[0].content[1]
-    assert.equal(seededCall.type, 'tool-call')
-    assert.match(seededCall.id, /^seed_/)
-    assert.equal(seededCall.name, 'bash')
-    assert.equal(seededCall.arguments, '{"command": "pwd && ls -la"}')
-    assert.deepEqual(assistantMessages[1].content, [{ type: 'text', text: 'Ready.' }])
-
-    const toolResult = value.events.find(event => event.type === 'tool/result')
-    assert.equal(toolResult.data.message.content[0].content[0].text, '/work/project')
-    assert.equal(value.events.some(event => event.type === 'context/message'), false)
-  })
-
-  it('does not invent a workspace when session metadata has no usable cwd', () => {
-    const { inserted, warnings } = harness()
-    const missing = session()
-    delete missing.header.cwd
-    const blank = session()
-    blank.header.cwd = '   '
-
-    inserted({ agent: { session: missing }, message: { source: { kind: 'user' } } })
-    inserted({ agent: { session: blank }, message: { source: { kind: 'user' } } })
-
-    assert.deepEqual(missing.events, [])
-    assert.deepEqual(blank.events, [])
-    assert.equal(warnings.length, 2)
-    for (const warning of warnings) {
-      assert.match(warning, /session header does not contain a working directory/)
-    }
+    const runner = agentHarness(inserted, session())
+    runner.insert({
+      id: 'plugin-1',
+      role: 'user',
+      content: [{ type: 'text', text: 'internal' }],
+      source: { kind: 'plugin', plugin: 'other' },
+    })
+    assert.deepEqual(runner.removed, [])
+    assert.deepEqual(runner.followed, [])
   })
 })
 
 describe('warm-minimal preset composition', () => {
-  it('is minimal-equivalent: complete fixed prompt, two tools, no extra contexts', async () => {
+  it('is minimal-equivalent: complete fixed prompt, two platform tools, no extra contexts', async () => {
     const preset = await readFile(new URL('../presets/warm-minimal/agent.cordis.yml', import.meta.url), 'utf8')
 
     assert.match(preset, /text: You are a helpful software engineer assistant\./)

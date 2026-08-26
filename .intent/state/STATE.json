@@ -1,7 +1,7 @@
 {
   "$schema": "meta-intent/0.2/state",
   "id": "dsh-warm-minimal",
-  "revision": "0.1.0-draft.6",
+  "revision": "0.1.0-draft.7",
   "status": "draft",
   "document": "STATE.md",
   "logs": [
@@ -10,7 +10,8 @@
     "../logs/2026-08-26-host-realization-ownership.md",
     "../logs/2026-08-26-trajectory-turn-order-regression.md",
     "../logs/2026-08-26-runtime-preset-scope-correction.md",
-    "../logs/2026-08-26-minimal-template-authority.md"
+    "../logs/2026-08-26-minimal-template-authority.md",
+    "../logs/2026-08-26-native-bootstrap-and-visible-chat.md"
   ],
   "protocol": {
     "id": "meta-intent",
@@ -38,6 +39,6 @@
   ],
   "activeLocks": [],
   "candidateLocks": [
-    "../locks/warm-minimal-linux-web-0.1.0-candidate.4/LOCK.json"
+    "../locks/warm-minimal-linux-web-0.1.0-candidate.5/LOCK.json"
   ]
 }

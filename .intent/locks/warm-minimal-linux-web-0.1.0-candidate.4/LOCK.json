@@ -2,7 +2,7 @@
   "kind": "realization",
   "id": "dsh-warm-minimal-linux-web",
   "revision": "0.1.0-candidate.4",
-  "status": "candidate",
+  "status": "failed",
   "protocol": {
     "id": "meta-intent",
     "revision": "0.2"

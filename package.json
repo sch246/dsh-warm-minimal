@@ -15,7 +15,6 @@
     "index.mjs",
     "cordis.patch.yml",
     "presets",
-    "realization",
     "scripts",
     "README.md",
     "LICENSE"
@@ -25,7 +24,6 @@
     "setup:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
     "uninstall": "bash scripts/uninstall.sh",
     "uninstall:win": "powershell -ExecutionPolicy Bypass -File scripts/uninstall.ps1",
-    "host:status": "node scripts/host-patch.mjs status",
     "test": "node --test"
   },
   "keywords": [
