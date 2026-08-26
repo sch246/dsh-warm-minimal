@@ -24,8 +24,7 @@ function harness() {
 function session(preset = 'warm-minimal') {
   const value = {
     id: 'session-12345678-aaaa-bbbb-cccc-123456789abc',
-    cwd: '/work/project',
-    header: { agentPreset: preset },
+    header: { agentPreset: preset, cwd: '/work/project' },
     events: [],
     append(type, data, options) {
       value.events.push({ type, data, options })
@@ -50,10 +49,15 @@ describe('dsh-warm-minimal timing', () => {
     ])
     assert.equal(value.events[2].data.role, 'user')
     assert.match(value.events[2].data.id, /^seed-/)
+    assert.equal(value.events[2].data.source.form, 'warmup')
     assert.equal(value.events[3].data.message.role, 'assistant')
     assert.match(value.events[3].data.message.id, /^seed-/)
     assert.equal(value.events[5].data.message.role, 'user')
     assert.match(value.events[5].data.message.id, /^seed-/)
+    assert.equal(
+      value.events[5].data.message.content[0].content[0].text,
+      'Path\n----\n/work/project',
+    )
   })
 
   it('seeds only once and only for the warm-minimal preset', () => {
@@ -66,7 +70,27 @@ describe('dsh-warm-minimal timing', () => {
     assert.deepEqual(standard.events, [])
 
     inserted({ agent: { session: warm }, message: input })
+    const seededEventCount = warm.events.length
     inserted({ agent: { session: warm }, message: input })
     assert.equal(warm.events.filter(event => event.type === 'turn/start').length, 1)
+    assert.equal(warm.events.length, seededEventCount)
+  })
+
+  it('does not invent a workspace when session metadata has no usable cwd', () => {
+    const { inserted, warnings } = harness()
+    const missing = session()
+    delete missing.header.cwd
+    const blank = session()
+    blank.header.cwd = '   '
+
+    inserted({ agent: { session: missing }, message: { source: { kind: 'user' } } })
+    inserted({ agent: { session: blank }, message: { source: { kind: 'user' } } })
+
+    assert.deepEqual(missing.events, [])
+    assert.deepEqual(blank.events, [])
+    assert.equal(warnings.length, 2)
+    for (const warning of warnings) {
+      assert.match(warning, /session header does not contain a working directory/)
+    }
   })
 })

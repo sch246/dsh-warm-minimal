@@ -31,6 +31,7 @@ const SEED_REASONING = [
 const SEED_SOURCE = {
   kind: 'plugin',
   plugin: 'dsh-warm-minimal',
+  form: 'warmup',
 }
 
 /** Model-shaped source for the seeded assistant messages. */
@@ -48,7 +49,10 @@ const SEED_MODEL_SOURCE = {
 function seedRound(session, config = {}) {
   const userText = config.userText ?? DEFAULT_USER_TEXT
   const readyText = config.readyText ?? DEFAULT_READY_TEXT
-  const cwd = session.cwd ?? process.cwd()
+  const cwd = session.header?.cwd
+  if (typeof cwd !== 'string' || cwd.trim().length === 0) {
+    throw new Error('session header does not contain a working directory')
+  }
   const callId = `seed_${session.id.replaceAll('-', '').slice(0, 8)}_1`
   const argumentsJson = JSON.stringify({
     command: 'Get-Location',

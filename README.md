@@ -6,7 +6,7 @@
 **温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset：新会话先保持官方空白启动界面；用户发送第一条真实消息后，插件在 agent loop 唤醒前同步写入一条高质量首轮轨迹（`we` / `let's` 思维链、无 `let me`），真实输入随后作为第二轮执行。
 
 - 首轮推理以 `We need to confirm the current working directory first.` 开头；
-- 首轮唯一工具调用是 `pwsh Get-Location`，结果为会话真实工作目录；
+- 首轮唯一 synthetic tool trace 是 `pwsh Get-Location`，结果取自会话真实工作目录；
 - 真实消息进入时模型已是"热身"状态，风格提示要求首句 `we need to ...`、避开 `let me`。
 
 ## 安装
@@ -50,7 +50,7 @@ cp -r presets/warm-minimal ~/.dsh/.agent-presets/
 
 重启后新建会话，在 preset 选择器里选 **「温暖极简模式」**，直接发第一条消息即可。
 
-界面里不会出现一条"你发的"第一轮：种子的 user 消息来源是 `dsh-warm-minimal`，UI 按来源把它渲染成一条折叠的**上下文注入行**（点开可见 `Get ready. ...`），上方还有种子的 assistant 一步：折叠的 `we` / `let's` 推理、`Get-Location` 工具卡和一条 `Ready.`。
+普通 Chat 不显示 synthetic warm-up turn。模型上下文仍包含这一轮；现有 Trajectory/debug 界面会完整保留并显示来源为 `dsh-warm-minimal` 的准备上下文、`we` / `let's` 推理、synthetic `Get-Location` trace 和 `Ready.`，便于调试与审计。首次真实 provider request 的 `Initial System Prompt` 属于真实请求 turn，不属于此前的 warm-up turn。
 
 ## 目录结构
 
