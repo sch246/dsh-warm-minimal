@@ -1,0 +1,99 @@
+{
+  "kind": "realization",
+  "id": "dsh-warm-minimal-linux-web",
+  "revision": "0.1.0-candidate.4",
+  "status": "candidate",
+  "protocol": {
+    "id": "meta-intent",
+    "revision": "0.2"
+  },
+  "package": {
+    "id": "dsh-warm-minimal",
+    "revision": "0.1.0-draft.6"
+  },
+  "state": {
+    "revision": "0.1.0-draft.6",
+    "entry": {
+      "path": "inputs/state/STATE.json",
+      "digest": "sha256:c8e787e36e61a487f3e930b0451cffcb2267ba6e78bfe02229e2c097727000b2"
+    },
+    "document": {
+      "path": "inputs/state/STATE.md",
+      "digest": "sha256:82af0c78236e216809fb277a822f501afdc5e6dba3a14586be830d71d304a105"
+    }
+  },
+  "logs": [
+    {
+      "path": "../../logs/2026-08-26-reverse-engineering-and-workspace-correction.md",
+      "digest": "sha256:4381c2804ca89fd54ac67211c40682c1fe76c69e263dba859c3ff489949f7b69"
+    },
+    {
+      "path": "../../logs/2026-08-26-chat-visibility-and-debug-order.md",
+      "digest": "sha256:9277a5cdb853a1b0d440eb67868756132bb20b1f3dd4226bf27d953fa7d6009b"
+    },
+    {
+      "path": "../../logs/2026-08-26-host-realization-ownership.md",
+      "digest": "sha256:55c3d32047f2740210282f05a2756bce4e87be1a1efdcea2c7fa7d96a1d84dd2"
+    },
+    {
+      "path": "../../logs/2026-08-26-trajectory-turn-order-regression.md",
+      "digest": "sha256:0e1bc0642ef1bc72d6b06ed1c37e8bd4bb961f5c3b02ba36af33a8c9ae8a1e5f"
+    },
+    {
+      "path": "../../logs/2026-08-26-runtime-preset-scope-correction.md",
+      "digest": "sha256:f587db7a449cd6630ea339208926d4ec15c6ef08311b72b12e1615ee24cdb9ad"
+    },
+    {
+      "path": "../../logs/2026-08-26-minimal-template-authority.md",
+      "digest": "sha256:799bfdd8772608083cd83babf46cbdfb0c20415e04196015b0feab06d8e1564e"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "artifacts/acceptance.md",
+      "digest": "sha256:da333bb8356624ded84157b567428c8488d71dd27b7480933571fac82f8bf239"
+    },
+    {
+      "path": "artifacts/install.md",
+      "digest": "sha256:dacf8787380257fef1b456a1299e4df687a45ad2bb0427e115df271ceaba3531"
+    }
+  ],
+  "target": {
+    "kind": "git",
+    "uri": "https://github.com/sch246/dsh-warm-minimal.git",
+    "commit": "2809158c299643cd47c0c1bc2b3ffbdc0bd9b95c",
+    "paths": [
+      "cordis.patch.yml",
+      "index.mjs",
+      "package.json",
+      "presets/warm-minimal",
+      "realization",
+      "scripts"
+    ]
+  },
+  "acceptance": {
+    "status": "incomplete",
+    "evidence": [
+      {
+        "id": "trajectory-turn-order-red-green",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.1 failed 2/24; candidate.2 passed 24/24 and all affected package/type/catalog checks"
+      },
+      {
+        "id": "candidate-lifecycle-procedure",
+        "artifact": "artifacts/install.md",
+        "result": "production and validation patches are separately retained with drift-aware install/uninstall"
+      },
+      {
+        "id": "runtime-preset-scope-red-green",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.2 reproduced stale-header injection; candidate.3 passed both runtime-switch directions and all 6 plugin tests"
+      },
+      {
+        "id": "minimal-donor-equivalence-red-green",
+        "artifact": "artifacts/acceptance.md",
+        "result": "old seed and composition failed independently; candidate.4 matches donor fields, equals official minimal composition bytes, and passes all 8 plugin tests"
+      }
+    ]
+  }
+}
