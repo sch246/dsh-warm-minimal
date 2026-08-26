@@ -1,0 +1,90 @@
+{
+  "kind": "realization",
+  "id": "dsh-warm-minimal-linux-web",
+  "revision": "0.1.0-candidate.3",
+  "status": "candidate",
+  "protocol": {
+    "id": "meta-intent",
+    "revision": "0.2"
+  },
+  "package": {
+    "id": "dsh-warm-minimal",
+    "revision": "0.1.0-draft.5"
+  },
+  "state": {
+    "revision": "0.1.0-draft.5",
+    "entry": {
+      "path": "inputs/state/STATE.json",
+      "digest": "sha256:ded4f2d9b9fbe52b8de01996b8f5f9356353174f386694e94d7635b56e89d83d"
+    },
+    "document": {
+      "path": "inputs/state/STATE.md",
+      "digest": "sha256:6667954c4ed60153476a39dc1503c64a634be3ae4377064b0f7c730dbee66a04"
+    }
+  },
+  "logs": [
+    {
+      "path": "../../logs/2026-08-26-reverse-engineering-and-workspace-correction.md",
+      "digest": "sha256:4381c2804ca89fd54ac67211c40682c1fe76c69e263dba859c3ff489949f7b69"
+    },
+    {
+      "path": "../../logs/2026-08-26-chat-visibility-and-debug-order.md",
+      "digest": "sha256:9277a5cdb853a1b0d440eb67868756132bb20b1f3dd4226bf27d953fa7d6009b"
+    },
+    {
+      "path": "../../logs/2026-08-26-host-realization-ownership.md",
+      "digest": "sha256:55c3d32047f2740210282f05a2756bce4e87be1a1efdcea2c7fa7d96a1d84dd2"
+    },
+    {
+      "path": "../../logs/2026-08-26-trajectory-turn-order-regression.md",
+      "digest": "sha256:0e1bc0642ef1bc72d6b06ed1c37e8bd4bb961f5c3b02ba36af33a8c9ae8a1e5f"
+    },
+    {
+      "path": "../../logs/2026-08-26-runtime-preset-scope-correction.md",
+      "digest": "sha256:f587db7a449cd6630ea339208926d4ec15c6ef08311b72b12e1615ee24cdb9ad"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "artifacts/acceptance.md",
+      "digest": "sha256:594a5fd995825c2d5e7eae7fd128170ee69ba1db9d5625b02a8e625d8e9f9b4e"
+    },
+    {
+      "path": "artifacts/install.md",
+      "digest": "sha256:ffda7baac0aaf6e50443f35918dcefd2967e22cac200e6684b9e526684c27be8"
+    }
+  ],
+  "target": {
+    "kind": "git",
+    "uri": "https://github.com/sch246/dsh-warm-minimal.git",
+    "commit": "52b67f46a9bfd8b101967b760b587422e4bf641d",
+    "paths": [
+      "cordis.patch.yml",
+      "index.mjs",
+      "package.json",
+      "presets/warm-minimal",
+      "realization",
+      "scripts"
+    ]
+  },
+  "acceptance": {
+    "status": "incomplete",
+    "evidence": [
+      {
+        "id": "trajectory-turn-order-red-green",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.1 failed 2/24; candidate.2 passed 24/24 and all affected package/type/catalog checks"
+      },
+      {
+        "id": "candidate-lifecycle-procedure",
+        "artifact": "artifacts/install.md",
+        "result": "production and validation patches are separately retained with drift-aware install/uninstall"
+      },
+      {
+        "id": "runtime-preset-scope-red-green",
+        "artifact": "artifacts/acceptance.md",
+        "result": "candidate.2 reproduced stale-header injection; candidate.3 passed both runtime-switch directions and all 6 plugin tests"
+      }
+    ]
+  }
+}
