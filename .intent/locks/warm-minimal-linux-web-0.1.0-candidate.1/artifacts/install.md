@@ -4,7 +4,7 @@ Realization: `deepseek-harness-warmup-projection@0.1.0-candidate.1`
 
 Target baseline: DeepSeek Harness `b642a10626a950cc95c2d6f839810cb01fe599fe`.
 
-Implementation identity: `dsh-warm-minimal` commit `0fd5761fcc44d3f8dfe0cb41a098cbca8f9af2b3`.
+Implementation identity: `dsh-warm-minimal` commit `a46bf4394ac8ed054f599dfddd48eb662b5e4377`.
 
 Install on the current Linux Web target:
 

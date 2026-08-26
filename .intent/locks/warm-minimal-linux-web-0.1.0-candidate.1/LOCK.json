@@ -43,13 +43,13 @@
     },
     {
       "path": "artifacts/install.md",
-      "digest": "sha256:787bce5954f6cba7f077305718d50d2d56293b72830c9d6fbbd3eb759efe5837"
+      "digest": "sha256:104a2d35cef2141d0ef8e9d9db6e77fbb2819c11e5ac68bc31f748be1712aa15"
     }
   ],
   "target": {
     "kind": "git",
     "uri": "https://github.com/sch246/dsh-warm-minimal.git",
-    "commit": "0fd5761fcc44d3f8dfe0cb41a098cbca8f9af2b3",
+    "commit": "a46bf4394ac8ed054f599dfddd48eb662b5e4377",
     "paths": [
       "cordis.patch.yml",
       "index.mjs",
