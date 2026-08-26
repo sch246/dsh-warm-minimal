@@ -42,6 +42,19 @@ const SEED_MODEL_SOURCE = {
 }
 
 /**
+ * Resolve the preset currently selected for a session. DSH keeps the creation
+ * preset in the header and appends later successful selections to the event
+ * log, so the latest selection must override that initial value.
+ */
+function resolveSessionPreset(session) {
+  for (let index = session.events.length - 1; index >= 0; index -= 1) {
+    const event = session.events[index]
+    if (event.type === 'agent-preset/selected') return event.data.agentPreset
+  }
+  return session.header?.agentPreset
+}
+
+/**
  * Write the fake first round into one not-yet-started session.
  * @param session - durable session; must not contain a turn yet.
  * @param config - text overrides from the bundle row.
@@ -130,7 +143,7 @@ export function apply(ctx, config = {}) {
   ctx.effect(() => ctx.root.on('agent/inbox/inserted', ({ agent, message: input }) => {
     if (input.source?.kind !== 'user') return
     const session = agent.session
-    if (session.header?.agentPreset !== 'warm-minimal') return
+    if (resolveSessionPreset(session) !== 'warm-minimal') return
     if (session.events.some((event) => event.type === 'turn/start')) return
     try {
       seedRound(session, config)

@@ -76,6 +76,27 @@ describe('dsh-warm-minimal timing', () => {
     assert.equal(warm.events.length, seededEventCount)
   })
 
+  it('uses the latest runtime preset selection instead of the creation header', () => {
+    const { inserted } = harness()
+    const input = { source: { kind: 'user' } }
+
+    const switchedAway = session('warm-minimal')
+    switchedAway.events.push({
+      type: 'agent-preset/selected',
+      data: { agentPreset: 'standard' },
+    })
+    inserted({ agent: { session: switchedAway }, message: input })
+    assert.equal(switchedAway.events.some(event => event.type === 'turn/start'), false)
+
+    const switchedToWarm = session('standard')
+    switchedToWarm.events.push({
+      type: 'agent-preset/selected',
+      data: { agentPreset: 'warm-minimal' },
+    })
+    inserted({ agent: { session: switchedToWarm }, message: input })
+    assert.equal(switchedToWarm.events.filter(event => event.type === 'turn/start').length, 1)
+  })
+
   it('does not invent a workspace when session metadata has no usable cwd', () => {
     const { inserted, warnings } = harness()
     const missing = session()

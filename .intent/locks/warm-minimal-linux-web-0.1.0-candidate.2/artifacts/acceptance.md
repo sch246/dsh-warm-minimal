@@ -11,9 +11,8 @@ Observed on 2026-08-26:
 - The host lifecycle receipt reports candidate.2 installed, and Harness has no package-created commit or fork.
 - `pnpm run build` completed successfully with candidate.2 installed. The compiled Trajectory bundle contains durable-event placement and non-system turn-order selection; the compiled Conversation bundle contains warm-up chat hiding.
 - `dsh-web` was restarted from that build. It returned to `active`, listened on `127.0.0.1:3082`, and served the production HTML successfully after startup.
+- Live preset-switch evidence failed `WARM-002`: sessions created with header preset `warm-minimal` but switched to `standard` or `minimal` before their first real message still received the package warm-up. Candidate.2 used the immutable header instead of DSH's latest runtime preset selection.
 
-Still required before acceptance:
+Failure disposition:
 
-- Observe the same two-turn scenario in the live Trajectory UI: warm-up turn first; real request turn second; Initial System Prompt first only within the real request turn.
-- Exercise live-profile uninstall/reinstall without losing unrelated worktree or profile changes.
-- Obtain explicit user acceptance.
+- Candidate.2 is failed and retained as evidence. It must not be accepted or selected as current.

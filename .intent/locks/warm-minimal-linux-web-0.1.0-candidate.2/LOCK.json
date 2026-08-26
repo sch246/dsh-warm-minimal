@@ -2,7 +2,7 @@
   "kind": "realization",
   "id": "dsh-warm-minimal-linux-web",
   "revision": "0.1.0-candidate.2",
-  "status": "candidate",
+  "status": "failed",
   "protocol": {
     "id": "meta-intent",
     "revision": "0.2"
@@ -43,7 +43,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:02f8fca02e13fc40471725be72c7de7573bef6514ac673600149407fae5f264f"
+      "digest": "sha256:88da352b241a1bf9c6d6c7c1f94fe592649c9fd13d31e6b8db808e72da5bad07"
     },
     {
       "path": "artifacts/install.md",
@@ -64,7 +64,7 @@
     ]
   },
   "acceptance": {
-    "status": "incomplete",
+    "status": "failed",
     "evidence": [
       {
         "id": "trajectory-turn-order-red-green",
@@ -75,6 +75,11 @@
         "id": "candidate-lifecycle-procedure",
         "artifact": "artifacts/install.md",
         "result": "production and validation patches are separately retained with drift-aware install/uninstall"
+      },
+      {
+        "id": "live-runtime-preset-scope",
+        "artifact": "artifacts/acceptance.md",
+        "result": "failed WARM-002: runtime selection away from warm-minimal still received the synthetic warm-up"
       }
     ]
   }
