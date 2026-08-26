@@ -11,40 +11,30 @@
 
 ## 安装
 
-前置：可运行的 dsh checkout（`dsh web`）、Node.js `^22.19.0 || >=24.0.0`。
+前置：可运行的 dsh Git checkout（`dsh web`）、Node.js `^22.19.0 || >=24.0.0`。当前 candidate realization 会对指定 checkout 施加一个由本包追踪的兼容 patch；不会创建 Harness fork 或提交。
 
 ### 方式一：clone + setup 脚本（推荐）
 
 ```bash
 git clone https://github.com/sch246/dsh-warm-minimal.git
 cd dsh-warm-minimal
-bash scripts/setup.sh          # Windows PowerShell:
-                               # powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+DSH_REPO=/path/to/deepseek-harness bash scripts/setup.sh
+# Windows PowerShell:
+# $env:DSH_REPO='C:\path\to\deepseek-harness'; powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-脚本做两件事：把 `presets/warm-minimal` 复制进 `<dsh home>/.agent-presets/`；若 `dsh` 在 PATH 上，自动执行 `dsh plugin --profile web add .` 把本包注册为 bundle。之后**重启 dsh web**。
+脚本做三件事：对 `DSH_REPO` 施加 lock-declared host patch 并在目标仓库 `.git/` 中记录 ownership receipt；把 `presets/warm-minimal` 复制进 `<dsh home>/.agent-presets/`；若 `dsh` 在 PATH 上，自动执行 `dsh plugin --profile web add .` 把本包注册为 bundle。之后在 Harness 根目录执行 `pnpm run build` 并**重启 dsh web**。
 
-### 方式二：分开手动装
+安装器默认拒绝认领已存在但没有 receipt 的 patch，也拒绝覆盖无 ownership marker 的同名 preset。只有在确认它们确实来自旧版安装后，迁移时才分别设置 `DSH_WARM_ADOPT_HOST_PATCH=1` 和 `DSH_WARM_ADOPT_PRESET=1`。
+
+### 状态与卸载
 
 ```bash
-# 1) 注册 bundle（挂载 boot 时机的 seed 插件，替代手工 patch 行）
-dsh plugin --profile web add github:sch246/dsh-warm-minimal
-
-# 2) 复制 preset 到用户根目录
-mkdir -p ~/.dsh/.agent-presets
-cp -r presets/warm-minimal ~/.dsh/.agent-presets/
-
-# 3) 重启 dsh web
+DSH_REPO=/path/to/deepseek-harness node scripts/host-patch.mjs status
+DSH_REPO=/path/to/deepseek-harness bash scripts/uninstall.sh
 ```
 
-`DSH_HOME` / `DSH_PROFILE` 环境变量在两个方式里都生效。
-
-> 故障排查：如果 `github:` 安装卡在 `git ls-remote git@github.com:...`（pnpm 把 GitHub 解析成 SSH，而本机没有对应 SSH 通路），改用 HTTPS clone + 本地路径安装：
-> ```bash
-> git clone https://github.com/sch246/dsh-warm-minimal.git
-> cd dsh-warm-minimal
-> dsh plugin --profile web add .
-> ```
+卸载先校验 preset、receipt 和反向 patch；任一 package-owned hunk 或 preset 文件发生漂移都会停止，不覆盖后来的编辑。卸载成功后也需要重新构建并重启 Harness。`DSH_HOME` / `DSH_PROFILE` 环境变量对安装和卸载均生效。
 
 ## 使用
 
@@ -59,13 +49,17 @@ dsh-warm-minimal/
 ├── package.json              # dsh.bundle.patch 声明；main -> index.mjs
 ├── cordis.patch.yml          # bundle 层：profile boot 挂载 bootstrap-seed-host
 ├── index.mjs                 # host 半身：首条真实消息入 inbox 后写入首轮
+├── realization/             # baseline-bound Harness patch + manifest
 ├── presets/warm-minimal/
 │   ├── preset.yml            # 选择器展示文案
 │   ├── agent.cordis.yml      # standard 底子 + reasoning-style 的组合
 │   └── reasoning-style.mjs   # oh-we-need 风格提示（system section order 0）
 ├── scripts/
 │   ├── setup.sh              # 复制 preset + 自动注册 bundle
-│   └── setup.ps1
+│   ├── setup.ps1
+│   ├── host-patch.mjs        # receipt / drift-aware install + uninstall
+│   ├── uninstall.sh
+│   └── uninstall.ps1
 └── tools/
     └── mine-first-rounds.mjs # 从 session 日志挖掘高质量首轮模板
 ```

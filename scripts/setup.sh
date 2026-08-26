@@ -3,12 +3,14 @@
 # when the dsh CLI is available, register this package as a bundle in the web
 # profile.
 #
+# DSH_REPO identifies the source checkout that receives the realization patch.
 # Honors DSH_HOME and DSH_PROFILE; defaults are ~/.dsh and web.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
 PROFILE="${DSH_PROFILE:-web}"
+DSH_REPO_DIR="${DSH_REPO:?set DSH_REPO to the DeepSeek Harness checkout}"
 SRC="$REPO_DIR/presets/warm-minimal"
 DEST="$DSH_HOME_DIR/.agent-presets/warm-minimal"
 
@@ -26,8 +28,19 @@ case "$DEST" in
 esac
 
 mkdir -p "$(dirname "$DEST")"
-# Upgrades replace the preset directory wholesale; user edits should live in a
-# copied preset, not here.
+if [ -e "$DEST" ] && [ ! -f "$DEST/.dsh-warm-minimal-owned" ] && [ "${DSH_WARM_ADOPT_PRESET:-0}" != "1" ]; then
+  echo "refusing to replace an unowned preset: $DEST" >&2
+  echo "set DSH_WARM_ADOPT_PRESET=1 only after verifying it belongs to this package" >&2
+  exit 1
+fi
+
+HOST_PATCH_ARGS=(install --repo "$DSH_REPO_DIR")
+if [ "${DSH_WARM_ADOPT_HOST_PATCH:-0}" = "1" ]; then
+  HOST_PATCH_ARGS+=(--adopt)
+fi
+node "$REPO_DIR/scripts/host-patch.mjs" "${HOST_PATCH_ARGS[@]}"
+
+# Package-owned upgrades replace only the marked preset directory.
 rm -rf "$DEST"
 cp -R "$SRC" "$DEST"
 echo "preset installed -> $DEST"
@@ -41,4 +54,4 @@ else
 fi
 
 echo
-echo "Restart dsh web, then pick '温暖极简模式' in the preset picker."
+echo "Build and restart dsh web, then pick '温暖极简模式' in the preset picker."

@@ -1,6 +1,6 @@
 # DSH warm-minimal
 
-Status: draft reconstruction from the existing implementation plus the user's workspace, Chat-visibility, and debug-order corrections. Those three corrections are explicit; other product semantics below are the best fact-aligned projection of the implementation and documentation and remain draft until accepted by the user. The acceptance criteria are target-specific behavior for DeepSeek Harness, not additions to the intent-package protocol.
+Status: draft reconstruction from the existing implementation plus the user's workspace, Chat-visibility, debug-order, and host-realization ownership corrections. Those corrections are explicit; other product semantics below are the best fact-aligned projection of the implementation and documentation and remain draft until accepted by the user. The acceptance criteria are target-specific behavior for DeepSeek Harness, not additions to the intent-package protocol.
 
 ## Intent
 
@@ -17,7 +17,7 @@ The preset remains a capable software-engineering assistant. Warm-up behavior su
 - `WARM-004`: The workspace shown by the warm-up equals the workspace recorded in the current session metadata. It never falls back to the DSH process directory or the plugin checkout. If the session has no workspace metadata, the plugin adds no fabricated warm-up result and reports the failure without blocking the real request.
 - `WARM-005`: The deterministic warm-up reasoning uses `we need` / `let's` phrasing and contains no `let me`. The continuing style guidance encourages concise, one-action-at-a-time reasoning without claiming deterministic control over model-generated hidden reasoning.
 - `WARM-006`: On the real request, the selected agent still receives the normal repository instructions, runtime context, skill catalog, and software-engineering tool capabilities supplied by its compatible DSH preset composition.
-- `WARM-007`: Installation adds only the package-owned `warm-minimal` preset and bundle registration. Reinstallation does not create duplicate effective behavior, and removing those owned contributions leaves unrelated presets, profile configuration, sessions, and source files unchanged.
+- `WARM-007`: Installation adds only the package-owned `warm-minimal` preset, bundle registration, and any lock-declared host compatibility patch required by the selected realization. Reinstallation does not create duplicate effective behavior. Uninstall removes or reverses only effects proven to be package-owned and stops on drift rather than overwriting later edits; unrelated presets, profile configuration, sessions, source edits, and repository history remain unchanged.
 
 ## Resources
 
@@ -32,7 +32,7 @@ The preset remains a capable software-engineering assistant. Warm-up behavior su
 - Treat DSH session metadata as the authority for the current session workspace. A host process working directory, plugin checkout path, static machine path, or guessed fallback is not an acceptable substitute.
 - Preserve truthful provenance for synthetic events: plugin, model-shaped seed, and tool-result sources remain distinguishable. The warm-up must not be represented as an actually executed user command or a real user-authored message.
 - Preserve unrelated profile entries and presets. Replacement of the package-owned `warm-minimal` preset directory is allowed during an authorized upgrade only when that directory is wholly package-owned.
-- Do not require modifications to DeepSeek Harness source when public plugin and preset seams can realize the intent.
+- Host source changes are permitted only when public plugin and preset seams cannot realize an acceptance criterion. Every such change must be a lock-owned, baseline-bound patch with explicit paths, install ownership evidence, drift checks, and a reversible uninstall procedure; ad-hoc Harness commits or untracked manual edits are not a supported realization.
 - Installing into or restarting a live DSH profile, publishing, pushing, changing remotes, or changing external services requires authority for that operation.
 - Supported realizations must honor the runtime requirements they declare; the reconstruction baseline declares Node.js `^22.19.0 || >=24.0.0`.
 
@@ -43,6 +43,7 @@ The preset remains a capable software-engineering assistant. Warm-up behavior su
 - Creating a general prompt framework, session recorder, workspace manager, or alternative agent loop.
 - Hard-coding one repository, machine, user name, or DSH checkout as the workspace.
 - Shipping task-specific build, fix, or weak-request warm-up templates in this revision.
+- Maintaining a fork or feature branch of DeepSeek Harness for package-owned compatibility changes.
 - Reproducing the current implementation byte-for-byte when a future realization can satisfy the same acceptance criteria more safely.
 
 ## Implementation hints
@@ -56,8 +57,9 @@ The preset remains a capable software-engineering assistant. Warm-up behavior su
 
 - The user explicitly requires the injected workspace to be the current session's workspace. The baseline implementation read `session.cwd` and fell back to `process.cwd()`; this is classified as an implementation mismatch, not a request to change intent.
 - The user explicitly chose to hide the synthetic warm-up from ordinary Chat while retaining it in the existing debug interface. This does not authorize a new display mode or a plugin-name-specific UI filter; it requires a semantic warm-up marker and correct request ownership in the existing projections.
+- The user corrected the realization boundary: the required Harness projection changes belong to this package's state and realization lock, not to a Harness fork or standalone Harness commit. Installation and uninstall must therefore own the exact host patch and fail safely on drift.
 - The current synthetic tool card names `pwsh` even on systems where the preset exposes `bash` instead. The intent requires a truthful workspace-confirmation step, not a particular shell brand; a portable representation remains an implementation decision.
 - The preset copies the current standard tool composition. DSH upgrades may require compatibility maintenance so that `WARM-006` remains true without treating one copied roster as permanent intent.
 - The setup scripts replace the package-owned preset directory during upgrade, and clean uninstall has not yet been exercised end to end. `WARM-007` therefore lacks acceptance evidence.
-- No realization lock is selected. The baseline commit predates the workspace fix, while the corrected worktree has not been committed, installed into an isolated target, or accepted through the full lifecycle.
+- No accepted realization lock is selected. The current host-patch realization remains a candidate until build, live behavior, and uninstall/reinstall evidence are complete and the user accepts it.
 - The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; the empty local `locks/` area is only for realizations of `dsh-warm-minimal` itself.
