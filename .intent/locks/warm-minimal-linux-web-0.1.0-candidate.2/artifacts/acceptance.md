@@ -9,10 +9,11 @@ Observed on 2026-08-26:
 - `npm test` in the plugin passed 5/5 lifecycle and warm-up tests.
 - The production patch passes reverse-check against the installed five owned Harness paths. The separate regression patch passes forward-check after validation cleanup.
 - The host lifecycle receipt reports candidate.2 installed, and Harness has no package-created commit or fork.
+- `pnpm run build` completed successfully with candidate.2 installed. The compiled Trajectory bundle contains durable-event placement and non-system turn-order selection; the compiled Conversation bundle contains warm-up chat hiding.
+- `dsh-web` was restarted from that build. It returned to `active`, listened on `127.0.0.1:3082`, and served the production HTML successfully after startup.
 
 Still required before acceptance:
 
-- Build and restart Web from candidate.2.
 - Observe the same two-turn scenario in the live Trajectory UI: warm-up turn first; real request turn second; Initial System Prompt first only within the real request turn.
 - Exercise live-profile uninstall/reinstall without losing unrelated worktree or profile changes.
 - Obtain explicit user acceptance.
