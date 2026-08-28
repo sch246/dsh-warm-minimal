@@ -22,7 +22,12 @@ Second live verification (2026-08-28, `reasoningEffort: low`, the condition of t
 - Bootstrap `request/header` (seq 11): tools exactly `[bash, str_replace_editor]`; second `request/header` (seq 62): full 24-tool catalog.
 - Bootstrap reasoning is the minimal 33-char `check current working directory.` with `letMe=0`. The real turn opens `also verify with more precise count...` with `we=0, lets=0, letMe=1` — no `Let me` opening, in contrast to the pre-fix low-effort session's `Let me` chains.
 
+Cold-start discovery verification (2026-08-28):
+
+- Fresh conversation-empty `minimal` session `session-b7a3d918-2978-4ccf-b76f-eb6ece0ee1cb` in cwd `/root/dsh-warm-minimal` started from `AGENTS.md`, reconstructed the meta-intent architecture, the v4-pro rationale, and the two-tool bootstrap face, and cited the correct cold-agent reading order. See `../../logs/2026-08-28-cold-start-discovery-verification.md`.
+
 Known boundary:
+
 
 - Donor session `session-26c57c2e-5ff3-49fd-afd1-c40c468ef9d4` opened with `We need` despite the same 24-tool profile catalog under `reasoningEffort: max`; reasoning effort is recorded as a possible additional style factor, not as a reason to weaken the selected two-tool gate.
 - `WARM-007` clean uninstall/reinstall evidence remains required before full acceptance.

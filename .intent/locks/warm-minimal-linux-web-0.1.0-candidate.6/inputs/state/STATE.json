@@ -12,7 +12,8 @@
     "../logs/2026-08-26-runtime-preset-scope-correction.md",
     "../logs/2026-08-26-minimal-template-authority.md",
     "../logs/2026-08-26-native-bootstrap-and-visible-chat.md",
-    "../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md"
+    "../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md",
+    "../logs/2026-08-28-cold-start-discovery-verification.md"
   ],
   "protocol": {
     "id": "meta-intent",

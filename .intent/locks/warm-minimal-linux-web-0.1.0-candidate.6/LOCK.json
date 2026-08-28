@@ -15,11 +15,11 @@
     "revision": "0.1.0-draft.8",
     "entry": {
       "path": "inputs/state/STATE.json",
-      "digest": "sha256:dfbb2bf133b64db28cccea46a0b519a4044a6b3b5ac5f517057a519613061154"
+      "digest": "sha256:dd0d9ac7a351d27e8f3c0d2925b64f858fc9708c7cad52e3b64ed64b962308ce"
     },
     "document": {
       "path": "inputs/state/STATE.md",
-      "digest": "sha256:cb83c5c7513ee0aaaeaab0edd1bac75297daf237deb5dceb2ea0ede57bf3e17e"
+      "digest": "sha256:ba1c252ab2e883cd538b57356d489e37535d499052a22c6fdfe8877644a7f28f"
     }
   },
   "logs": [
@@ -54,12 +54,16 @@
     {
       "path": "../../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md",
       "digest": "sha256:8dee8d508459ed5540870fc3a86af37dc3627f010fe6fefdd5fa9eb377d67be4"
+    },
+    {
+      "path": "../../logs/2026-08-28-cold-start-discovery-verification.md",
+      "digest": "sha256:428901ee725aabb49236f491264896bb742073a6e13c7c693279d44176ff9b84"
     }
   ],
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:874b41da4cea7f1909e2d57d21f47c5ec84e737f4556381c79d6ab4af3508054"
+      "digest": "sha256:8fd1a9b7ee6aab73d6227a1b8c1cb5d5682217e57da68dfbdb008e9ccc27afa7"
     },
     {
       "path": "artifacts/install.md",
@@ -100,6 +104,11 @@
         "id": "live-bootstrap-tool-face-low-effort",
         "artifact": "artifacts/acceptance.md",
         "result": "low-effort session-0a0d844f recorded bootstrap tools [bash, str_replace_editor], second request full catalog, and a real-turn opening without Let me"
+      },
+      {
+        "id": "cold-start-discovery-from-agents-md",
+        "artifact": "artifacts/acceptance.md",
+        "result": "fresh conversation-empty session b7a3d918 reconstructed architecture and WARM-009 from AGENTS.md before implementation files"
       }
     ]
   }
