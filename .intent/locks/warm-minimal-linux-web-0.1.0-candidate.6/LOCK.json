@@ -59,7 +59,7 @@
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:32406785d57048c0870f6354867e231ab95612cd9c3ec38c3e58ab1904248ca1"
+      "digest": "sha256:874b41da4cea7f1909e2d57d21f47c5ec84e737f4556381c79d6ab4af3508054"
     },
     {
       "path": "artifacts/install.md",
@@ -95,6 +95,11 @@
         "id": "pre-fix-counterexample",
         "artifact": "artifacts/acceptance.md",
         "result": "session-2b5966bc recorded 24 bootstrap tools and real-turn reasoning fingerprints with letMe=3/8/35"
+      },
+      {
+        "id": "live-bootstrap-tool-face-low-effort",
+        "artifact": "artifacts/acceptance.md",
+        "result": "low-effort session-0a0d844f recorded bootstrap tools [bash, str_replace_editor], second request full catalog, and a real-turn opening without Let me"
       }
     ]
   }
