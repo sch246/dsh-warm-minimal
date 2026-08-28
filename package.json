@@ -1,7 +1,7 @@
 {
   "name": "dsh-warm-minimal",
   "version": "0.1.0",
-  "description": "DSH 温暖极简模式：官方 minimal 等价 composition，加一条固定工作目录确认首轮。",
+  "description": "DSH 温暖极简模式：模仿官方 minimal 的首轮两工具形态引导 deepseek-v4-pro 进入 we need 思维链；bootstrap 后第二轮再放行其余工具。",
   "type": "module",
   "main": "index.mjs",
   "exports": {

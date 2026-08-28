@@ -3,11 +3,15 @@
 [![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-4c7dff)](https://github.com/deepseek-ai/deepseek-harness)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset。它与官方 minimal 使用完全相同的 composition，并在处理新会话的第一条真实请求前，先通过正常 agent loop 执行一轮工作目录确认。
+**温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset。它在处理新会话的第一条真实请求前，先通过正常 agent loop 执行一轮工作目录确认，让第一条真实请求成为第二轮。
+
+## 为什么这么做
+
+deepseek-v4-pro 由于训练的原因对初始提示词和初始工具面非常敏感。官方极简模式（minimal）的第一轮只有一句固定 system prompt（`You are a helpful software engineer assistant.`）和两个工具（`bash` + `str_replace_editor`）；这种固定的第一轮形态会把模型引导进 `we need` 式的协作思维链，而不是 `Let me` 式的自言自语。温暖极简模式的目标就是**模仿官方极简模式的第一轮形态**：
 
 - 完整 system prompt 只有 `You are a helpful software engineer assistant.`；
-- Linux 下模型工具只有 `bash` 与 `str_replace_editor`；
-- 不注入 repository instructions、runtime context、skills、compaction 或其他 standard-mode CONTEXT；
+- **bootstrap 第一轮**只暴露官方 minimal 的两个工具，其余由其他 bundle 注册的工具（开发插件、图像阅读器、天气等）一律不进入首轮；
+- **从第二轮开始**再放行其余工具：不能完全不给工具，也不能在第一轮全给，唯一解就是第二轮注入剩余工具；
 - 不伪造 assistant、tool call、tool result 或 `Ready.`，这些内容均由当前模型与真实工具产生；
 - 不修改 DeepSeek Harness 源码。
 
@@ -35,7 +39,9 @@ bash scripts/setup.sh
 检查当前工作目录，确认后仅回复 Ready.
 ```
 
-模型随后使用 minimal 的真实 shell 检查该会话的工作目录。bootstrap 完成后，原消息按原顺序恢复并成为下一轮；bootstrap 失败也不会丢弃原消息。
+模型随后使用 minimal 的真实 shell 检查该会话的工作目录。bootstrap 的第一条 provider 请求只包含 `bash` + `str_replace_editor` 两个工具；bootstrap 完成后，原消息按原顺序恢复并成为下一轮，从这一轮起其余已注册工具恢复可见。
+
+bootstrap 失败也不会丢弃原消息。
 
 Chat 与 Trajectory 都按 Harness 的原生顺序显示这一轮。bootstrap 的 `UserMessage.id` 以 `dsh-warm-minimal:bootstrap:` 开头：该标记会随会话持久化，但不会发送给模型，可供未来独立的会话折叠插件识别。
 
@@ -43,8 +49,10 @@ Chat 与 Trajectory 都按 Harness 的原生顺序显示这一轮。bootstrap �
 
 - bundle 在 profile boot 挂载，监听同步的 `agent/inbox/inserted`；空会话仍保持官方空白界面。
 - 第一条真实输入被从 inbox 暂存后，插件用 `agent.followup()` 提交标记过的 bootstrap，再用 `agent.whenIdle()` 等待该轮完成，最后恢复暂存消息。
+- 同一插件在 `system-prompt/assemble` 瀑布里做首轮工具门控：会话处于 bootstrap 期间且未提升（promoted）时，只保留平台 shell 与 `str_replace_editor`；`whenIdle()` 完成、恢复真实消息之前先置为已提升，第二轮起的装配原样放行完整工具目录。
+- preset 文件与官方 minimal 的 `agent.cordis.yml` 保持一致；模型面的系统提示词始终只有一句。其余工具并非本包注册，而是 profile 里其他 bundle 的全局工具，本包只决定它们在 bootstrap 轮隐藏、第二轮起恢复。
 - bootstrap 的来源保持原生 `{ kind: 'user' }`，所以 Harness 自己负责生成、持久化和投影完整的 USER → ASSISTANT → TOOL → ASSISTANT 因果顺序。
-- preset 文件与官方 minimal 的 `agent.cordis.yml` 保持一致；当前工作目录由真实 shell 运行环境决定。
+- 当前工作目录由真实 shell 运行环境决定。
 
 ## 卸载
 
@@ -62,6 +70,7 @@ bash scripts/uninstall.sh
 
 - 当前只提供一条固定 bootstrap 指令，不进行任务分类。
 - bootstrap 是真实 provider turn，会进入 API transcript 与 token 计量。
+- 首轮工具门控只过滤 `system-prompt/assemble` 的模型可见目录；是否成功引导出 `we need` 式思维链仍取决于所选模型与推理强度，本包不在提示词里注入风格文本。
 - 升级 dsh 后如官方 minimal composition 变化，需要重新验证 prompt、两工具和无额外 context 的等价性。
 
 ## License

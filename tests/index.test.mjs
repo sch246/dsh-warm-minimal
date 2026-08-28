@@ -21,6 +21,7 @@ function nextTask() {
 
 function harness() {
   let inserted
+  let assemble
   const warnings = []
   const ctx = {
     root: {
@@ -31,12 +32,18 @@ function harness() {
         return () => {}
       },
     },
+    on(event, listener) {
+      assert.equal(event, 'system-prompt/assemble')
+      assemble = listener
+      return () => {}
+    },
     effect(register) { register() },
     logger: { warn(message) { warnings.push(message) } },
   }
   apply(ctx)
   assert.equal(typeof inserted, 'function')
-  return { inserted, warnings }
+  assert.equal(typeof assemble, 'function')
+  return { inserted, assemble, warnings }
 }
 
 function session(preset = 'warm-minimal') {
@@ -86,6 +93,24 @@ function agentHarness(inserted, value, idle = deferred()) {
       inserted({ agent, message })
     },
   }
+}
+
+function fullAssembly() {
+  return {
+    sections: [{ name: 'persona', text: 'You are a helpful software engineer assistant.' }],
+    contexts: [],
+    tools: [
+      { name: 'bash', description: 'shell' },
+      { name: 'dev_extra', description: 'host-registered tool' },
+      { name: 'image_scan', description: 'host-registered tool' },
+      { name: 'str_replace_editor', description: 'editor' },
+    ],
+    variables: {},
+  }
+}
+
+async function assemble(assembleListener, agent, assembly = fullAssembly()) {
+  return assembleListener(assembly, { agent }, async () => assembly)
 }
 
 describe('dsh-warm-minimal native bootstrap', () => {
@@ -187,6 +212,56 @@ describe('dsh-warm-minimal native bootstrap', () => {
     })
     assert.deepEqual(runner.removed, [])
     assert.deepEqual(runner.followed, [])
+  })
+
+  it('limits the bootstrap turn to the two minimal tools and restores the full catalog afterwards', async () => {
+    const { inserted, assemble: assembleListener } = harness()
+    const runner = agentHarness(inserted, session())
+    const original = userMessage('user-1', '真实任务')
+
+    runner.insert(original)
+
+    const bootAssembly = await assemble(assembleListener, runner.agent)
+    assert.deepEqual(
+      bootAssembly.tools.map(tool => tool.name),
+      ['bash', 'str_replace_editor'],
+    )
+    assert.equal(bootAssembly.sections[0].text, 'You are a helpful software engineer assistant.')
+
+    runner.idle.resolve()
+    await nextTask()
+
+    const promotedAssembly = await assemble(assembleListener, runner.agent)
+    assert.deepEqual(
+      promotedAssembly.tools.map(tool => tool.name),
+      ['bash', 'dev_extra', 'image_scan', 'str_replace_editor'],
+    )
+    assert.deepEqual(runner.followed.slice(1), [original])
+  })
+
+  it('never gates assemblies without an in-flight warm-minimal bootstrap', async () => {
+    const { assemble: assembleListener } = harness()
+    const runner = agentHarness(assembleListener, session())
+    const assembly = await assemble(assembleListener, runner.agent)
+    assert.deepEqual(assembly.tools.map(tool => tool.name), ['bash', 'dev_extra', 'image_scan', 'str_replace_editor'])
+  })
+
+  it('leaves non-agent assemblies untouched during bootstrap', async () => {
+    const { inserted, assemble: assembleListener } = harness()
+    const runner = agentHarness(inserted, session())
+    runner.insert(userMessage('user-1', '真实任务'))
+    const assembly = await assemble(assembleListener, undefined)
+    assert.deepEqual(assembly.tools.map(tool => tool.name), ['bash', 'dev_extra', 'image_scan', 'str_replace_editor'])
+  })
+
+  it('does not gate a bootstrap for another effective preset', async () => {
+    const { inserted, assemble: assembleListener } = harness()
+    const value = session('standard')
+    value.events.push({ type: 'agent-preset/selected', data: { agentPreset: 'standard' } })
+    const runner = agentHarness(inserted, value)
+    runner.insert(userMessage('user-1', '标准模式消息'))
+    const assembly = await assemble(assembleListener, runner.agent)
+    assert.deepEqual(assembly.tools.map(tool => tool.name), ['bash', 'dev_extra', 'image_scan', 'str_replace_editor'])
   })
 })
 
