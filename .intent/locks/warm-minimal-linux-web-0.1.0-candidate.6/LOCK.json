@@ -1,25 +1,25 @@
 {
   "kind": "realization",
   "id": "dsh-warm-minimal-linux-web",
-  "revision": "0.1.0-candidate.5",
-  "status": "failed",
+  "revision": "0.1.0-candidate.6",
+  "status": "candidate",
   "protocol": {
     "id": "meta-intent",
     "revision": "0.2"
   },
   "package": {
     "id": "dsh-warm-minimal",
-    "revision": "0.1.0-draft.7"
+    "revision": "0.1.0-draft.8"
   },
   "state": {
-    "revision": "0.1.0-draft.7",
+    "revision": "0.1.0-draft.8",
     "entry": {
       "path": "inputs/state/STATE.json",
-      "digest": "sha256:a902f11b7afb76e6493b3baaf9073cfe2af0923ab4d11ddfe8e49321c2e07eb3"
+      "digest": "sha256:dfbb2bf133b64db28cccea46a0b519a4044a6b3b5ac5f517057a519613061154"
     },
     "document": {
       "path": "inputs/state/STATE.md",
-      "digest": "sha256:b8b9c8018d092ec6ac25349cd8b5503f5ab30e7901cc6c17d34116c79e76d289"
+      "digest": "sha256:cb83c5c7513ee0aaaeaab0edd1bac75297daf237deb5dceb2ea0ede57bf3e17e"
     }
   },
   "logs": [
@@ -50,22 +50,26 @@
     {
       "path": "../../logs/2026-08-26-native-bootstrap-and-visible-chat.md",
       "digest": "sha256:18781393e0779f6029fbe47969334e6a097c6c1237c21d2f64c8ad9a79399488"
+    },
+    {
+      "path": "../../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md",
+      "digest": "sha256:8dee8d508459ed5540870fc3a86af37dc3627f010fe6fefdd5fa9eb377d67be4"
     }
   ],
   "artifacts": [
     {
       "path": "artifacts/acceptance.md",
-      "digest": "sha256:1bcad5c076988b1be62ad251913ecc6e39de13d38f74ab3bd21881ddbd8cb411"
+      "digest": "sha256:32406785d57048c0870f6354867e231ab95612cd9c3ec38c3e58ab1904248ca1"
     },
     {
       "path": "artifacts/install.md",
-      "digest": "sha256:c508776c98f2b22e8b596522ebd5d835c7a4a623acd79c95238610953e23409b"
+      "digest": "sha256:0965a9e42c2878bc6f7924a3be94981c80e43839608f392887a287814547cd67"
     }
   ],
   "target": {
     "kind": "git",
     "uri": "https://github.com/sch246/dsh-warm-minimal.git",
-    "commit": "b1b61a25afc44401a705e05c15713ec56d2b3d1a",
+    "commit": "980a8891cec72830b292a5c4f5d4103d6dea238e",
     "paths": [
       "cordis.patch.yml",
       "index.mjs",
@@ -78,34 +82,19 @@
     "status": "incomplete",
     "evidence": [
       {
-        "id": "native-bootstrap-unit-suite",
+        "id": "two-tool-gate-unit-suite",
         "artifact": "artifacts/acceptance.md",
-        "result": "6/6 tests pass for native bootstrap ordering, restoration, scope, idempotence, and official-minimal composition"
+        "result": "10/10 node --test checks pass, including first-turn two-tool filtering and post-bootstrap full-catalog promotion"
       },
       {
-        "id": "zero-host-patch-migration",
+        "id": "live-bootstrap-tool-face",
         "artifact": "artifacts/acceptance.md",
-        "result": "candidate.4 receipt removed cleanly and all five formerly owned Harness paths match their Git baseline"
+        "result": "new warm-minimal session recorded bootstrap request/header tools [bash, str_replace_editor] and second request full 24-tool catalog"
       },
       {
-        "id": "session-workspace-shell-path",
+        "id": "pre-fix-counterexample",
         "artifact": "artifacts/acceptance.md",
-        "result": "official persistent bash passes owner.session.header.cwd through terminal spawn to subprocess cwd"
-      },
-      {
-        "id": "minimal-composition-equivalence",
-        "artifact": "artifacts/acceptance.md",
-        "result": "warm-minimal agent composition is byte-for-byte equal to official minimal on the selected target"
-      },
-      {
-        "id": "candidate5-live-deployment",
-        "artifact": "artifacts/acceptance.md",
-        "result": "zero-patch Harness rebuild completed; linked profile restarted active and served production HTML on 127.0.0.1:3082"
-      },
-      {
-        "id": "superseded-by-v4-pro-initial-face-correction",
-        "artifact": "artifacts/acceptance.md",
-        "result": "2026-08-28 user correction: bootstrap request/header exposed 24 tools, violating the clarified two-tool first-turn requirement; superseded by candidate.6"
+        "result": "session-2b5966bc recorded 24 bootstrap tools and real-turn reasoning fingerprints with letMe=3/8/35"
       }
     ]
   }
