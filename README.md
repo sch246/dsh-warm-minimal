@@ -1,6 +1,7 @@
 # dsh-warm-minimal
 
 [![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-4c7dff)](https://github.com/deepseek-ai/deepseek-harness)
+[![GitHub release](https://img.shields.io/github/v/release/sch246/dsh-warm-minimal)](https://github.com/sch246/dsh-warm-minimal/releases)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset。它在处理新会话的第一条真实请求前，先通过正常 agent loop 执行一轮工作目录确认，让第一条真实请求成为第二轮。
@@ -45,6 +46,16 @@ bootstrap 失败也不会丢弃原消息。
 
 Chat 与 Trajectory 都按 Harness 的原生顺序显示这一轮。bootstrap 的 `UserMessage.id` 以 `dsh-warm-minimal:bootstrap:` 开头：该标记会随会话持久化，但不会发送给模型，可供未来独立的会话折叠插件识别。
 
+## 验收清单
+
+可观察的安装成功判据：
+
+- [ ] 新会话首轮只暴露 `bash`（Windows 为 `pwsh`）与 `str_replace_editor` 两个工具，system prompt 只有一句；
+- [ ] Chat 与 Trajectory 都显示完整 bootstrap 轮，其 `UserMessage.id` 以 `dsh-warm-minimal:bootstrap:` 开头；
+- [ ] 第一条真实消息在 bootstrap 完成后按原顺序恢复，并从第二轮起可见完整工具目录；
+- [ ] 空白会话不出现任何 bootstrap 内容；
+- [ ] bootstrap 失败时，暂存的第一条真实消息仍被恢复。
+
 ## 工作原理
 
 - bundle 在 profile boot 挂载，监听同步的 `agent/inbox/inserted`；空会话仍保持官方空白界面。
@@ -53,6 +64,19 @@ Chat 与 Trajectory 都按 Harness 的原生顺序显示这一轮。bootstrap �
 - preset 文件与官方 minimal 的 `agent.cordis.yml` 保持一致；模型面的系统提示词始终只有一句。其余工具并非本包注册，而是 profile 里其他 bundle 的全局工具，本包只决定它们在 bootstrap 轮隐藏、第二轮起恢复。
 - bootstrap 的来源保持原生 `{ kind: 'user' }`，所以 Harness 自己负责生成、持久化和投影完整的 USER → ASSISTANT → TOOL → ASSISTANT 因果顺序。
 - 当前工作目录由真实 shell 运行环境决定。
+
+## 开发与测试
+
+前置同安装。运行测试：
+
+```bash
+npm test
+```
+
+测试覆盖两部分行为：
+
+- native bootstrap：首条真实输入被暂存、标记 bootstrap 执行后按原顺序恢复；bootstrap 失败不丢输入；首轮仅两个 minimal 工具、第二轮恢复完整目录；空会话与已启动会话不触发；
+- preset 组合：warm-minimal 与官方 minimal 等价——一句完整 prompt、两个平台工具、无额外 context。
 
 ## 卸载
 
