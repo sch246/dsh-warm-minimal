@@ -33,7 +33,7 @@ ensure_link "$ROOT/node_modules/react-dom" "$CHECKOUT/packages/client/ui-rendere
 ensure_link "$ROOT/node_modules/@types/react" "$CHECKOUT/packages/client/ui-renderer/node_modules/@types/react"
 ensure_link "$ROOT/node_modules/@types/react-dom" "$CHECKOUT/packages/client/ui-renderer/node_modules/@types/react-dom"
 ensure_link "$ROOT/node_modules/zod" "$CHECKOUT/packages/api/gateway/node_modules/zod"
-ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-primitives" "$ROOT/tests/fixtures/ui-primitives"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-primitives" "$ROOT/scripts/fixtures/ui-primitives"
 
 "$CHECKOUT/node_modules/.bin/tsc" -p "$ROOT/tsconfig.client.json"
 (cd "$ROOT" && "$CHECKOUT/node_modules/.bin/tsdown" --config tsdown.client.config.ts)

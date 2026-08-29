@@ -1,7 +1,7 @@
 const ROSTER_ASSIGNMENTS = new Map([
   ['persona', 'parent-only'],
   ['worker-persona', 'child-only'],
-  ['agent-instructions', 'child-only'],
+  ['agent-instructions', 'shared'],
   ['persistent-shell:persistent-bash', 'shared'],
   ['persistent-shell:persistent-pwsh', 'shared'],
   ['filesystem:str-replace-editor', 'shared'],

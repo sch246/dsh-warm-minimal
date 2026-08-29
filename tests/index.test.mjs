@@ -376,7 +376,7 @@ describe('preset-plane roster projection', () => {
     assert.deepEqual(defaults.promptAssignments, {
       'source:parent-persona': 'parent-only',
       'source:worker-persona': 'child-only',
-      'source:agents': 'child-only',
+      'source:agents': 'shared',
       'source:shell': 'shared',
       'source:editor': 'shared',
       'source:skill': 'shared',

@@ -19,7 +19,7 @@
 bootstrap 之后，或关闭 bootstrap 后从首轮开始：
 
 - 主代理默认拥有 persona、AGENTS、持久 shell、编辑器、窄用途 skill、目标/计划、委派/工作流、用户交互和 todo；
-- 子代理默认拥有 persona、AGENTS、持久 shell、编辑器、skill、文件系统发现、搜索与 Web；
+- 子代理默认使用复制的 Standard persona，并拥有 AGENTS、持久 shell、编辑器、skill、文件系统发现、搜索、后台 jobs 与 Web；
 - 未知来源默认仅对子代理开放；
 - 隐藏只影响模型可见的 prompt、context 和 tool schema，不改变可执行工具注册表，也不会拒绝主代理显式形成的调用。
 
@@ -33,7 +33,7 @@ warm-minimal 自己维护完整 roster，不继承或运行时组合 Standard pr
 
 ## 配置
 
-在 Web UI 的 **设置 → 插件 → Warm minimal** 中可以配置：
+Web UI 的 **设置 → 插件 → Warm minimal** 保留一个紧凑摘要卡；点击“打开完整配置”后进入宽配置窗口：
 
 - 是否执行 bootstrap；
 - bootstrap 的用户消息；
@@ -41,7 +41,7 @@ warm-minimal 自己维护完整 roster，不继承或运行时组合 Standard pr
 - prompt/context 来源分配；
 - tool 来源分配。
 
-每个来源都可选 `仅主代理`、`仅子代理` 或 `通用`。保存值只包含 bootstrap 三项与两张稳定 source ID 到分配值的映射。来源名称、贡献列表等 inventory 由 Host 只读查询返回，不会被浏览器草稿写回配置。
+Prompt/context 与工具来源列表可以独立展开。每个来源使用三个并列的单选项选择 `仅主代理`、`仅子代理` 或 `通用`，不使用下拉框；工具行显示模型可见的工具名与说明预览，完整 source ID 只在展开详情中显示。保存值只包含 bootstrap 三项与两张稳定 source ID 到分配值的映射。已知来源的默认值由运行时 roster 的同一解析器提供，未知来源才回落为 `仅子代理`。来源名称、工具说明和其它 inventory 元数据由 Host 只读查询返回，不会被浏览器草稿写回配置。
 
 ## 安装
 
@@ -100,6 +100,8 @@ DSH_CHECKOUT=/root/deepseek-harness bash scripts/uninstall.sh
 - bootstrap 是真实 provider turn，会进入 transcript 与 token 计量。
 - 工作目录和工具输出按普通会话规则保存在本地 transcript。
 - 模型是否实际委派仍受模型行为、推理强度和 Host 委派策略影响。
+- `AGENTS.md` 由 durable user-role 消息注入，不经过当前 system-prompt 来源准入；父子代理目前实际共享这项能力。实现“主代理有限 AGENTS、子代理完整 AGENTS”仍需要 Host 提供 durable model-input 来源准入，配置页不会把它伪装成已按角色分离。
+- LSP 尚未加入默认 worker roster；当前 stdio provider 没有 sandbox confinement，不能作为 worker-safe 默认能力。
 - Harness 升级后需要重新验证补丁、来源 ID、preset roster 和配置投影兼容性。
 
 ## License
