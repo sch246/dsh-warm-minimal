@@ -1,11 +1,14 @@
 {
   "name": "dsh-warm-minimal",
-  "version": "0.1.0",
-  "description": "DSH 温暖极简模式：模仿官方 minimal 的首轮两工具形态引导 deepseek-v4-pro 进入 we need 思维链；bootstrap 后第二轮再放行其余工具。",
+  "version": "0.2.0",
+  "description": "DSH warm-minimal mode with an optional minimal bootstrap and configurable coordinator/worker model visibility.",
   "type": "module",
   "main": "index.mjs",
   "exports": {
     ".": "./index.mjs",
+    "./config": "./config.mjs",
+    "./projection": "./projection-host.mjs",
+    "./runtime": "./runtime.mjs",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
@@ -13,6 +16,11 @@
     ".intent",
     "AGENTS.md",
     "index.mjs",
+    "config.mjs",
+    "host.mjs",
+    "projection.mjs",
+    "projection-host.mjs",
+    "runtime.mjs",
     "cordis.patch.yml",
     "presets",
     "scripts",
@@ -44,6 +52,11 @@
   "license": "MIT",
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-settings": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-system-prompt": "^0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "^3.18.1"
   },
   "dsh": {
     "bundle": {
