@@ -1,7 +1,7 @@
 {
   "$schema": "meta-intent/0.2/state",
   "id": "dsh-warm-minimal",
-  "revision": "0.1.0-draft.8",
+  "revision": "0.2.0-draft.1",
   "status": "draft",
   "document": "STATE.md",
   "logs": [
@@ -13,7 +13,8 @@
     "../logs/2026-08-26-minimal-template-authority.md",
     "../logs/2026-08-26-native-bootstrap-and-visible-chat.md",
     "../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md",
-    "../logs/2026-08-28-cold-start-discovery-verification.md"
+    "../logs/2026-08-28-cold-start-discovery-verification.md",
+    "../logs/2026-08-29-configurable-coordinator-worker-visibility.md"
   ],
   "protocol": {
     "id": "meta-intent",
@@ -28,19 +29,17 @@
       "id": "implementation.dsh-warm-minimal-baseline",
       "kind": "git-repository",
       "uri": "https://github.com/sch246/dsh-warm-minimal.git",
-      "revision": "06fa6d385545215f543479aee9e4013a428965fc",
-      "scope": "reverse-engineering-baseline"
+      "revision": "9961118802c5dd8627aeb794c812b1f42ea6fbf3",
+      "scope": "stale-0.1-realization-baseline"
     },
     {
       "id": "target.deepseek-harness",
       "kind": "git-repository",
       "uri": "https://github.com/deepseek-ai/deepseek-harness.git",
-      "revision": "b642a10626a950cc95c2d6f839810cb01fe599fe",
-      "scope": "observed-session-and-preset-api"
+      "revision": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+      "scope": "configurable-visibility-and-plugin-settings-target"
     }
   ],
   "activeLocks": [],
-  "candidateLocks": [
-    "../locks/warm-minimal-linux-web-0.1.0-candidate.6/LOCK.json"
-  ]
+  "candidateLocks": []
 }
