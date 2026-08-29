@@ -3,7 +3,7 @@ import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 import { type WarmMinimalLocaleKey } from './locales.ts';
 export type { AssignedSource, InventorySource, SourceAssignment, WarmMinimalSettings, } from './contract.ts';
 export type { WarmMinimalCardObservable, WarmMinimalCardView, WarmMinimalInventoryRemote, } from './controller.ts';
-export type { WarmMinimalCardFace, WarmMinimalCardProps } from './WarmMinimalCard.tsx';
+export type { WarmMinimalCardFace, WarmMinimalCardProps, WarmMinimalSettingsContentProps, } from './WarmMinimalCard.tsx';
 /** Host settings namespace and keyed Plugins-card dispatch value. */
 export declare const WARM_MINIMAL_SETTINGS_NAMESPACE = "warm-minimal";
 /** Browser locale namespace. */

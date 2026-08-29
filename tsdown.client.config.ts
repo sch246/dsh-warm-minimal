@@ -9,6 +9,7 @@ const CLIENT_EXTERNALS = [
   'react/jsx-runtime',
   'react-dom',
   'react-dom/client',
+  '@deepseek-ai/dsh-client-ui-primitives',
 ] as const
 
 /** Browser bundle served by the Harness Client module system. */

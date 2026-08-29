@@ -18,7 +18,9 @@ export type {
 export type {
   WarmMinimalCardObservable, WarmMinimalCardView, WarmMinimalInventoryRemote,
 } from './controller.ts'
-export type { WarmMinimalCardFace, WarmMinimalCardProps } from './WarmMinimalCard.tsx'
+export type {
+  WarmMinimalCardFace, WarmMinimalCardProps, WarmMinimalSettingsContentProps,
+} from './WarmMinimalCard.tsx'
 
 /** Host settings namespace and keyed Plugins-card dispatch value. */
 export const WARM_MINIMAL_SETTINGS_NAMESPACE = 'warm-minimal'

@@ -11,6 +11,7 @@
     { "path": "./harness/packages/api/remotes/tsconfig.client.json" },
     { "path": "./harness/packages/client/locale" },
     { "path": "./harness/packages/client/runtime" },
+    { "path": "./harness/packages/client/ui-primitives" },
     { "path": "./harness/packages/client/ui-settings" },
     { "path": "./harness/packages/client/ui-settings-plugins" },
     { "path": "./harness/packages/client/ui-slots" },
