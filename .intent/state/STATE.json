@@ -48,8 +48,8 @@
       "id": "implementation.dsh-warm-minimal-realization",
       "kind": "git-repository",
       "uri": "https://github.com/sch246/dsh-warm-minimal.git",
-      "revision": "fecda5c81e48d6a1d53e7cd539b050c086106b83",
-      "scope": "local-0.2-tool-schema-realization-evidence"
+      "revision": "c68ac911bcff544af6656625cfdf5d5921a43b81",
+      "scope": "local-0.2-installed-tool-schema-realization-evidence"
     }
   ],
   "activeLocks": [],
