@@ -1,11 +1,19 @@
 /** Staged Plugins-card form over one official settings namespace scope. */
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client';
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol';
-import type { AssignedPromptSource, AssignedToolSource, InventorySource, SourceAssignment, WarmMinimalSettings } from './contract.ts';
+import type { AssignedPromptSource, AssignedToolSource, InventoryPromptSource, InventoryTool, SourceAssignment, ToolSchemaId, WarmMinimalInventory, WarmMinimalSettings } from './contract.ts';
+interface WireInventoryTool extends Omit<InventoryTool, 'id'> {
+    /** Unvalidated tool identity received from the generated Remote codec. */
+    readonly id: string;
+}
+interface WireWarmMinimalInventory extends Omit<WarmMinimalInventory, 'tools'> {
+    /** Tool rows whose opaque identities are validated by this controller. */
+    readonly tools: readonly WireInventoryTool[];
+}
 /** Read-only generated Remote face consumed by the controller. */
 export interface WarmMinimalInventoryRemote {
     /** Query the current contribution inventory. */
-    queryInventory(): Promise<RemoteResult<readonly InventorySource[]>>;
+    queryInventory(): Promise<RemoteResult<WireWarmMinimalInventory>>;
 }
 /** Immutable projection rendered by the settings card. */
 export interface WarmMinimalCardView {
@@ -66,8 +74,12 @@ export declare class WarmMinimalCardController implements WarmMinimalCardObserva
     setBootstrapMessage(message: string): void;
     /** Stage post-bootstrap coordinator guidance without writing. */
     setGuidance(guidance: string): void;
-    /** Stage one assignment in the settings-owned source map. */
-    assign(list: 'prompt' | 'tool', source: string, assignment: SourceAssignment): void;
+    /** Stage one prompt assignment by source identity. */
+    assign(list: 'prompt', id: string, assignment: SourceAssignment): void;
+    /** Stage one tool assignment by opaque schema identity. */
+    assign(list: 'tool', id: ToolSchemaId, assignment: SourceAssignment): void;
+    /** Stage a UI-selected assignment after validating tool identities at runtime. */
+    assign(list: 'prompt' | 'tool', id: string, assignment: SourceAssignment): void;
     /** Drop every browser-local edit. */
     discard(): void;
     /** Write staged fields only through settingsScope, which owns CAS and serialization. */
@@ -81,8 +93,8 @@ export declare class WarmMinimalCardController implements WarmMinimalCardObserva
     private publish;
 }
 /** Project prompt inventory separately from the settings write model. */
-declare function projectPromptSources(inventory: readonly InventorySource[], assignments: Readonly<Record<string, SourceAssignment>>): AssignedPromptSource[];
+declare function projectPromptSources(inventory: readonly InventoryPromptSource[], assignments: Readonly<Record<string, SourceAssignment>>): AssignedPromptSource[];
 /** Project tool inventory separately from the settings write model. */
-declare function projectToolSources(inventory: readonly InventorySource[], assignments: Readonly<Record<string, SourceAssignment>>): AssignedToolSource[];
+declare function projectToolSources(inventory: readonly InventoryTool[], assignments: Readonly<Record<ToolSchemaId, SourceAssignment>>): AssignedToolSource[];
 export { projectPromptSources, projectToolSources };
 //# sourceMappingURL=controller.d.ts.map

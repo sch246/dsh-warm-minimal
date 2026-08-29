@@ -1,6 +1,10 @@
 /** Client-owned view types for the warm-minimal Plugins card. */
-/** Post-bootstrap visibility assigned to one stable contribution source. */
+/** Post-bootstrap visibility assigned to one model input. */
 export type SourceAssignment = 'parent-only' | 'child-only' | 'shared';
+/** Stable opaque identity of one provider-owned tool schema. */
+export type ToolSchemaId = string & {
+    readonly __warmMinimalToolSchemaId: never;
+};
 /** The complete settings section served under the `warm-minimal` namespace. */
 export interface WarmMinimalSettings {
     /** Whether the first real input is preceded by the bootstrap turn. */
@@ -11,49 +15,63 @@ export interface WarmMinimalSettings {
     guidance: string;
     /** Prompt/context visibility overrides keyed by stable source identity. */
     promptAssignments: Record<string, SourceAssignment>;
-    /** Tool-schema visibility overrides keyed by stable source identity. */
-    toolAssignments: Record<string, SourceAssignment>;
+    /** Tool-schema visibility overrides keyed by opaque schema identity. */
+    toolAssignments: Record<ToolSchemaId, SourceAssignment>;
 }
-/** One source returned by the read-only inventory Remote. */
-export interface InventorySource {
-    /** Stable Host identity used as the settings-map key. */
+/** One prompt source returned by the read-only inventory Remote. */
+export interface InventoryPromptSource {
+    /** Stable Host identity used as the prompt settings-map key. */
     readonly source: string;
     /** Package roster default for prompt and context visibility. */
-    readonly promptDefault: SourceAssignment;
-    /** Package roster default for tool-schema visibility. */
-    readonly toolDefault: SourceAssignment;
+    readonly defaultAssignment: SourceAssignment;
     /** System-prompt section names contributed by this source. */
     readonly sections: readonly string[];
     /** Runtime-context names contributed by this source. */
     readonly contexts: readonly string[];
-    /** Model-visible tools contributed by this source. */
-    readonly tools: readonly InventoryTool[];
 }
-/** One readable tool returned by the inventory Remote. */
+/** One independently assignable tool returned by the inventory Remote. */
 export interface InventoryTool {
+    /** Stable opaque settings-map key. */
+    readonly id: ToolSchemaId;
+    /** Read-only provider provenance. */
+    readonly source: string;
     /** Model-visible tool name. */
     readonly name: string;
-    /** Model-visible description, when the source reached a complete assembly. */
-    readonly description?: string;
+    /** Model-visible description from the assembled schema. */
+    readonly description: string;
+    /** Exact roster default, or the closed unknown fallback. */
+    readonly defaultAssignment: SourceAssignment;
 }
-/** Fields shared by prompt and tool assignment rows. */
-interface AssignedSourceBase {
-    /** Stable Host source identity. */
-    source: string;
-    /** Current effective assignment exposed by the settings section. */
-    assignment: SourceAssignment;
+/** Atomic inventory returned by one preset-scope assembly. */
+export interface WarmMinimalInventory {
+    /** Prompt and context contributions grouped by source. */
+    readonly promptSources: readonly InventoryPromptSource[];
+    /** One row per model-visible tool schema. */
+    readonly tools: readonly InventoryTool[];
 }
 /** One prompt assignment row with section and context contributions kept distinct. */
-export interface AssignedPromptSource extends AssignedSourceBase {
+export interface AssignedPromptSource {
+    /** Stable Host source identity. */
+    source: string;
+    /** Current effective assignment. */
+    assignment: SourceAssignment;
     /** System-prompt section names contributed by this source. */
     sections: readonly string[];
     /** Runtime-context names contributed by this source. */
     contexts: readonly string[];
 }
-/** One tool assignment row with model-visible descriptions. */
-export interface AssignedToolSource extends AssignedSourceBase {
-    /** Tool schemas contributed by this source. */
-    tools: readonly InventoryTool[];
+/** One independently assignable tool row. */
+export interface AssignedToolSource {
+    /** Opaque settings identity for this exact schema. */
+    id: ToolSchemaId;
+    /** Read-only provider provenance. */
+    source: string;
+    /** Model-visible tool name. */
+    name: string;
+    /** Model-visible description from the assembled schema. */
+    description: string;
+    /** Current effective assignment. */
+    assignment: SourceAssignment;
 }
 /** One UI-readable assignment row. */
 export type AssignedSource = AssignedPromptSource | AssignedToolSource;
@@ -61,4 +79,6 @@ export type AssignedSource = AssignedPromptSource | AssignedToolSource;
 export declare function decodeWarmMinimalSettings(value: unknown): WarmMinimalSettings | undefined;
 /** @returns whether a browser select value is a supported source assignment. */
 export declare function isSourceAssignment(value: string): value is SourceAssignment;
+/** @returns whether a wire string is one canonical v1 tool-schema identity. */
+export declare function isToolSchemaId(value: string): value is ToolSchemaId;
 //# sourceMappingURL=contract.d.ts.map

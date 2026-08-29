@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { DEFAULT_CONFIG } from '../config.mjs'
+import {
+  DEFAULT_CONFIG,
+  makeToolSchemaId,
+  parseToolSchemaId,
+  validateToolAssignmentMap,
+} from '../config.mjs'
 import {
   BOOTSTRAP_SYSTEM_PROMPT,
   BOOTSTRAP_TOOL_NAMES,
@@ -80,6 +85,8 @@ function setup(config = {}) {
     assemble: (assembly, context) => assemble(assembly, context, async () => assembly),
   }
 }
+
+const toolId = (source, name) => makeToolSchemaId(source, name)
 
 function session(depth = 0) {
   return {
@@ -215,7 +222,12 @@ describe('warm-minimal runtime seam', () => {
     const test = setup({ guidance: 'Coordinate.' })
     test.runtime.registerRoster({
       promptAssignments: { 'source-shared': 'shared', 'source-parent': 'parent-only', 'source-child': 'child-only' },
-      toolAssignments: { 'source-shared': 'shared', 'source-parent': 'parent-only', 'source-child': 'child-only' },
+      toolAssignments: {
+        [toolId('source-shared', BOOTSTRAP_TOOL_NAMES[0])]: 'shared',
+        [toolId('source-shared', 'str_replace_editor')]: 'shared',
+        [toolId('source-parent', 'ask_user')]: 'parent-only',
+        [toolId('source-child', 'read_file')]: 'child-only',
+      },
     })
     const runner = agentHarness(test)
     test.root(runner.agent)
@@ -238,7 +250,12 @@ describe('warm-minimal runtime seam', () => {
     const test = setup({ bootstrapEnabled: false, guidance: 'Coordinate.' })
     test.runtime.registerRoster({
       promptAssignments: { 'source-shared': 'shared', 'source-parent': 'parent-only', 'source-child': 'child-only' },
-      toolAssignments: { 'source-shared': 'shared', 'source-parent': 'parent-only', 'source-child': 'child-only' },
+      toolAssignments: {
+        [toolId('source-shared', BOOTSTRAP_TOOL_NAMES[0])]: 'shared',
+        [toolId('source-shared', 'str_replace_editor')]: 'shared',
+        [toolId('source-parent', 'ask_user')]: 'parent-only',
+        [toolId('source-child', 'read_file')]: 'child-only',
+      },
     })
     const parent = agentHarness(test).agent
     const child = agentHarness(test, session(1)).agent
@@ -278,13 +295,19 @@ describe('warm-minimal runtime seam', () => {
     const view = await test.assemble(fullAssembly(test), { agent: parent })
     assert.deepEqual(view.sections.map(entry => entry.name), ['unknown-prompt', 'dsh-warm-minimal:guidance'])
     assert.deepEqual(promptAssignments, { 'source-unknown': 'parent-only' })
-    assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-child'), {
+    const inventory = test.runtime.inventoryFor(fullAssembly(test))
+    assert.deepEqual(inventory.promptSources.find(row => row.source === 'source-child'), {
       source: 'source-child',
-      promptDefault: 'child-only',
-      toolDefault: 'child-only',
+      defaultAssignment: 'child-only',
       sections: ['child-prompt'],
       contexts: ['child-context'],
-      tools: [{ name: 'read_file', description: 'read_file' }],
+    })
+    assert.deepEqual(inventory.tools.find(tool => tool.name === 'read_file'), {
+      id: toolId('source-child', 'read_file'),
+      source: 'source-child',
+      name: 'read_file',
+      description: 'read_file',
+      defaultAssignment: 'child-only',
     })
   })
 
@@ -292,23 +315,130 @@ describe('warm-minimal runtime seam', () => {
     const test = setup({ bootstrapEnabled: false })
     test.runtime.registerRoster({
       promptAssignments: { 'source-parent': 'parent-only' },
-      toolAssignments: { 'source-shared': 'shared' },
+      toolAssignments: {
+        [toolId('source-shared', BOOTSTRAP_TOOL_NAMES[0])]: 'shared',
+        [toolId('source-shared', 'str_replace_editor')]: 'shared',
+      },
     })
 
-    await test.assemble(fullAssembly(test), { scope: {} })
+    const inventory = test.runtime.inventoryFor(fullAssembly(test))
 
-    assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-parent'), {
+    assert.deepEqual(inventory.promptSources.find(row => row.source === 'source-parent'), {
       source: 'source-parent',
-      promptDefault: 'parent-only',
-      toolDefault: 'child-only',
+      defaultAssignment: 'parent-only',
       sections: ['parent-prompt'],
       contexts: ['parent-context'],
-      tools: [{ name: 'ask_user', description: 'ask_user' }],
     })
-    assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-shared')?.tools, [
-      { name: BOOTSTRAP_TOOL_NAMES[0], description: BOOTSTRAP_TOOL_NAMES[0] },
-      { name: 'str_replace_editor', description: 'str_replace_editor' },
+    assert.deepEqual(inventory.tools.filter(tool => tool.source === 'source-shared'), [
+      {
+        id: toolId('source-shared', BOOTSTRAP_TOOL_NAMES[0]),
+        source: 'source-shared',
+        name: BOOTSTRAP_TOOL_NAMES[0],
+        description: BOOTSTRAP_TOOL_NAMES[0],
+        defaultAssignment: 'shared',
+      },
+      {
+        id: toolId('source-shared', 'str_replace_editor'),
+        source: 'source-shared',
+        name: 'str_replace_editor',
+        description: 'str_replace_editor',
+        defaultAssignment: 'shared',
+      },
     ])
+  })
+
+  it('returns each inventory from its own assembly without a mutable snapshot', () => {
+    const test = setup({ bootstrapEnabled: false })
+    const first = test.runtime.inventoryFor(fullAssembly(test))
+    const second = test.runtime.inventoryFor({
+      sections: [], contexts: [], variables: {},
+      tools: [test.mark('source-next', { name: 'next', description: 'Next.', parameters: {} })],
+    })
+
+    assert.equal('inventorySnapshot' in test.runtime, false)
+    assert.equal(first.tools.length, 5)
+    assert.deepEqual(second, {
+      promptSources: [],
+      tools: [{
+        id: toolId('source-next', 'next'),
+        source: 'source-next',
+        name: 'next',
+        description: 'Next.',
+        defaultAssignment: 'child-only',
+      }],
+    })
+  })
+
+  it('assigns two schemas from one provider independently and keeps new schemas child-only', async () => {
+    const alpha = toolId('source-mixed', 'alpha')
+    const beta = toolId('source-mixed', 'beta')
+    const test = setup({
+      bootstrapEnabled: false,
+      toolAssignments: { [alpha]: 'parent-only', [beta]: 'child-only' },
+    })
+    const parent = agentHarness(test).agent
+    const child = agentHarness(test, session(1)).agent
+    test.root(parent)
+    test.child(child)
+    const mixedAssembly = () => ({
+      sections: [], contexts: [], variables: {},
+      tools: [
+        test.mark('source-mixed', { name: 'alpha', parameters: {} }),
+        test.mark('source-mixed', { name: 'beta', parameters: {} }),
+        test.mark('source-mixed', { name: 'new_tool', parameters: {} }),
+      ],
+    })
+
+    assert.equal(test.admitSource({ agent: parent }, { kind: 'tool', source: 'source-mixed', name: 'alpha' }), true)
+    assert.equal(test.admitSource({ agent: parent }, { kind: 'tool', source: 'source-mixed', name: 'beta' }), false)
+    assert.equal(test.admitSource({ agent: child }, { kind: 'tool', source: 'source-mixed', name: 'alpha' }), false)
+    assert.equal(test.admitSource({ agent: child }, { kind: 'tool', source: 'source-mixed', name: 'beta' }), true)
+    assert.deepEqual((await test.assemble(mixedAssembly(), { agent: parent })).tools.map(tool => tool.name), ['alpha'])
+    assert.deepEqual((await test.assemble(mixedAssembly(), { agent: child })).tools.map(tool => tool.name), ['beta', 'new_tool'])
+  })
+
+  it('keeps tool ids stable across metadata drift and rejects malformed or legacy keys', () => {
+    const test = setup({ bootstrapEnabled: false })
+    const schema = (source, name, description, parameters) => ({
+      sections: [], contexts: [], variables: {},
+      tools: [test.mark(source, { name, description, parameters })],
+    })
+    const first = test.runtime.inventoryFor(schema('source-a', 'alpha', 'first', { type: 'object' })).tools[0].id
+    const metadataDrift = test.runtime.inventoryFor(schema('source-a', 'alpha', 'second', { type: 'string' })).tools[0].id
+    const sourceDrift = test.runtime.inventoryFor(schema('source-b', 'alpha', 'second', { type: 'string' })).tools[0].id
+    const nameDrift = test.runtime.inventoryFor(schema('source-a', 'beta', 'second', { type: 'string' })).tools[0].id
+
+    assert.equal(first, metadataDrift)
+    assert.notEqual(first, sourceDrift)
+    assert.notEqual(first, nameDrift)
+    assert.deepEqual(parseToolSchemaId(first), { source: 'source-a', name: 'alpha' })
+    assert.deepEqual(validateToolAssignmentMap({}), {})
+    assert.throws(() => validateToolAssignmentMap({ 'source-a': 'shared' }), /invalid tool schema id/)
+    assert.throws(() => validateToolAssignmentMap({ 'tool-schema:v1:not-base64!': 'shared' }), /invalid tool schema id/)
+  })
+
+  it('fails loud when one source contributes the same tool name twice', () => {
+    const test = setup({ bootstrapEnabled: false })
+    const duplicate = {
+      sections: [], contexts: [], variables: {},
+      tools: [
+        test.mark('source-a', { name: 'alpha', description: 'first', parameters: {} }),
+        test.mark('source-a', { name: 'alpha', description: 'second', parameters: {} }),
+      ],
+    }
+
+    assert.throws(() => test.runtime.inventoryFor(duplicate), /duplicate tool schema contribution/)
+  })
+
+  it('rejects legacy provider-scoped tool settings on the runtime path', async () => {
+    const test = setup({
+      bootstrapEnabled: false,
+      toolAssignments: { 'source-a': 'parent-only' },
+    })
+    const parent = agentHarness(test).agent
+    test.root(parent)
+
+    await assert.rejects(test.assemble(fullAssembly(test), { agent: parent }), /invalid tool schema id/)
   })
 
   it('does not install an execution restriction for a hidden registered tool', async () => {
@@ -350,7 +480,9 @@ describe('preset-plane roster projection', () => {
       'source:persona': 'parent-only',
       'source:delegate': 'parent-only',
     })
-    assert.deepEqual(defaults.toolAssignments, defaults.promptAssignments)
+    assert.deepEqual(defaults.toolAssignments, {
+      [toolId('source:delegate', 'subagent')]: 'parent-only',
+    })
     assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('nested:persona'), false)
   })
 
@@ -383,6 +515,48 @@ describe('preset-plane roster projection', () => {
       'source:jobs': 'child-only',
       'source:web': 'child-only',
     })
-    assert.deepEqual(defaults.toolAssignments, defaults.promptAssignments)
+    assert.deepEqual(defaults.toolAssignments, {
+      [toolId('source:shell', 'bash')]: 'shared',
+      [toolId('source:editor', 'str_replace_editor')]: 'shared',
+      [toolId('source:skill', 'skill')]: 'shared',
+      [toolId('source:jobs', 'job_output')]: 'child-only',
+      [toolId('source:jobs', 'job_list')]: 'child-only',
+      [toolId('source:jobs', 'job_kill')]: 'child-only',
+      [toolId('source:web', 'web_search')]: 'child-only',
+      [toolId('source:web', 'web_fetch')]: 'child-only',
+    })
+    assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('delegation:tool-subagent-fork'), false)
+  })
+
+  it('declares exact per-tool defaults for the complete known DSH roster', () => {
+    const entries = PACKAGE_ROSTER_ENTRY_IDS.map(id => ({ id, fiber: { ctx: { token: id } } }))
+    const owner = { parent: { tree: { entries: () => entries } } }
+    const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
+    let defaults
+    applyPresetProjection(ctx, {
+      hostSourceId: entryCtx => `source:${entryCtx.token}`,
+      registerRoster(value) { defaults = value; return () => {} },
+    })
+    const expected = (source, names, assignment) => Object.fromEntries(
+      names.map(name => [toolId(`source:${source}`, name), assignment]),
+    )
+
+    assert.deepEqual(defaults.toolAssignments, {
+      ...expected('persistent-shell:persistent-bash', ['bash'], 'shared'),
+      ...expected('persistent-shell:persistent-pwsh', ['pwsh'], 'shared'),
+      ...expected('filesystem:str-replace-editor', ['str_replace_editor'], 'shared'),
+      ...expected('tool-fs', ['read', 'edit', 'write', 'read_image'], 'child-only'),
+      ...expected('tool-fs-search', ['glob', 'grep'], 'child-only'),
+      ...expected('tool-jobs', ['job_output', 'job_list', 'job_kill'], 'child-only'),
+      ...expected('tool-skill', ['skill'], 'shared'),
+      ...expected('tool-goal', ['get_goal', 'create_goal', 'update_goal'], 'parent-only'),
+      ...expected('planning:plan-mode', ['exit_plan_mode'], 'parent-only'),
+      ...expected('delegation:tool-subagent-control', ['send_message', 'interrupt_agent'], 'parent-only'),
+      ...expected('delegation:tool-subagent-list-agents', ['list_agents'], 'parent-only'),
+      ...expected('delegation:tool-subagent', ['subagent'], 'parent-only'),
+      ...expected('tool-ask-user', ['ask_user_question'], 'parent-only'),
+      ...expected('tool-todo', ['todo_write'], 'parent-only'),
+      ...expected('tool-web', ['web_search', 'web_fetch'], 'child-only'),
+    })
   })
 })

@@ -1,4 +1,9 @@
-import { assignmentFor, DEFAULT_CONFIG } from './config.mjs'
+import {
+  assignmentFor,
+  DEFAULT_CONFIG,
+  makeToolSchemaId,
+  validateToolAssignmentMap,
+} from './config.mjs'
 
 export const BOOTSTRAP_ID_PREFIX = 'dsh-warm-minimal:bootstrap:'
 export const PLATFORM_SHELL = process.platform === 'win32' ? 'pwsh' : 'bash'
@@ -54,70 +59,56 @@ function allowed(assignment, role) {
   return assignment === 'shared' || assignment === `${role}-only`
 }
 
-function groupedInventory(inventory, defaultAssignmentFor) {
-  const sources = new Map()
-  for (const kind of ['sections', 'contexts']) {
-    for (const entry of inventory[kind]) {
-      let row = sources.get(entry.source)
-      if (row === undefined) {
-        row = { source: entry.source, sections: [], contexts: [], tools: [] }
-        sources.set(entry.source, row)
-      }
-      if (!row[kind].includes(entry.name)) row[kind].push(entry.name)
-    }
+function assertContributionPart(label, value, maximum) {
+  if (typeof value !== 'string' || value.length === 0 || value.length > maximum) {
+    throw new TypeError(`dsh-warm-minimal: ${label} must contain 1-${maximum} characters`)
   }
-  for (const entry of inventory.tools) {
-    let row = sources.get(entry.source)
-    if (row === undefined) {
-      row = { source: entry.source, sections: [], contexts: [], tools: [] }
-      sources.set(entry.source, row)
-    }
-    const index = row.tools.findIndex(tool => tool.name === entry.name)
-    const tool = entry.description === undefined
-      ? { name: entry.name }
-      : { name: entry.name, description: entry.description }
-    if (index === -1) row.tools.push(tool)
-    else if (row.tools[index].description === undefined && tool.description !== undefined) row.tools[index] = tool
+}
+
+function assertAssignment(assignment, id) {
+  if (assignment !== 'parent-only' && assignment !== 'child-only' && assignment !== 'shared') {
+    throw new TypeError(`dsh-warm-minimal: invalid package assignment for ${JSON.stringify(id)}`)
   }
-  return [...sources.values()].map(row => ({
-    source: row.source,
-    promptDefault: defaultAssignmentFor('prompt', row.source),
-    toolDefault: defaultAssignmentFor('tool', row.source),
-    sections: [...row.sections],
-    contexts: [...row.contexts],
-    tools: row.tools.map(tool => ({ ...tool })),
-  }))
 }
 
 /** Build the dependency-injected warm runtime used by the Host plugin. */
 export function createWarmRuntime({ agents, promptAssemblySourceInventory, getConfig = () => DEFAULT_CONFIG }) {
   const active = new WeakMap()
   const rosterRegistrations = new Set()
-  const observedCandidates = new WeakMap()
-  let inventory = []
 
   const rosterFor = (kind) => {
     const merged = new Map()
     for (const registration of rosterRegistrations) {
-      for (const [source, assignment] of registration[kind]) {
-        const previous = merged.get(source)
+      for (const [id, assignment] of registration[kind]) {
+        const previous = merged.get(id)
         if (previous !== undefined && previous !== assignment) {
-          throw new Error(`dsh-warm-minimal: conflicting package assignment for source ${JSON.stringify(source)}`)
+          throw new Error(`dsh-warm-minimal: conflicting package assignment for ${JSON.stringify(id)}`)
         }
-        merged.set(source, assignment)
+        merged.set(id, assignment)
       }
     }
     return merged
   }
 
-  const defaultAssignmentFor = (kind, source) => assignmentFor(source, {}, rosterFor(kind))
+  const defaultAssignmentFor = (kind, id) => assignmentFor(id, {}, rosterFor(kind))
 
-  const resolvedAssignmentFor = (kind, source, config) => {
+  const resolvedConfig = () => {
+    const config = getConfig()
+    validateToolAssignmentMap(config.toolAssignments)
+    return config
+  }
+
+  const resolvedAssignmentFor = (kind, id, config) => {
     const saved = kind === 'tool' ? config.toolAssignments : config.promptAssignments
-    return saved[source] ?? defaultAssignmentFor(kind, source)
+    return saved[id] ?? defaultAssignmentFor(kind, id)
   }
 
   const registerRoster = ({ promptAssignments, toolAssignments }) => {
+    validateToolAssignmentMap(toolAssignments)
+    for (const [source, assignment] of Object.entries(promptAssignments)) {
+      assertContributionPart('prompt source', source, 4096)
+      assertAssignment(assignment, source)
+    }
     const registration = {
       prompt: new Map(Object.entries(promptAssignments)),
       tool: new Map(Object.entries(toolAssignments)),
@@ -132,30 +123,86 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
     return roleOf(agents, agent)
   }
 
-  const observeCandidate = (context, candidate) => {
-    let candidates = observedCandidates.get(context)
-    if (candidates === undefined) {
-      candidates = []
-      observedCandidates.set(context, candidates)
-    }
-    candidates.push(candidate)
-  }
-
   const admitSource = (context, candidate) => {
     const role = resolvedRole(context)
     if (role === undefined) return true
-    observeCandidate(context, candidate)
     const state = active.get(context.agent.session)
     if (state !== undefined && !state.promoted) return true
-    const config = getConfig()
-    const kind = candidate.kind === 'tool' ? 'tool' : 'prompt'
-    return allowed(resolvedAssignmentFor(kind, candidate.source, config), role)
+    const config = resolvedConfig()
+    if (candidate.kind === 'tool') {
+      const id = makeToolSchemaId(candidate.source, candidate.name)
+      return allowed(resolvedAssignmentFor('tool', id, config), role)
+    }
+    assertContributionPart('prompt source', candidate.source, 4096)
+    assertContributionPart(`${candidate.kind} name`, candidate.name, 1024)
+    return allowed(resolvedAssignmentFor('prompt', candidate.source, config), role)
+  }
+
+  const sourceInventoryFor = (assembly) => {
+    const inventory = promptAssemblySourceInventory(assembly)
+    for (const kind of ['sections', 'contexts', 'tools']) {
+      const entries = assembly[kind]
+      const sources = inventory[kind]
+      if (!Array.isArray(sources) || sources.length !== entries.length) {
+        throw new Error(`dsh-warm-minimal: ${kind} source inventory does not align with assembly`)
+      }
+      for (let index = 0; index < entries.length; index += 1) {
+        const sourceEntry = sources[index]
+        if (sourceEntry?.name !== entries[index]?.name) {
+          throw new Error(`dsh-warm-minimal: ${kind} source/name inventory does not align at index ${index}`)
+        }
+        assertContributionPart(`${kind} source`, sourceEntry.source, 4096)
+        assertContributionPart(`${kind} name`, sourceEntry.name, kind === 'tools' ? 256 : 1024)
+      }
+    }
+    const seen = new Set()
+    for (const entry of inventory.tools) {
+      const id = makeToolSchemaId(entry.source, entry.name)
+      if (seen.has(id)) {
+        throw new Error(`dsh-warm-minimal: duplicate tool schema contribution ${JSON.stringify(id)}`)
+      }
+      seen.add(id)
+    }
+    return inventory
+  }
+
+  const inventoryFor = (assembly) => {
+    const sourceInventory = sourceInventoryFor(assembly)
+    const grouped = new Map()
+    for (const kind of ['sections', 'contexts']) {
+      for (const entry of sourceInventory[kind]) {
+        let row = grouped.get(entry.source)
+        if (row === undefined) {
+          row = { source: entry.source, sections: [], contexts: [] }
+          grouped.set(entry.source, row)
+        }
+        if (!row[kind].includes(entry.name)) row[kind].push(entry.name)
+      }
+    }
+    return {
+      promptSources: [...grouped.values()].map(row => ({
+        source: row.source,
+        defaultAssignment: defaultAssignmentFor('prompt', row.source),
+        sections: [...row.sections],
+        contexts: [...row.contexts],
+      })),
+      tools: sourceInventory.tools.map((entry, index) => {
+        const id = makeToolSchemaId(entry.source, entry.name)
+        return {
+          id,
+          source: entry.source,
+          name: entry.name,
+          description: assembly.tools[index].description,
+          defaultAssignment: defaultAssignmentFor('tool', id),
+        }
+      }),
+    }
   }
 
   async function runBootstrap(ctx, agent, state) {
     const { session } = agent
     try {
-      agent.followup(bootstrapMessage(getConfig().bootstrapMessage))
+      agent.followup(bootstrapMessage(resolvedConfig().bootstrapMessage))
       await agent.whenIdle()
     } catch (error) {
       ctx.logger.warn(`dsh-warm-minimal: bootstrap failed for ${session.id}: ${errorMessage(error)}`)
@@ -183,7 +230,7 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
       else ctx.logger.warn(`dsh-warm-minimal: failed to hold ${input.id} during bootstrap for ${session.id}`)
       return
     }
-    if (!getConfig().bootstrapEnabled) return
+    if (!resolvedConfig().bootstrapEnabled) return
     if (resolveSessionPreset(session) !== 'warm-minimal') return
     if (session.events.some(event => event.type === 'turn/start')) return
     if (!agent.inbox.remove(input.id)) {
@@ -196,53 +243,44 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
   }
 
   const project = (assembly, context) => {
-    const sourceInventory = promptAssemblySourceInventory(assembly)
-    const observed = observedCandidates.get(context) ?? []
-    observedCandidates.delete(context)
-    inventory = groupedInventory({
-      sections: [
-        ...observed.filter(candidate => candidate.kind === 'section').map(candidate => ({ name: candidate.name, source: candidate.source })),
-        ...sourceInventory.sections,
-      ],
-      contexts: [
-        ...observed.filter(candidate => candidate.kind === 'context').map(candidate => ({ name: candidate.name, source: candidate.source })),
-        ...sourceInventory.contexts,
-      ],
-      tools: [
-        ...observed.filter(candidate => candidate.kind === 'tool').map(candidate => ({ name: candidate.name, source: candidate.source })),
-        ...sourceInventory.tools.map((entry, index) => ({
-          ...entry,
-          description: assembly.tools[index]?.description,
-        })),
-      ],
-    }, defaultAssignmentFor)
+    const sourceInventory = sourceInventoryFor(assembly)
     const agent = context.agent
     if (agent === undefined) return assembly
     const state = active.get(agent.session)
     if (state !== undefined && !state.promoted) return minimalBootstrapAssembly(assembly)
     if (resolveSessionPreset(agent.session) !== 'warm-minimal') return assembly
-    const config = getConfig()
+    const config = resolvedConfig()
     const role = roleOf(agents, agent)
-    const filter = (entries, sources, kind) => entries.filter((_entry, index) => {
-      const source = sources[index]?.source
-      return source !== undefined && allowed(resolvedAssignmentFor(kind, source, config), role)
+    const filterPrompts = (entries, sources) => entries.filter((_entry, index) =>
+      allowed(resolvedAssignmentFor('prompt', sources[index].source, config), role))
+    const admittedTools = assembly.tools.flatMap((tool, index) => {
+      const source = sourceInventory.tools[index].source
+      const id = makeToolSchemaId(source, tool.name)
+      return allowed(resolvedAssignmentFor('tool', id, config), role) ? [{ tool, source }] : []
     })
-    const sections = filter(assembly.sections, sourceInventory.sections, 'prompt')
-    const contexts = filter(assembly.contexts, sourceInventory.contexts, 'prompt')
-    const tools = filter(assembly.tools, sourceInventory.tools, 'tool')
+    const sourceByName = new Map()
+    for (const { tool, source } of admittedTools) {
+      const previous = sourceByName.get(tool.name)
+      if (previous !== undefined && previous !== source) {
+        throw new Error(`dsh-warm-minimal: ambiguous ${role} tool ${JSON.stringify(tool.name)} from different sources`)
+      }
+      sourceByName.set(tool.name, source)
+    }
+    const sections = filterPrompts(assembly.sections, sourceInventory.sections)
+    const contexts = filterPrompts(assembly.contexts, sourceInventory.contexts)
     return {
       ...assembly,
       sections: role === 'parent' && config.guidance.length > 0
         ? [...sections, { name: 'dsh-warm-minimal:guidance', text: config.guidance }]
         : sections,
       contexts,
-      tools,
+      tools: admittedTools.map(entry => entry.tool),
     }
   }
 
   return {
     registerRoster,
-    inventorySnapshot: () => structuredClone(inventory),
+    inventoryFor,
     install(ctx) {
       ctx.effect(() => ctx.root.on('agent/inbox/inserted', payload => onInserted(ctx, payload), { global: true }), 'dsh-warm-minimal: optional native bootstrap before first real request')
       ctx.effect(() => ctx.systemPrompt.admitSources(admitSource), 'dsh-warm-minimal: role-aware registry source admission')

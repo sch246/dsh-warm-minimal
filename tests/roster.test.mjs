@@ -59,12 +59,6 @@ describe('warm-minimal package-owned roster', () => {
       'delegation/tool-subagent-control',
       'delegation/tool-subagent-list-agents',
       'delegation/tool-subagent',
-      'delegation/tool-subagent-fork',
-      'delegation/tool-subagent-codex',
-      'delegation/tool-subagent-claude-code',
-      'delegation/workflow-worker-thread',
-      'delegation/tool-workflow',
-      'delegation/tool-ralph',
       'tool-ask-user',
       'tool-todo',
       'tool-web',
@@ -75,6 +69,7 @@ describe('warm-minimal package-owned roster', () => {
 
   it('owns projection and roster configuration without another preset', async () => {
     const preset = await readFile(presetUrl, 'utf8')
+    const paths = entryPaths(preset)
 
     assert.match(
       topLevelBlock(preset, 'worker-persona'),
@@ -89,6 +84,9 @@ describe('warm-minimal package-owned roster', () => {
       /^\s*name: '@deepseek-ai\/dsh-tool-(?:bash|pwsh)'\s*$/m,
     )
     assert.match(preset, /@deepseek-ai\/dsh-tool-jobs/)
+    for (const removed of ['tool-subagent-fork', 'tool-workflow', 'tool-ralph', 'workflow-worker-thread']) {
+      assert.equal(paths.has(`delegation/${removed}`), false, `compact coordinator must not mount ${removed}`)
+    }
   })
 
   it('keeps persona extensible and copies the selected runtime settings', async () => {
@@ -110,9 +108,6 @@ describe('warm-minimal package-owned roster', () => {
       /headChars: 4096/,
       /tailChars: 1024/,
       /provider: spawn\n\s+toolName: subagent\n\s+backgroundMode: continuable/,
-      /provider: fork\n\s+toolName: subagent_fork\n\s+backgroundMode: continuable/,
-      /id: workflow-worker-thread\n\s+name: '@deepseek-ai\/dsh-workflow-worker-thread'\n\s+config:\n\s+provider: spawn/,
-      /subagentProvider: spawn\n\s+maxRounds: 64/,
       /allowParallelInProgress: true/,
       /fetch: false\n\s+searchTimeoutMs: 60000/,
     ]) {

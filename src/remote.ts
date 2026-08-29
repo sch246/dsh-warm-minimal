@@ -6,7 +6,7 @@ import type { WarmMinimalInventory } from './types.ts'
 
 /** Runtime capability exposed to the inventory Remote. */
 export interface WarmMinimalInventoryRuntime {
-  /** Refresh the preset inventory without a model request and return an isolated snapshot. */
+  /** Assemble the preset scope without a model request and return its atomic inventory. */
   queryInventory(): Promise<WarmMinimalInventory>
 }
 
@@ -21,8 +21,8 @@ export class WarmMinimalRemote extends TypertRemoteService {
   }
 
   /**
-   * Read the latest inventory discovered by model assembly.
-   * @returns stable source ids with roster defaults and readable contributions.
+   * Read one inventory from the current preset-scope assembly.
+   * @returns grouped prompt sources and independently assignable tool schemas.
    */
   @Remote('queryInventory')
   queryInventory(): Promise<WarmMinimalInventory> {

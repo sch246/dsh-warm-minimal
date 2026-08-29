@@ -7,19 +7,27 @@ import { TYPERT } from '../lib/typert.host.js'
 describe('warm-minimal inventory Remote', () => {
   it('returns stable source ids, roster defaults, and readable contributions', async () => {
     const ctx = new Context()
-    const snapshot = [{
-      source: 'host-source:plugin-row',
-      promptDefault: 'parent-only',
-      toolDefault: 'shared',
-      sections: ['persona'],
-      contexts: ['workspace'],
-      tools: [{ name: 'bash', description: 'Run commands.' }],
-    }]
+    const snapshot = {
+      promptSources: [{
+        source: 'host-source:plugin-row',
+        defaultAssignment: 'parent-only',
+        sections: ['persona'],
+        contexts: ['workspace'],
+      }],
+      tools: [{
+        id: 'tool-schema:v1:WyJob3N0LXNvdXJjZTpwbHVnaW4tcm93IiwiYmFzaCJd',
+        source: 'host-source:plugin-row',
+        name: 'bash',
+        description: 'Run commands.',
+        defaultAssignment: 'shared',
+      }],
+    }
     const remote = new WarmMinimalRemote(ctx, {
       queryInventory: async () => structuredClone(snapshot),
     })
 
     assert.deepEqual(await remote.queryInventory(), snapshot)
+    assert.deepEqual(TYPERT.invocations[0].result.schema.parse(snapshot), snapshot)
     assert.equal(typeof ctx.get('warmMinimal')?.queryInventory, 'function')
   })
 

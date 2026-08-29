@@ -3,13 +3,31 @@
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type {
-  AssignedPromptSource, AssignedToolSource, InventorySource, SourceAssignment, WarmMinimalSettings,
+  AssignedPromptSource,
+  AssignedToolSource,
+  InventoryPromptSource,
+  InventoryTool,
+  SourceAssignment,
+  ToolSchemaId,
+  WarmMinimalInventory,
+  WarmMinimalSettings,
 } from './contract.ts'
+import { isToolSchemaId } from './contract.ts'
+
+interface WireInventoryTool extends Omit<InventoryTool, 'id'> {
+  /** Unvalidated tool identity received from the generated Remote codec. */
+  readonly id: string
+}
+
+interface WireWarmMinimalInventory extends Omit<WarmMinimalInventory, 'tools'> {
+  /** Tool rows whose opaque identities are validated by this controller. */
+  readonly tools: readonly WireInventoryTool[]
+}
 
 /** Read-only generated Remote face consumed by the controller. */
 export interface WarmMinimalInventoryRemote {
   /** Query the current contribution inventory. */
-  queryInventory(): Promise<RemoteResult<readonly InventorySource[]>>
+  queryInventory(): Promise<RemoteResult<WireWarmMinimalInventory>>
 }
 
 /** Immutable projection rendered by the settings card. */
@@ -52,7 +70,7 @@ const SETTINGS_FIELDS: readonly SettingsField[] = [
 export class WarmMinimalCardController implements WarmMinimalCardObservable {
   private readonly listeners = new Set<() => void>()
   private readonly staged: Partial<WarmMinimalSettings> = {}
-  private inventory: readonly InventorySource[] | undefined
+  private inventory: WarmMinimalInventory | undefined
   private inventoryLoading = false
   private saving = false
   private failure: string | undefined
@@ -107,12 +125,18 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
     this.stage('guidance', guidance)
   }
 
-  /** Stage one assignment in the settings-owned source map. */
-  assign(list: 'prompt' | 'tool', source: string, assignment: SourceAssignment): void {
+  /** Stage one prompt assignment by source identity. */
+  assign(list: 'prompt', id: string, assignment: SourceAssignment): void
+  /** Stage one tool assignment by opaque schema identity. */
+  assign(list: 'tool', id: ToolSchemaId, assignment: SourceAssignment): void
+  /** Stage a UI-selected assignment after validating tool identities at runtime. */
+  assign(list: 'prompt' | 'tool', id: string, assignment: SourceAssignment): void
+  /** Stage one assignment in its settings-owned identity map. */
+  assign(list: 'prompt' | 'tool', id: string, assignment: SourceAssignment): void {
     const field = list === 'prompt' ? 'promptAssignments' : 'toolAssignments'
     const current = this.effective()
-    if (current === undefined) return
-    this.stage(field, { ...current[field], [source]: assignment })
+    if (current === undefined || (list === 'tool' && !isToolSchemaId(id))) return
+    this.stage(field, { ...current[field], [id]: assignment })
   }
 
   /** Drop every browser-local edit. */
@@ -165,7 +189,7 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
     try {
       const result = await this.remote.queryInventory()
       if (this.disposed) return
-      if (result.ok) this.inventory = result.value.map(cloneInventorySource)
+      if (result.ok) this.inventory = cloneInventory(result.value)
       else this.failure = `Inventory query failed: ${result.error.code}: ${result.error.message}`
     } catch (error) {
       if (!this.disposed) this.failure = error instanceof Error ? error.message : String(error)
@@ -199,7 +223,7 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
   private project(): WarmMinimalCardView {
     const snapshot = this.scope.getSnapshot()
     const draft = this.effective()
-    const inventory = this.inventory ?? []
+    const inventory = this.inventory ?? { promptSources: [], tools: [] }
     const status = snapshot.status === 'unavailable'
       ? 'unavailable'
       : snapshot.status !== 'ready' || this.inventoryLoading
@@ -210,8 +234,8 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
       revision: snapshot.revision,
       writable: snapshot.writable,
       draft,
-      promptSources: draft === undefined ? [] : projectPromptSources(inventory, draft.promptAssignments),
-      toolSources: draft === undefined ? [] : projectToolSources(inventory, draft.toolAssignments),
+      promptSources: draft === undefined ? [] : projectPromptSources(inventory.promptSources, draft.promptAssignments),
+      toolSources: draft === undefined ? [] : projectToolSources(inventory.tools, draft.toolAssignments),
       dirty: Object.keys(this.staged).length > 0,
       saving: this.saving,
       failure: this.failure,
@@ -227,7 +251,7 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
 
 /** Project prompt inventory separately from the settings write model. */
 function projectPromptSources(
-  inventory: readonly InventorySource[],
+  inventory: readonly InventoryPromptSource[],
   assignments: Readonly<Record<string, SourceAssignment>>,
 ): AssignedPromptSource[] {
   return inventory.flatMap((entry) => {
@@ -236,34 +260,39 @@ function projectPromptSources(
       source: entry.source,
       sections: [...entry.sections],
       contexts: [...entry.contexts],
-      assignment: assignments[entry.source] ?? entry.promptDefault,
+      assignment: assignments[entry.source] ?? entry.defaultAssignment,
     }]
   }).sort((left, right) => left.source.localeCompare(right.source))
 }
 
 /** Project tool inventory separately from the settings write model. */
 function projectToolSources(
-  inventory: readonly InventorySource[],
-  assignments: Readonly<Record<string, SourceAssignment>>,
+  inventory: readonly InventoryTool[],
+  assignments: Readonly<Record<ToolSchemaId, SourceAssignment>>,
 ): AssignedToolSource[] {
-  return inventory.flatMap((entry) => {
-    if (entry.tools.length === 0) return []
-    return [{
-      source: entry.source,
-      tools: entry.tools.map(tool => ({ ...tool })),
-      assignment: assignments[entry.source] ?? entry.toolDefault,
-    }]
-  }).sort((left, right) => left.source.localeCompare(right.source))
+  return inventory.map(entry => ({
+    id: entry.id,
+    source: entry.source,
+    name: entry.name,
+    description: entry.description,
+    assignment: assignments[entry.id] ?? entry.defaultAssignment,
+  })).sort((left, right) => left.source.localeCompare(right.source) || left.name.localeCompare(right.name))
 }
 
-function cloneInventorySource(source: InventorySource): InventorySource {
+function cloneInventory(inventory: WireWarmMinimalInventory): WarmMinimalInventory {
   return {
-    source: source.source,
-    promptDefault: source.promptDefault,
-    toolDefault: source.toolDefault,
-    sections: [...source.sections],
-    contexts: [...source.contexts],
-    tools: source.tools.map(tool => ({ ...tool })),
+    promptSources: inventory.promptSources.map(source => ({
+      source: source.source,
+      defaultAssignment: source.defaultAssignment,
+      sections: [...source.sections],
+      contexts: [...source.contexts],
+    })),
+    tools: inventory.tools.map((tool) => {
+      if (!isToolSchemaId(tool.id)) {
+        throw new TypeError(`dsh-warm-minimal: inventory returned invalid tool schema id ${JSON.stringify(tool.id)}`)
+      }
+      return { ...tool, id: tool.id }
+    }),
   }
 }
 

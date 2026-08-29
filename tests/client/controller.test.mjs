@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { decodeWarmMinimalSettings, isToolSchemaId } from '../../lib/types/client/contract.js'
 import { WarmMinimalCardController } from '../../lib/types/client/controller.js'
 
 function settings() {
@@ -8,7 +9,10 @@ function settings() {
     bootstrapMessage: '检查当前工作目录，确认后仅回复 Ready.',
     guidance: 'Coordinate.',
     promptAssignments: { 'source:known': 'shared', retained: 'parent-only' },
-    toolAssignments: { 'source:known': 'child-only' },
+    toolAssignments: {
+      'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0': 'child-only',
+      'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJzdHJfcmVwbGFjZV9lZGl0b3IiXQ': 'shared',
+    },
   }
 }
 
@@ -50,27 +54,38 @@ function remoteDouble() {
         calls += 1
         return {
           ok: true,
-          value: [
+          value: {
+            promptSources: [
             {
               source: 'source:known',
-              promptDefault: 'parent-only',
-              toolDefault: 'shared',
+              defaultAssignment: 'parent-only',
               sections: ['persona', 'duplicate'],
               contexts: ['workspace', 'duplicate'],
-              tools: [
-                { name: 'bash', description: 'Run commands.' },
-                { name: 'str_replace_editor' },
-              ],
             },
             {
               source: 'unknown:very-long-source-identity-that-needs-a-short-browser-value:tail',
-              promptDefault: 'shared',
-              toolDefault: 'child-only',
+              defaultAssignment: 'shared',
               sections: ['extra'],
               contexts: [],
-              tools: [],
             },
-          ],
+            ],
+            tools: [
+              {
+                id: 'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0',
+                source: 'source:known',
+                name: 'bash',
+                description: 'Run commands.',
+                defaultAssignment: 'shared',
+              },
+              {
+                id: 'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJzdHJfcmVwbGFjZV9lZGl0b3IiXQ',
+                source: 'source:known',
+                name: 'str_replace_editor',
+                description: 'Edit files.',
+                defaultAssignment: 'child-only',
+              },
+            ],
+          },
         }
       },
     },
@@ -78,6 +93,15 @@ function remoteDouble() {
 }
 
 describe('WarmMinimalCardController', () => {
+  it('rejects legacy provider-scoped tool settings before constructing a draft', () => {
+    const legacy = settings()
+    legacy.toolAssignments = { 'source:known': 'shared' }
+
+    assert.equal(decodeWarmMinimalSettings(legacy), undefined)
+    assert.equal(isToolSchemaId('source:known'), false)
+    assert.equal(isToolSchemaId('tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0'), true)
+  })
+
   it('reads inventory defaults through Remote and retains prompt, context, and tool detail', async () => {
     const host = scopeDouble()
     const inventory = remoteDouble()
@@ -93,14 +117,44 @@ describe('WarmMinimalCardController', () => {
       assignment: 'shared',
     })
     assert.equal(controller.getSnapshot().promptSources[1].assignment, 'shared')
-    assert.deepEqual(controller.getSnapshot().toolSources[0], {
+    assert.deepEqual(controller.getSnapshot().toolSources, [{
+      id: 'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0',
       source: 'source:known',
-      tools: [
-        { name: 'bash', description: 'Run commands.' },
-        { name: 'str_replace_editor' },
-      ],
+      name: 'bash',
+      description: 'Run commands.',
       assignment: 'child-only',
+    }, {
+      id: 'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJzdHJfcmVwbGFjZV9lZGl0b3IiXQ',
+      source: 'source:known',
+      name: 'str_replace_editor',
+      description: 'Edit files.',
+      assignment: 'shared',
+    }])
+  })
+
+  it('fails inventory loading when the Remote returns a malformed tool identity', async () => {
+    const host = scopeDouble()
+    const inventory = remoteDouble()
+    inventory.remote.queryInventory = async () => ({
+      ok: true,
+      value: {
+        promptSources: [],
+        tools: [{
+          id: 'source:legacy',
+          source: 'source:legacy',
+          name: 'bash',
+          description: 'Run commands.',
+          defaultAssignment: 'shared',
+        }],
+      },
     })
+    const controller = new WarmMinimalCardController(host.scope, inventory.remote)
+
+    await controller.loadInventory()
+
+    assert.equal(controller.getSnapshot().status, 'error')
+    assert.match(controller.getSnapshot().failure, /invalid tool schema id/)
+    assert.deepEqual(controller.getSnapshot().toolSources, [])
   })
 
   it('saves only the five settings fields through settingsScope and never inventory metadata', async () => {
@@ -113,7 +167,7 @@ describe('WarmMinimalCardController', () => {
     controller.setBootstrapMessage('Editable while disabled')
     controller.setGuidance('Own integration.')
     controller.assign('prompt', 'source:known', 'child-only')
-    controller.assign('tool', 'source:known', 'shared')
+    controller.assign('tool', 'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0', 'shared')
     await controller.save()
 
     assert.deepEqual(host.writes.map(write => write.field), [
@@ -122,7 +176,10 @@ describe('WarmMinimalCardController', () => {
     assert.deepEqual(host.writes[3].value, {
       'source:known': 'child-only', retained: 'parent-only',
     })
-    assert.deepEqual(host.writes[4].value, { 'source:known': 'shared' })
+    assert.deepEqual(host.writes[4].value, {
+      'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJiYXNoIl0': 'shared',
+      'tool-schema:v1:WyJzb3VyY2U6a25vd24iLCJzdHJfcmVwbGFjZV9lZGl0b3IiXQ': 'shared',
+    })
     assert.equal(JSON.stringify(host.writes).includes('persona'), false)
     assert.equal(JSON.stringify(host.writes).includes('description'), false)
     assert.equal(controller.getSnapshot().dirty, false)
