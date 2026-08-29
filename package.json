@@ -31,6 +31,10 @@
       "types": "./lib/typert.remote-client.d.ts",
       "default": "./lib/typert.remote-client.js"
     },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
@@ -44,6 +48,9 @@
     "projection-host.mjs",
     "runtime.mjs",
     "lib/remote.js",
+    "lib/client.js",
+    "lib/types/client/**/*.js",
+    "lib/types/client/**/*.d.ts",
     "lib/types/remote.d.ts",
     "lib/types/types.js",
     "lib/types/types.d.ts",
@@ -63,6 +70,7 @@
     "uninstall": "bash scripts/uninstall.sh",
     "uninstall:win": "powershell -ExecutionPolicy Bypass -File scripts/uninstall.ps1",
     "build:host": "bash scripts/build-host.sh",
+    "build:client": "bash scripts/build-client.sh",
     "test": "node --test"
   },
   "keywords": [
@@ -86,10 +94,17 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-api-remotes": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-locale": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.1-rc.2",
     "@deepseek-ai/dsh-settings": "^0.1.1-rc.2",
     "@deepseek-ai/dsh-system-prompt": "^0.1.1-rc.2",
     "@deepseek-ai/dsh-typert-protocol": "^0.1.1-rc.2",
-    "@deepseek-ai/schemastery": "^3.18.1"
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "zod": "^4.4.3"
@@ -97,6 +112,16 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-locale"
+      ]
     }
   }
 }

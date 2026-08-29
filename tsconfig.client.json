@@ -1,0 +1,19 @@
+{
+  "extends": "./harness/tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": "src/client",
+    "outDir": "lib/types/client",
+    "tsBuildInfoFile": "lib/types/client/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/client"],
+  "references": [
+    { "path": "./harness/vendor/cordis" },
+    { "path": "./harness/packages/api/remotes/tsconfig.client.json" },
+    { "path": "./harness/packages/client/locale" },
+    { "path": "./harness/packages/client/runtime" },
+    { "path": "./harness/packages/client/ui-settings" },
+    { "path": "./harness/packages/client/ui-settings-plugins" },
+    { "path": "./harness/packages/client/ui-slots" },
+    { "path": "./harness/packages/typert/protocol" }
+  ]
+}
