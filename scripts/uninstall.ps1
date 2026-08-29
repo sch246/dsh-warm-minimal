@@ -7,6 +7,20 @@ $CheckoutInput = if ($env:DSH_CHECKOUT) { $env:DSH_CHECKOUT } else { "/root/deep
 $Patch = Join-Path $RepoDir "patches\deepseek-harness.patch"
 $Src = Join-Path $RepoDir "presets\warm-minimal"
 $Dest = Join-Path $DshHome ".agent-presets\warm-minimal"
+$OwnerMarker = ".dsh-warm-minimal-owned"
+$CurrentOwner = "dsh-warm-minimal@0.2.0"
+
+function Get-PresetOwner([string]$Path) {
+    $Lines = @(Get-Content -LiteralPath $Path)
+    if ($Lines.Count -ne 1) { return $null }
+    return $Lines[0]
+}
+
+function Test-PlainFile([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+    $Attributes = (Get-Item -Force -LiteralPath $Path).Attributes
+    return ($Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0
+}
 
 $Checkout = (& git -C $CheckoutInput rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $Checkout) {
@@ -19,6 +33,13 @@ if (-not (Test-Path $HarnessPackage) -or -not (Select-String -Quiet -SimpleMatch
 }
 if (-not (Test-Path $Patch)) {
     throw "uninstall: package-owned Harness patch not found: $Patch"
+}
+if (-not (Test-Path (Join-Path $Src "agent.cordis.yml")) -or -not (Test-Path (Join-Path $Src "preset.yml")) -or -not (Test-Path (Join-Path $Src $OwnerMarker))) {
+    throw "uninstall: preset source not found: $Src"
+}
+$SourceOwner = Get-PresetOwner (Join-Path $Src $OwnerMarker)
+if ($SourceOwner -cne $CurrentOwner) {
+    throw "uninstall: preset source ownership marker is not ${CurrentOwner}: $(Join-Path $Src $OwnerMarker)"
 }
 
 $PatchPresent = $false
@@ -34,8 +55,12 @@ if ($LASTEXITCODE -eq 0) {
     }
 }
 
-if (-not (Test-Path (Join-Path $Dest ".dsh-warm-minimal-owned"))) {
+if (-not (Test-PlainFile (Join-Path $Dest $OwnerMarker))) {
     throw "uninstall: refusing to remove an unowned preset: $Dest"
+}
+$InstalledOwner = Get-PresetOwner (Join-Path $Dest $OwnerMarker)
+if ($InstalledOwner -cne $CurrentOwner) {
+    throw "uninstall: refusing to remove a preset not owned by ${CurrentOwner}: $Dest"
 }
 $Diff = & git diff --no-index --quiet -- $Src $Dest
 if ($LASTEXITCODE -ne 0) { throw "uninstall: package-owned preset has drifted; refusing to remove later edits: $Dest" }

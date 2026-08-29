@@ -12,6 +12,38 @@ $CheckoutInput = if ($env:DSH_CHECKOUT) { $env:DSH_CHECKOUT } else { "/root/deep
 $Patch = Join-Path $RepoDir "patches\deepseek-harness.patch"
 $Src = Join-Path $RepoDir "presets\warm-minimal"
 $Dest = Join-Path $DshHome ".agent-presets\warm-minimal"
+$OwnerMarker = ".dsh-warm-minimal-owned"
+$CurrentOwner = "dsh-warm-minimal@0.2.0"
+$LegacyOwner = "dsh-warm-minimal@0.1.0"
+$LegacyAgentSha256 = "c952e72ff87cb09e6d2700dcf806c6584a67cf867adcd103ec822a6c538d4f87"
+$LegacyPresetSha256 = "745b32e24aeb8d7c0f51ed729c82238addcae703eed76d7790fd745f9e323909"
+
+function Get-PresetOwner([string]$Path) {
+    $Lines = @(Get-Content -LiteralPath $Path)
+    if ($Lines.Count -ne 1) { return $null }
+    return $Lines[0]
+}
+
+function Test-PlainFile([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+    $Attributes = (Get-Item -Force -LiteralPath $Path).Attributes
+    return ($Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0
+}
+
+function Test-ExactLegacyPreset([string]$Path) {
+    $ExpectedEntries = @($OwnerMarker, "agent.cordis.yml", "preset.yml") | Sort-Object
+    $ActualEntries = @((Get-ChildItem -Force -LiteralPath $Path).Name | Sort-Object)
+    if (@(Compare-Object -ReferenceObject $ExpectedEntries -DifferenceObject $ActualEntries).Count -ne 0) { return $false }
+
+    $AgentPath = Join-Path $Path "agent.cordis.yml"
+    $PresetPath = Join-Path $Path "preset.yml"
+    if (-not (Test-PlainFile $AgentPath) -or -not (Test-PlainFile $PresetPath)) {
+        return $false
+    }
+    $AgentHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $AgentPath).Hash.ToLowerInvariant()
+    $PresetHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $PresetPath).Hash.ToLowerInvariant()
+    return $AgentHash -ceq $LegacyAgentSha256 -and $PresetHash -ceq $LegacyPresetSha256
+}
 
 $Checkout = (& git -C $CheckoutInput rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $Checkout) {
@@ -25,20 +57,45 @@ if (-not (Test-Path $HarnessPackage) -or -not (Select-String -Quiet -SimpleMatch
 if (-not (Test-Path $Patch)) {
     throw "setup: package-owned Harness patch not found: $Patch"
 }
-if (-not (Test-Path (Join-Path $Src "agent.cordis.yml"))) {
+if (-not (Test-Path (Join-Path $Src "agent.cordis.yml")) -or -not (Test-Path (Join-Path $Src "preset.yml")) -or -not (Test-Path (Join-Path $Src $OwnerMarker))) {
     throw "setup: preset source not found: $Src"
+}
+$SourceOwner = Get-PresetOwner (Join-Path $Src $OwnerMarker)
+if ($SourceOwner -cne $CurrentOwner) {
+    throw "setup: preset source ownership marker is not ${CurrentOwner}: $(Join-Path $Src $OwnerMarker)"
 }
 if ($Dest -notlike "*.agent-presets*") {
     throw "setup: refusing to install outside an .agent-presets directory: $Dest"
 }
 
-if ((Test-Path $Dest) -and -not (Test-Path (Join-Path $Dest ".dsh-warm-minimal-owned")) -and $env:DSH_WARM_ADOPT_PRESET -ne "1") {
-    throw "setup: refusing to replace an unowned preset: $Dest; set DSH_WARM_ADOPT_PRESET=1 only after verification"
-}
-if ((Test-Path (Join-Path $Dest ".dsh-warm-minimal-owned")) -and $env:DSH_WARM_REPLACE_DRIFTED_PRESET -ne "1") {
-    & git diff --no-index --quiet -- $Src $Dest
-    if ($LASTEXITCODE -ne 0) {
-        throw "setup: package-owned preset has drifted; refusing to overwrite later edits: $Dest; set DSH_WARM_REPLACE_DRIFTED_PRESET=1 only after reviewing the diff"
+if (Test-Path $Dest) {
+    $InstalledMarker = Join-Path $Dest $OwnerMarker
+    if (-not (Test-PlainFile $InstalledMarker)) {
+        if ($env:DSH_WARM_ADOPT_PRESET -ne "1") {
+            throw "setup: refusing to replace an unowned preset: $Dest; set DSH_WARM_ADOPT_PRESET=1 only after verification"
+        }
+    } else {
+        $InstalledOwner = Get-PresetOwner $InstalledMarker
+        switch -CaseSensitive ($InstalledOwner) {
+            $CurrentOwner {
+                if ($env:DSH_WARM_REPLACE_DRIFTED_PRESET -ne "1") {
+                    & git diff --no-index --quiet -- $Src $Dest
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "setup: package-owned preset has drifted; refusing to overwrite later edits: $Dest; set DSH_WARM_REPLACE_DRIFTED_PRESET=1 only after reviewing the diff"
+                    }
+                }
+            }
+            $LegacyOwner {
+                if (Test-ExactLegacyPreset $Dest) {
+                    Write-Host "setup: upgrading exact package-owned preset from $LegacyOwner to $CurrentOwner"
+                } elseif ($env:DSH_WARM_REPLACE_DRIFTED_PRESET -ne "1") {
+                    throw "setup: legacy package-owned preset has drifted; refusing to overwrite later edits: $Dest; set DSH_WARM_REPLACE_DRIFTED_PRESET=1 only after reviewing the diff"
+                }
+            }
+            default {
+                throw "setup: refusing preset with unknown owner '$InstalledOwner': $Dest"
+            }
+        }
     }
 }
 

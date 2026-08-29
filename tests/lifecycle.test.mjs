@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { chmod, cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -8,7 +9,10 @@ import { describe, it } from 'node:test'
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const patchPath = join(packageRoot, 'patches/deepseek-harness.patch')
+const presetSource = join(packageRoot, 'presets/warm-minimal')
+const legacyPresetPath = join(packageRoot, 'tests/warm-minimal-0.1.agent.cordis.yml')
 const baseline = 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e'
+const legacyAgentSha256 = 'c952e72ff87cb09e6d2700dcf806c6584a67cf867adcd103ec822a6c538d4f87'
 const sourceCheckout = process.env.DSH_LIFECYCLE_TEST_SOURCE ?? '/root/deepseek-harness'
 
 function run(command, args, options = {}) {
@@ -83,7 +87,88 @@ async function readOptional(path) {
   }
 }
 
+async function writeLegacyPreset(destination, { driftAgent = false } = {}) {
+  const legacyAgent = await readFile(legacyPresetPath)
+  assert.equal(createHash('sha256').update(legacyAgent).digest('hex'), legacyAgentSha256)
+
+  await mkdir(destination, { recursive: true })
+  const agent = driftAgent ? Buffer.concat([legacyAgent, Buffer.from('\n# user edit\n')]) : legacyAgent
+  await writeFile(join(destination, 'agent.cordis.yml'), agent)
+  await cp(join(presetSource, 'preset.yml'), join(destination, 'preset.yml'))
+  await writeFile(join(destination, '.dsh-warm-minimal-owned'), 'dsh-warm-minimal@0.1.0\n')
+}
+
 describe('package-owned Harness patch lifecycle', () => {
+  it('upgrades only the exact package-owned 0.1 preset', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-warm-lifecycle-'))
+    try {
+      const patchSource = await readFile(patchPath, 'utf8')
+      const repository = await createBaselineRepository(root, patchSource)
+      const env = await createEnvironment(root, repository)
+      const preset = join(env.DSH_HOME, '.agent-presets/warm-minimal')
+      await writeLegacyPreset(preset)
+
+      const refusedOldUninstall = run('bash', [join(packageRoot, 'scripts/uninstall.sh')], { env })
+      assert.notEqual(refusedOldUninstall.status, 0)
+      assert.match(refusedOldUninstall.stderr, /refusing to remove a preset not owned by dsh-warm-minimal@0\.2\.0/)
+
+      const upgraded = run('bash', [join(packageRoot, 'scripts/setup.sh')], { env })
+      expectSuccess(upgraded, 'upgrade exact 0.1 preset')
+      assert.match(upgraded.stdout, /upgrading exact package-owned preset from dsh-warm-minimal@0\.1\.0 to dsh-warm-minimal@0\.2\.0/)
+      assert.equal(
+        await readFile(join(preset, '.dsh-warm-minimal-owned'), 'utf8'),
+        'dsh-warm-minimal@0.2.0\n',
+      )
+      assert.equal(
+        await readFile(join(preset, 'agent.cordis.yml'), 'utf8'),
+        await readFile(join(presetSource, 'agent.cordis.yml'), 'utf8'),
+      )
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses a drifted 0.1 preset and an unknown owner', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-warm-lifecycle-'))
+    try {
+      const patchSource = await readFile(patchPath, 'utf8')
+      const repository = await createBaselineRepository(root, patchSource)
+      const env = await createEnvironment(root, repository)
+      const preset = join(env.DSH_HOME, '.agent-presets/warm-minimal')
+      await writeLegacyPreset(preset, { driftAgent: true })
+
+      const drifted = run('bash', [join(packageRoot, 'scripts/setup.sh')], { env })
+      assert.notEqual(drifted.status, 0)
+      assert.match(drifted.stderr, /legacy package-owned preset has drifted/)
+      assert.equal(await readOptional(env.DSH_TEST_DSH_LOG), undefined)
+      assert.equal(run('git', ['-C', repository, 'status', '--porcelain']).stdout, '')
+
+      const forced = run('bash', [join(packageRoot, 'scripts/setup.sh')], {
+        env: { ...env, DSH_WARM_REPLACE_DRIFTED_PRESET: '1' },
+      })
+      expectSuccess(forced, 'explicitly replace drifted 0.1 preset')
+      assert.equal(
+        await readFile(join(preset, '.dsh-warm-minimal-owned'), 'utf8'),
+        'dsh-warm-minimal@0.2.0\n',
+      )
+
+      await rm(preset, { recursive: true, force: true })
+      await cp(presetSource, preset, { recursive: true })
+      await writeFile(join(preset, '.dsh-warm-minimal-owned'), 'dsh-warm-minimal@9.9.9\n')
+      const dshLogBeforeUnknown = await readFile(env.DSH_TEST_DSH_LOG, 'utf8')
+      const repositoryStatusBeforeUnknown = run('git', ['-C', repository, 'status', '--porcelain']).stdout
+      const unknown = run('bash', [join(packageRoot, 'scripts/setup.sh')], {
+        env: { ...env, DSH_WARM_REPLACE_DRIFTED_PRESET: '1' },
+      })
+      assert.notEqual(unknown.status, 0)
+      assert.match(unknown.stderr, /refusing preset with unknown owner 'dsh-warm-minimal@9\.9\.9'/)
+      assert.equal(await readFile(env.DSH_TEST_DSH_LOG, 'utf8'), dshLogBeforeUnknown)
+      assert.equal(run('git', ['-C', repository, 'status', '--porcelain']).stdout, repositoryStatusBeforeUnknown)
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
   it('applies once, refuses owned-region drift, and removes only the exact patch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-warm-lifecycle-'))
     try {
@@ -156,6 +241,28 @@ describe('package-owned Harness patch lifecycle', () => {
       assert.match(removed.stdout, /patch is not present; skipping source removal/)
       expectSuccess(run('git', ['-C', repository, 'status', '--porcelain']), 'inspect temporary repository')
       assert.equal(run('git', ['-C', repository, 'status', '--porcelain']).stdout, '')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses to uninstall a drifted current preset', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-warm-lifecycle-'))
+    try {
+      const patchSource = await readFile(patchPath, 'utf8')
+      const repository = await createBaselineRepository(root, patchSource)
+      const env = await createEnvironment(root, repository)
+      const preset = join(env.DSH_HOME, '.agent-presets/warm-minimal')
+      expectSuccess(run('bash', [join(packageRoot, 'scripts/setup.sh')], { env }), 'fresh setup')
+      const dshLogBefore = await readFile(env.DSH_TEST_DSH_LOG, 'utf8')
+      await writeFile(join(preset, 'agent.cordis.yml'), '# user replacement\n')
+
+      const refused = run('bash', [join(packageRoot, 'scripts/uninstall.sh')], { env })
+      assert.notEqual(refused.status, 0)
+      assert.match(refused.stderr, /package-owned preset has drifted; refusing to remove later edits/)
+      assert.equal(await readFile(env.DSH_TEST_DSH_LOG, 'utf8'), dshLogBefore)
+      assert.equal(await readFile(join(preset, 'agent.cordis.yml'), 'utf8'), '# user replacement\n')
+      expectSuccess(run('git', ['-C', repository, 'apply', '--check', '--reverse', patchPath]), 'verify patch remains applied')
     } finally {
       await rm(root, { recursive: true, force: true })
     }
