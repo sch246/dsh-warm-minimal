@@ -1,7 +1,7 @@
 {
   "$schema": "meta-intent/0.2/state",
   "id": "dsh-warm-minimal",
-  "revision": "0.2.0-draft.1",
+  "revision": "0.2.0-draft.2",
   "status": "draft",
   "document": "STATE.md",
   "logs": [
@@ -14,7 +14,8 @@
     "../logs/2026-08-26-native-bootstrap-and-visible-chat.md",
     "../logs/2026-08-28-v4-pro-initial-face-and-tool-gate.md",
     "../logs/2026-08-28-cold-start-discovery-verification.md",
-    "../logs/2026-08-29-configurable-coordinator-worker-visibility.md"
+    "../logs/2026-08-29-configurable-coordinator-worker-visibility.md",
+    "../logs/2026-08-29-self-contained-roster-correction.md"
   ],
   "protocol": {
     "id": "meta-intent",

@@ -15,7 +15,7 @@ The mode has one authoritative configuration with these user-controlled values:
 - the short post-bootstrap main-agent guidance, defaulting to a statement that delegated agents have broader tools and the main agent owns local inspection, integration, coordination, and user interaction;
 - one prompt/context-source assignment list and one tool-source assignment list, where every source is `parent-only`, `child-only`, or `shared` after bootstrap.
 
-Known DSH contributions have package defaults based on responsibility. User inquiry, approval-facing interaction, delegation, and coordination are main-agent capabilities. Broad search, filesystem discovery, terminal/job execution, Web access, language tooling, and workflow execution are child capabilities. The minimal shell/editor and narrowly useful skill access may be shared. A contribution without an explicit or known default is `child-only`; discovery order never grants it to the main agent.
+Known DSH contributions have package defaults based on responsibility. User inquiry, approval-facing interaction, delegation, and coordination are main-agent capabilities. Broad search, filesystem discovery, terminal/job execution, Web access, language tooling, and workflow execution are child capabilities. The minimal shell/editor and narrowly useful skill access may be shared. A contribution without an explicit or known default is `child-only`; discovery order never grants it to the main agent. The warm mode owns this roster and does not inherit or compose the Standard preset. A realization may copy selected DSH configuration into the package, where later changes require an explicit warm-package update.
 
 The official Plugins settings page is the preferred configuration surface. A package-owned settings page or a link from the Plugins page is a fallback only when the target cannot host the required controls. The empty new-session screen remains native. When bootstrap is enabled, Chat and Trajectory display it as an ordinary truthful turn; folding remains an independent concern.
 
@@ -34,6 +34,7 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - `WARM-011`: Configuration changes have one authority and one projection path. Runtime assembly and the settings UI read the same resolved assignment model; generated inventories and browser drafts do not become competing configuration authorities.
 - `WARM-012`: The bootstrap message retains a namespaced provider-hidden durable ID. Chat, Trajectory, persistence, resume, and model request headers preserve native causal order and reconstruct the configured phase without a package-owned transcript store.
 - `WARM-013`: Installation, maintenance, and uninstall preserve unrelated profile, preset, session, source, and generated changes. A realization that modifies shared Harness source marks every managed region with nearby `@meta-intent` ownership comments, records exact target identity and paths, regenerates affected artifacts, stops on owned-region drift, and removes only effects still proven package-owned.
+- `WARM-014`: The warm mode's known roster is package-owned and self-contained. It has no preset inheritance, runtime composition, or implicit update dependency on Standard. Copied DSH rows and source defaults change only through an explicit package revision whose target compatibility is revalidated.
 
 ## Resources
 
@@ -61,11 +62,12 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - Building a general replacement for DSH settings, plugin management, prompt assembly, the tool registry, session persistence, or the agent loop.
 - Hard-coding one repository, machine, user name, checkout, or mutable discovery order as semantic identity.
 - Maintaining a permanent Harness fork or making one Host patch design part of package meaning. Realizations may modify Host source while STATE remains implementation-independent.
+- Depending on the Standard preset for the warm roster, defaults, source inventory, or update behavior.
 - Reproducing the stale 0.1 realization byte-for-byte when another realization satisfies current acceptance more safely.
 
 ## Implementation hints
 
-- A full capability roster with role-aware provider-request projection is a closer substrate than a minimal preset that never mounted those capabilities. Keep one resolved assignment model and derive both main and child views from it.
+- A package-owned capability roster with role-aware provider-request projection is a closer substrate than a minimal preset that never mounted those capabilities. Keep one resolved assignment model and derive both main and child views from it.
 - The `system-prompt/assemble` waterfall already permits model-visible filtering without changing executable lookup. Stable contribution identity and a configuration inventory may require Host metadata retained alongside model-facing sections, contexts, and tool schemas.
 - Runtime ownership and durable lineage answer different questions. Role projection should use the live agent relation for active requests and durable, logged configuration/phase facts for resume rather than inferring ownership from one field.
 - A browser client can contribute a card to the official Plugins settings page while the Host settings namespace remains the persistence authority. Dynamic inventory belongs to a Host query or descriptor, not browser local storage.
@@ -79,4 +81,5 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - Parent-scoped complete prompts and restrictions are inherited by in-process children and cannot be widened. A realization must avoid encoding the main-agent face as an irreversible ancestor restriction when child agents require a broader face.
 - Candidate `0.1.0-candidate.6` is stale because it realizes draft.8's fixed second-turn catalog, permanent complete sentence, prohibition on AGENTS/skills/delegation, and zero-Host-modification rule. Its bootstrap evidence remains historical; no candidate currently realizes this STATE.
 - Host intrusion is a target realization choice, not a semantic coupling. Nearby purpose comments make ownership discoverable; the realization LOCK and current drift evidence govern maintenance and removal.
+- Copying selected DSH roster rows is deliberate duplication that buys semantic independence from Standard. Maintenance must compare and choose updates explicitly rather than treating Standard drift as warm behavior.
 - The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; local locks are realizations of `dsh-warm-minimal` only.
