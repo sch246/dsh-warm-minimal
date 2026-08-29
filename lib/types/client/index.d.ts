@@ -1,7 +1,7 @@
 /** Browser half: a warm-minimal card on the official Plugins settings page. */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 import { type WarmMinimalLocaleKey } from './locales.ts';
-export type { AssignedSource, InventorySource, SourceAssignment, WarmMinimalSettings, } from './contract.ts';
+export type { AssignedPromptSource, AssignedSource, AssignedToolSource, InventoryPromptSource, InventoryTool, SourceAssignment, ToolSchemaId, WarmMinimalInventory, WarmMinimalSettings, } from './contract.ts';
 export type { WarmMinimalCardObservable, WarmMinimalCardView, WarmMinimalInventoryRemote, } from './controller.ts';
 export type { WarmMinimalCardFace, WarmMinimalCardProps, WarmMinimalSettingsContentProps, } from './WarmMinimalCard.tsx';
 /** Host settings namespace and keyed Plugins-card dispatch value. */

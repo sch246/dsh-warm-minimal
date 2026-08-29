@@ -15,8 +15,8 @@ export interface WarmMinimalCardFace {
     setBootstrapMessage: (message: string) => void;
     /** Stage post-bootstrap main-agent guidance. */
     setGuidance: (guidance: string) => void;
-    /** Stage one stable source assignment. */
-    assign: (list: 'prompt' | 'tool', sourceId: string, assignment: SourceAssignment) => void;
+    /** Stage one stable prompt-source or tool-schema assignment. */
+    assign: (list: 'prompt' | 'tool', id: string, assignment: SourceAssignment) => void;
     /** Drop the current draft. */
     discard: () => void;
     /** Re-query the read-only Host inventory. */
@@ -39,8 +39,8 @@ export interface WarmMinimalSettingsContentProps {
     setBootstrapMessage: (message: string) => void;
     /** Stage post-bootstrap main-agent guidance. */
     setGuidance: (guidance: string) => void;
-    /** Stage one stable source assignment. */
-    assign: (list: 'prompt' | 'tool', sourceId: string, assignment: SourceAssignment) => void;
+    /** Stage one stable prompt-source or tool-schema assignment. */
+    assign: (list: 'prompt' | 'tool', id: string, assignment: SourceAssignment) => void;
     /** Drop the current draft. */
     discard: () => void;
     /** Re-query the read-only Host inventory. */

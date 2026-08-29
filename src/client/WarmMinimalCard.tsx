@@ -26,8 +26,8 @@ export interface WarmMinimalCardFace {
   setBootstrapMessage: (message: string) => void
   /** Stage post-bootstrap main-agent guidance. */
   setGuidance: (guidance: string) => void
-  /** Stage one stable source assignment. */
-  assign: (list: 'prompt' | 'tool', sourceId: string, assignment: SourceAssignment) => void
+  /** Stage one stable prompt-source or tool-schema assignment. */
+  assign: (list: 'prompt' | 'tool', id: string, assignment: SourceAssignment) => void
   /** Drop the current draft. */
   discard: () => void
   /** Re-query the read-only Host inventory. */
@@ -59,8 +59,8 @@ export interface WarmMinimalSettingsContentProps {
   setBootstrapMessage: (message: string) => void
   /** Stage post-bootstrap main-agent guidance. */
   setGuidance: (guidance: string) => void
-  /** Stage one stable source assignment. */
-  assign: (list: 'prompt' | 'tool', sourceId: string, assignment: SourceAssignment) => void
+  /** Stage one stable prompt-source or tool-schema assignment. */
+  assign: (list: 'prompt' | 'tool', id: string, assignment: SourceAssignment) => void
   /** Drop the current draft. */
   discard: () => void
   /** Re-query the read-only Host inventory. */
@@ -78,7 +78,7 @@ function assignmentLabel(t: Translate, assignment: SourceAssignment): string {
   }
 }
 
-/** Count the three effective assignments in a source list. */
+/** Count the three effective assignments in an inventory list. */
 function assignmentCounts(sources: readonly AssignedSource[]): Record<SourceAssignment, number> {
   const counts: Record<SourceAssignment, number> = { 'parent-only': 0, 'child-only': 0, shared: 0 }
   for (const source of sources) counts[source.assignment] += 1
@@ -104,7 +104,11 @@ function AssignmentSummary(props: { sources: readonly AssignedSource[], t: Trans
   )
 }
 
-/** Render the native-radio segmented assignment control for one source. */
+function assignmentId(source: AssignedSource): string {
+  return 'id' in source ? source.id : source.source
+}
+
+/** Render the native-radio segmented assignment control for one inventory row. */
 function AssignmentControl(props: {
   list: 'prompt' | 'tool'
   source: AssignedSource
@@ -140,7 +144,7 @@ function AssignmentControl(props: {
               checked={props.source.assignment === assignment}
               disabled={props.disabled}
               onChange={(event) => {
-                if (isSourceAssignment(event.target.value)) props.onAssign(props.source.source, event.target.value)
+                if (isSourceAssignment(event.target.value)) props.onAssign(assignmentId(props.source), event.target.value)
               }}
             />
             <span>{assignmentLabel(props.t, assignment)}</span>
@@ -167,19 +171,18 @@ function PromptSourceHeading(props: { source: AssignedPromptSource, t: Translate
 }
 
 function ToolSourceHeading(props: { source: AssignedToolSource, t: Translate }) {
-  const description = props.source.tools.find(tool => tool.description !== undefined)?.description
   return (
     <span className="dsh-warm-settings-source-copy">
-      <span className="dsh-warm-settings-tool-names">{props.source.tools.map(tool => tool.name).join(', ')}</span>
+      <span className="dsh-warm-settings-tool-name">{props.source.name}</span>
       <span className="dsh-warm-settings-tool-preview">
-        {description === undefined || description.length === 0 ? props.t('noDescription') : description}
+        {props.source.description.length === 0 ? props.t('noDescription') : props.source.description}
       </span>
     </span>
   )
 }
 
 function sourceHeading(source: AssignedSource, t: Translate): string {
-  if ('tools' in source) return source.tools.map(tool => tool.name).join(', ')
+  if ('id' in source) return source.name
   const names = [...source.sections, ...source.contexts]
   return names.length === 0 ? t('noSources') : names.join(', ')
 }
@@ -206,7 +209,7 @@ function SourceRow(props: {
           onClick={() => { setExpanded(!expanded) }}
         >
           <span className="dsh-warm-settings-source-chevron" data-open={expanded} aria-hidden="true">›</span>
-          {'tools' in props.source
+          {'id' in props.source
             ? <ToolSourceHeading source={props.source} t={props.t} />
             : <PromptSourceHeading source={props.source} t={props.t} />}
         </button>
@@ -219,17 +222,15 @@ function SourceRow(props: {
               <span>{props.t('source')}</span>
               <code>{props.source.source}</code>
             </div>
-            {'tools' in props.source
+            {'id' in props.source
               ? (
                 <div className="dsh-warm-settings-tool-details">
-                  {props.source.tools.map((tool, index) => (
-                    <div className="dsh-warm-settings-tool-detail" key={`${tool.name}-${index}`}>
-                      <strong>{tool.name}</strong>
-                      <span>{tool.description === undefined || tool.description.length === 0
-                        ? props.t('noDescription')
-                        : tool.description}</span>
-                    </div>
-                  ))}
+                  <div className="dsh-warm-settings-tool-detail">
+                    <strong>{props.t('descriptionLabel')}</strong>
+                    <span>{props.source.description.length === 0
+                      ? props.t('noDescription')
+                      : props.source.description}</span>
+                  </div>
                 </div>
                 )
               : (
@@ -260,7 +261,7 @@ function ContributionDetails(props: { title: string, names: readonly string[], t
   )
 }
 
-/** Render one independently collapsible source assignment list. */
+/** Render one independently collapsible assignment list. */
 function SourceList(props: {
   list: 'prompt' | 'tool'
   title: string
@@ -287,7 +288,7 @@ function SourceList(props: {
             ? <div className="dsh-warm-settings-empty">{props.t('noSources')}</div>
             : props.sources.map(source => (
               <SourceRow
-                key={source.source}
+                key={assignmentId(source)}
                 list={props.list}
                 source={source}
                 disabled={props.disabled}

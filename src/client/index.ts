@@ -13,7 +13,8 @@ import { en, zh, type WarmMinimalLocaleKey } from './locales.ts'
 import { installStyles } from './styles.ts'
 
 export type {
-  AssignedSource, InventorySource, SourceAssignment, WarmMinimalSettings,
+  AssignedPromptSource, AssignedSource, AssignedToolSource, InventoryPromptSource,
+  InventoryTool, SourceAssignment, ToolSchemaId, WarmMinimalInventory, WarmMinimalSettings,
 } from './contract.ts'
 export type {
   WarmMinimalCardObservable, WarmMinimalCardView, WarmMinimalInventoryRemote,

@@ -37,22 +37,29 @@ describe('WarmMinimalCard', () => {
     assert.match(html, /description/)
   })
 
-  it('renders distinct contribution kinds and one three-slot native radio group per source', () => {
+  it('keeps prompt sources grouped but renders one three-slot native radio group per tool schema', () => {
     const state = {
       status: 'ready', revision: 9, writable: true,
       draft: {
         bootstrapEnabled: true, bootstrapMessage: 'Inspect.', guidance: 'Coordinate.',
         promptAssignments: { 'source:\/\/prompt-alpha': 'parent-only' },
-        toolAssignments: { 'source:\/\/tool-alpha': 'shared' },
+        toolAssignments: {
+          'tool-schema:v1:WyJzb3VyY2U6Ly90b29sLWFscGhhIiwic2VhcmNoX2ZpbGVzIl0': 'shared',
+          'tool-schema:v1:WyJzb3VyY2U6Ly90b29sLWFscGhhIiwicmVhZF9maWxlIl0': 'child-only',
+        },
       },
       promptSources: [{
         source: 'source://prompt-alpha', sections: ['same', 'system'], contexts: ['same'],
         assignment: 'parent-only',
       }],
       toolSources: [{
-        source: 'source://tool-alpha',
-        tools: [{ name: 'search_files', description: 'Search all workspace files.' }, { name: 'read_file' }],
-        assignment: 'shared',
+        id: 'tool-schema:v1:WyJzb3VyY2U6Ly90b29sLWFscGhhIiwic2VhcmNoX2ZpbGVzIl0',
+        source: 'source://tool-alpha', name: 'search_files',
+        description: 'Search all workspace files.', assignment: 'shared',
+      }, {
+        id: 'tool-schema:v1:WyJzb3VyY2U6Ly90b29sLWFscGhhIiwicmVhZF9maWxlIl0',
+        source: 'source://tool-alpha', name: 'read_file',
+        description: 'Read one workspace file.', assignment: 'child-only',
       }],
       dirty: true, saving: false, failure: undefined,
     }
@@ -63,15 +70,21 @@ describe('WarmMinimalCard', () => {
     assert.match(html, /data-source-list="prompt"/)
     assert.match(html, /data-source-list="tool"/)
     assert.match(html, /data-parent-only="1" data-child-only="0" data-shared="0"/)
-    assert.match(html, /data-parent-only="0" data-child-only="0" data-shared="1"/)
-    assert.equal(html.match(/role="radiogroup"/g)?.length, 2)
-    assert.equal(html.match(/type="radio"/g)?.length, 6)
+    assert.match(html, /data-parent-only="0" data-child-only="1" data-shared="1"/)
+    assert.equal(html.match(/data-source-row="tool"/g)?.length, 2)
+    assert.equal(html.match(/role="radiogroup"/g)?.length, 3)
+    assert.equal(html.match(/type="radio"/g)?.length, 9)
     assert.doesNotMatch(html, /<select/)
     assert.match(html, /class="dsh-warm-settings-source-disclosure"[\s\S]*?<\/button><fieldset[^>]*role="radiogroup"/)
     assert.match(html, /dsh-warm-settings-contribution-kind">sections<\/span><span>same, system/)
     assert.match(html, /dsh-warm-settings-contribution-kind">contexts<\/span><span>same/)
-    assert.match(html, /dsh-warm-settings-tool-names">search_files, read_file/)
+    assert.match(html, /dsh-warm-settings-tool-name">search_files</)
+    assert.match(html, /dsh-warm-settings-tool-name">read_file</)
+    assert.doesNotMatch(html, /search_files, read_file/)
     assert.match(html, /dsh-warm-settings-tool-preview">Search all workspace files\./)
+    assert.match(html, /dsh-warm-settings-tool-preview">Read one workspace file\./)
+    assert.match(html, /aria-label="assignment: search_files"[\s\S]*?data-checked="true"[\s\S]*?checked="" value="shared"/)
+    assert.match(html, /aria-label="assignment: read_file"[\s\S]*?data-checked="true"[\s\S]*?checked="" value="child-only"/)
     assert.doesNotMatch(html, /source:\/\/tool-alpha/)
     assert.doesNotMatch(html, /source:\/\/prompt-alpha/)
   })

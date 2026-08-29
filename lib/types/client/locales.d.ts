@@ -35,6 +35,7 @@ export declare const zh: {
     shared: string;
     assignment: string;
     source: string;
+    descriptionLabel: string;
     sections: string;
     contexts: string;
     none: string;
@@ -88,6 +89,7 @@ export declare const en: {
     shared: string;
     assignment: string;
     source: string;
+    descriptionLabel: string;
     sections: string;
     contexts: string;
     none: string;
