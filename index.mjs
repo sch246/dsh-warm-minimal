@@ -2,7 +2,7 @@
 import { Config, applyHost } from './host.mjs'
 
 export const name = 'dsh-warm-minimal'
-export const inject = ['agents', 'settings', 'systemPrompt']
+export const inject = ['agentPresets', 'agents', 'settings', 'systemPrompt']
 export { Config }
 
 export function apply(ctx, config) {

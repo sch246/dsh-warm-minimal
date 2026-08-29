@@ -1,0 +1,13 @@
+{
+  "extends": "./harness/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/types/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/remote.ts", "src/types.ts"],
+  "references": [
+    { "path": "./harness/vendor/cordis" },
+    { "path": "./harness/packages/typert/protocol" }
+  ]
+}

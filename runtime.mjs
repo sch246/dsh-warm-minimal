@@ -175,12 +175,6 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
   }
 
   const project = (assembly, context) => {
-    const agent = context.agent
-    if (agent === undefined) return assembly
-    const state = active.get(agent.session)
-    if (state !== undefined && !state.promoted) return minimalBootstrapAssembly(assembly)
-    if (resolveSessionPreset(agent.session) !== 'warm-minimal') return assembly
-
     const sourceInventory = promptAssemblySourceInventory(assembly)
     const observed = observedCandidates.get(context) ?? []
     observedCandidates.delete(context)
@@ -198,6 +192,11 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
         ...sourceInventory.tools,
       ],
     })
+    const agent = context.agent
+    if (agent === undefined) return assembly
+    const state = active.get(agent.session)
+    if (state !== undefined && !state.promoted) return minimalBootstrapAssembly(assembly)
+    if (resolveSessionPreset(agent.session) !== 'warm-minimal') return assembly
     const config = getConfig()
     const role = roleOf(agents, agent)
     const promptRoster = rosterFor('prompt')

@@ -3,6 +3,7 @@ import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { promptAssemblySourceInventory } from '@deepseek-ai/dsh-system-prompt'
 import { ASSIGNMENTS, DEFAULT_CONFIG } from './config.mjs'
 import { createWarmRuntime } from './runtime.mjs'
+import { WarmMinimalRemote } from '#warm-minimal-remote'
 
 const Assignment = Schema.union(ASSIGNMENTS.map(value => Schema.const(value)))
 
@@ -26,5 +27,12 @@ export function applyHost(ctx, config) {
     getConfig: () => settings.get(),
   })
   ctx.provide('warmMinimalRuntime', runtime)
+  new WarmMinimalRemote(ctx, {
+    async queryInventory() {
+      const scope = await ctx.agentPresets.standingKeyFor('warm-minimal')
+      await ctx.systemPrompt.assemble({ scope })
+      return runtime.inventorySnapshot()
+    },
+  })
   runtime.install(ctx)
 }

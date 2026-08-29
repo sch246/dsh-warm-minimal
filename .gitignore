@@ -2,3 +2,6 @@ node_modules/
 *.tgz
 *.log
 .DS_Store
+/harness
+/lib/**/*.map
+/lib/**/*.tsbuildinfo
