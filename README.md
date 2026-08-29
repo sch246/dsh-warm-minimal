@@ -4,98 +4,103 @@
 [![GitHub release](https://img.shields.io/github/v/release/sch246/dsh-warm-minimal)](https://github.com/sch246/dsh-warm-minimal/releases)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**温暖极简模式（warm-minimal）** 是 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 的实验性 agent preset。它在处理新会话的第一条真实请求前，先通过正常 agent loop 执行一轮工作目录确认，让第一条真实请求成为第二轮。
+**温暖极简模式（warm-minimal）** 是 DeepSeek Harness 的实验性 agent preset。它保留 deepseek-v4-pro 敏感的极简初始界面，并在之后把主代理收窄为协调者，把更宽泛的发现与执行能力交给子代理。
 
-## 为什么这么做
+## 行为
 
-deepseek-v4-pro 由于训练的原因对初始提示词和初始工具面非常敏感。官方极简模式（minimal）的第一轮只有一句固定 system prompt（`You are a helpful software engineer assistant.`）和两个工具（`bash` + `str_replace_editor`）；这种固定的第一轮形态会把模型引导进 `we need` 式的协作思维链，而不是 `Let me` 式的自言自语。温暖极简模式的目标就是**模仿官方极简模式的第一轮形态**：
-
-- 完整 system prompt 只有 `You are a helpful software engineer assistant.`；
-- **bootstrap 第一轮**只暴露官方 minimal 的两个工具，其余由其他 bundle 注册的工具（开发插件、图像阅读器、天气等）一律不进入首轮；
-- **从第二轮开始**再放行其余工具：不能完全不给工具，也不能在第一轮全给，唯一解就是第二轮注入剩余工具；
-- 不伪造 assistant、tool call、tool result 或 `Ready.`，这些内容均由当前模型与真实工具产生；
-- 不修改 DeepSeek Harness 源码。
-
-## 安装
-
-前置：可运行的 dsh、Node.js `^22.19.0 || >=24.0.0`。
-
-```bash
-git clone https://github.com/sch246/dsh-warm-minimal.git
-cd dsh-warm-minimal
-bash scripts/setup.sh
-# Windows PowerShell:
-# powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
-```
-
-脚本把 `presets/warm-minimal` 复制进 `<dsh home>/.agent-presets/`；若 `dsh` 在 PATH 上，还会执行 `dsh plugin --profile web add .` 注册 bundle。安装器拒绝覆盖无 ownership marker 或已发生内容漂移的同名 preset。确认旧目录确实属于本包后可用 `DSH_WARM_ADOPT_PRESET=1` 迁移；审查过 package-owned preset 的差异后可用 `DSH_WARM_REPLACE_DRIFTED_PRESET=1` 升级。
-
-安装后重启 dsh web，在 preset 选择器中选择 **「温暖极简模式」**。
-
-## 使用与显示
-
-新建会话后直接发送第一条消息。插件会同步暂存这条消息，先插入真实 bootstrap 用户消息：
+默认情况下，插件会在第一条真实用户输入前执行一轮真实 bootstrap：
 
 ```text
 检查当前工作目录，确认后仅回复 Ready.
 ```
 
-模型随后使用 minimal 的真实 shell 检查该会话的工作目录。bootstrap 的第一条 provider 请求只包含 `bash` + `str_replace_editor` 两个工具；bootstrap 完成后，原消息按原顺序恢复并成为下一轮，从这一轮起其余已注册工具恢复可见。
+这轮请求的完整 system prompt 只有 `You are a helpful software engineer assistant.`，工具只有平台 shell 与 `str_replace_editor`。模型、工具调用、工具结果和回复都来自普通 agent loop；插件不伪造任何 assistant 或 tool 事件。必要工具缺失或来源不明确时，bootstrap 会明确失败，不会退化为未过滤请求，也不会丢失暂存的用户输入。
 
-bootstrap 失败也不会丢弃原消息。
+bootstrap 之后，或关闭 bootstrap 后从首轮开始：
 
-Chat 与 Trajectory 都按 Harness 的原生顺序显示这一轮。bootstrap 的 `UserMessage.id` 以 `dsh-warm-minimal:bootstrap:` 开头：该标记会随会话持久化，但不会发送给模型，可供未来独立的会话折叠插件识别。
+- 主代理默认拥有 persona、AGENTS、持久 shell、编辑器、窄用途 skill、目标/计划、委派/工作流、用户交互和 todo；
+- 子代理默认拥有 persona、AGENTS、持久 shell、编辑器、skill、文件系统发现、搜索与 Web；
+- 未知来源默认仅对子代理开放；
+- 隐藏只影响模型可见的 prompt、context 和 tool schema，不改变可执行工具注册表，也不会拒绝主代理显式形成的调用。
 
-## 验收清单
+主代理会收到一条很短的协调提示：
 
-可观察的安装成功判据：
-
-- [ ] 新会话首轮只暴露 `bash`（Windows 为 `pwsh`）与 `str_replace_editor` 两个工具，system prompt 只有一句；
-- [ ] Chat 与 Trajectory 都显示完整 bootstrap 轮，其 `UserMessage.id` 以 `dsh-warm-minimal:bootstrap:` 开头；
-- [ ] 第一条真实消息在 bootstrap 完成后按原顺序恢复，并从第二轮起可见完整工具目录；
-- [ ] 空白会话不出现任何 bootstrap 内容；
-- [ ] bootstrap 失败时，暂存的第一条真实消息仍被恢复。
-
-## 工作原理
-
-- bundle 在 profile boot 挂载，监听同步的 `agent/inbox/inserted`；空会话仍保持官方空白界面。
-- 第一条真实输入被从 inbox 暂存后，插件用 `agent.followup()` 提交标记过的 bootstrap，再用 `agent.whenIdle()` 等待该轮完成，最后恢复暂存消息。
-- 同一插件在 `system-prompt/assemble` 瀑布里做首轮工具门控：会话处于 bootstrap 期间且未提升（promoted）时，只保留平台 shell 与 `str_replace_editor`；`whenIdle()` 完成、恢复真实消息之前先置为已提升，第二轮起的装配原样放行完整工具目录。
-- preset 文件与官方 minimal 的 `agent.cordis.yml` 保持一致；模型面的系统提示词始终只有一句。其余工具并非本包注册，而是 profile 里其他 bundle 的全局工具，本包只决定它们在 bootstrap 轮隐藏、第二轮起恢复。
-- bootstrap 的来源保持原生 `{ kind: 'user' }`，所以 Harness 自己负责生成、持久化和投影完整的 USER → ASSISTANT → TOOL → ASSISTANT 因果顺序。
-- 当前工作目录由真实 shell 运行环境决定。
-
-## 开发与测试
-
-前置同安装。运行测试：
-
-```bash
-npm test
+```text
+Delegated agents have broader tools. Own local inspection, integration, coordination, and user interaction.
 ```
 
-测试覆盖两部分行为：
+warm-minimal 自己维护完整 roster，不继承或运行时组合 Standard preset。
 
-- native bootstrap：首条真实输入被暂存、标记 bootstrap 执行后按原顺序恢复；bootstrap 失败不丢输入；首轮仅两个 minimal 工具、第二轮恢复完整目录；空会话与已启动会话不触发；
-- preset 组合：warm-minimal 与官方 minimal 等价——一句完整 prompt、两个平台工具、无额外 context。
+## 配置
+
+在 Web UI 的 **设置 → 插件 → Warm minimal** 中可以配置：
+
+- 是否执行 bootstrap；
+- bootstrap 的用户消息；
+- bootstrap 后的主代理协调提示；
+- prompt/context 来源分配；
+- tool 来源分配。
+
+每个来源都可选 `仅主代理`、`仅子代理` 或 `通用`。保存值只包含 bootstrap 三项与两张稳定 source ID 到分配值的映射。来源名称、贡献列表等 inventory 由 Host 只读查询返回，不会被浏览器草稿写回配置。
+
+## 安装
+
+前置条件：
+
+- Node.js `^22.19.0 || >=24.0.0`；
+- 一个与本插件目标版本兼容的 DeepSeek Harness Git checkout。
+
+```bash
+git clone https://github.com/sch246/dsh-warm-minimal.git
+cd dsh-warm-minimal
+DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
+
+# Windows PowerShell:
+# $env:DSH_CHECKOUT = "C:\path\to\deepseek-harness"
+# powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+```
+
+安装器先验证并应用 `patches/deepseek-harness.patch`，再安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
+
+## 实现
+
+- Host 为 prompt section、context 和单个 tool schema 提供不进入模型 wire 的稳定来源 ID。
+- `SystemPrompt.admitSources()` 在 complete prompt 选择和动态内容求值前执行来源准入；工具按 schema 独立过滤。
+- preset projection 使用 Loader tree 的精确 entry ID 建立已知来源默认值，不从贡献名称猜测归属。
+- 运行时根据当前 agent 关系区分主代理与子代理，并在 assembly waterfall 后处理监听器新加入的未知来源。
+- Plugins 配置卡通过 Typert Remote 做 scope-only assembly，读取 inventory 时不创建 session、turn 或模型请求。
+- bootstrap 的消息 ID 使用 `dsh-warm-minimal:bootstrap:` 前缀；Chat、Trajectory、持久化与恢复沿用 Harness 原生事件顺序。
+
+## 开发与聚焦验证
+
+```bash
+bash scripts/build-host.sh
+bash scripts/build-client.sh
+node --test \
+  tests/index.test.mjs \
+  tests/roster.test.mjs \
+  tests/remote.test.mjs \
+  tests/client/controller.test.mjs \
+  tests/client/component.test.mjs \
+  tests/lifecycle.test.mjs
+```
+
+这些测试只覆盖当前主线：bootstrap 与角色可见性、独立 roster、只读 inventory、官方 Plugins 配置卡，以及 Host 补丁安装/卸载生命周期。
 
 ## 卸载
 
 ```bash
-bash scripts/uninstall.sh
+DSH_CHECKOUT=/root/deepseek-harness bash scripts/uninstall.sh
 ```
 
-卸载器只移除本包注册和带 ownership marker 的 preset；内容发生漂移时会停止。卸载后重启 dsh web。`DSH_HOME` / `DSH_PROFILE` 环境变量对安装和卸载均生效。
+卸载器只有在能够证明目标源码仍与 package-owned 补丁精确匹配时才会反向应用补丁；发生漂移时会在移除插件和 preset 前停止。它不会删除不能证明属于本包的内容，也不会重启服务。
 
-## 数据与隐私
+## 数据与限制
 
-工作目录与工具输出会像普通 minimal 会话一样进入本地 transcript。仓库不包含 donor session 的目录列表或其他机器细节，请勿直接外发完整 session 日志。
-
-## 已知限制
-
-- 当前只提供一条固定 bootstrap 指令，不进行任务分类。
-- bootstrap 是真实 provider turn，会进入 API transcript 与 token 计量。
-- 首轮工具门控只过滤 `system-prompt/assemble` 的模型可见目录；是否成功引导出 `we need` 式思维链仍取决于所选模型与推理强度，本包不在提示词里注入风格文本。
-- 升级 dsh 后如官方 minimal composition 变化，需要重新验证 prompt、两工具和无额外 context 的等价性。
+- bootstrap 是真实 provider turn，会进入 transcript 与 token 计量。
+- 工作目录和工具输出按普通会话规则保存在本地 transcript。
+- 模型是否实际委派仍受模型行为、推理强度和 Host 委派策略影响。
+- Harness 升级后需要重新验证补丁、来源 ID、preset roster 和配置投影兼容性。
 
 ## License
 
