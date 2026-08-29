@@ -6,8 +6,10 @@
   config:
     text: You are a helpful software engineer assistant.
 
-- id: warm-projection
+- id: worker-persona
   name: dsh-warm-minimal/projection
+  config:
+    workerPersona: You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
 
 - id: agent-instructions
   name: '@deepseek-ai/dsh-agent-instructions'
@@ -97,6 +99,9 @@
   name: '@deepseek-ai/dsh-tool-fs-search'
   config:
     sampleOverCapGlobResults: false
+
+- id: tool-jobs
+  name: '@deepseek-ai/dsh-tool-jobs'
 
 - id: skill-filesystem
   name: '@deepseek-ai/dsh-skill-filesystem'

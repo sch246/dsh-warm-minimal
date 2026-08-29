@@ -280,10 +280,35 @@ describe('warm-minimal runtime seam', () => {
     assert.deepEqual(promptAssignments, { 'source-unknown': 'parent-only' })
     assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-child'), {
       source: 'source-child',
+      promptDefault: 'child-only',
+      toolDefault: 'child-only',
       sections: ['child-prompt'],
       contexts: ['child-context'],
-      tools: ['read_file'],
+      tools: [{ name: 'read_file', description: 'read_file' }],
     })
+  })
+
+  it('publishes roster defaults and complete tool descriptions without saved overrides', async () => {
+    const test = setup({ bootstrapEnabled: false })
+    test.runtime.registerRoster({
+      promptAssignments: { 'source-parent': 'parent-only' },
+      toolAssignments: { 'source-shared': 'shared' },
+    })
+
+    await test.assemble(fullAssembly(test), { scope: {} })
+
+    assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-parent'), {
+      source: 'source-parent',
+      promptDefault: 'parent-only',
+      toolDefault: 'child-only',
+      sections: ['parent-prompt'],
+      contexts: ['parent-context'],
+      tools: [{ name: 'ask_user', description: 'ask_user' }],
+    })
+    assert.deepEqual(test.runtime.inventorySnapshot().find(row => row.source === 'source-shared')?.tools, [
+      { name: BOOTSTRAP_TOOL_NAMES[0], description: BOOTSTRAP_TOOL_NAMES[0] },
+      { name: 'str_replace_editor', description: 'str_replace_editor' },
+    ])
   })
 
   it('does not install an execution restriction for a hidden registered tool', async () => {
@@ -322,10 +347,42 @@ describe('preset-plane roster projection', () => {
     })
     assert.equal(returned, dispose)
     assert.deepEqual(defaults.promptAssignments, {
-      'source:persona': 'shared',
+      'source:persona': 'parent-only',
       'source:delegate': 'parent-only',
     })
     assert.deepEqual(defaults.toolAssignments, defaults.promptAssignments)
     assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('nested:persona'), false)
+  })
+
+  it('keeps parent and worker personas distinct and gives broad execution to children', () => {
+    const entries = [
+      { id: 'persona', fiber: { ctx: { token: 'parent-persona' } } },
+      { id: 'worker-persona', fiber: { ctx: { token: 'worker-persona' } } },
+      { id: 'agent-instructions', fiber: { ctx: { token: 'agents' } } },
+      { id: 'persistent-shell:persistent-bash', fiber: { ctx: { token: 'shell' } } },
+      { id: 'filesystem:str-replace-editor', fiber: { ctx: { token: 'editor' } } },
+      { id: 'tool-skill', fiber: { ctx: { token: 'skill' } } },
+      { id: 'tool-jobs', fiber: { ctx: { token: 'jobs' } } },
+      { id: 'tool-web', fiber: { ctx: { token: 'web' } } },
+    ]
+    const owner = { parent: { tree: { entries: () => entries } } }
+    const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
+    let defaults
+    applyPresetProjection(ctx, {
+      hostSourceId: entryCtx => `source:${entryCtx.token}`,
+      registerRoster(value) { defaults = value; return () => {} },
+    })
+
+    assert.deepEqual(defaults.promptAssignments, {
+      'source:parent-persona': 'parent-only',
+      'source:worker-persona': 'child-only',
+      'source:agents': 'child-only',
+      'source:shell': 'shared',
+      'source:editor': 'shared',
+      'source:skill': 'shared',
+      'source:jobs': 'child-only',
+      'source:web': 'child-only',
+    })
+    assert.deepEqual(defaults.toolAssignments, defaults.promptAssignments)
   })
 })

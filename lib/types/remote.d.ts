@@ -17,7 +17,7 @@ export declare class WarmMinimalRemote extends TypertRemoteService {
     constructor(ctx: Context, runtime: WarmMinimalInventoryRuntime);
     /**
      * Read the latest inventory discovered by model assembly.
-     * @returns stable source ids with section, context, and tool names only.
+     * @returns stable source ids with roster defaults and readable contributions.
      */
     queryInventory(): Promise<WarmMinimalInventory>;
 }

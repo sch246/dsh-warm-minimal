@@ -22,7 +22,7 @@ export class WarmMinimalRemote extends TypertRemoteService {
 
   /**
    * Read the latest inventory discovered by model assembly.
-   * @returns stable source ids with section, context, and tool names only.
+   * @returns stable source ids with roster defaults and readable contributions.
    */
   @Remote('queryInventory')
   queryInventory(): Promise<WarmMinimalInventory> {

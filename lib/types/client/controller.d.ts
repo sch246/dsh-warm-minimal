@@ -1,7 +1,7 @@
 /** Staged Plugins-card form over one official settings namespace scope. */
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client';
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol';
-import type { AssignedSource, InventorySource, SourceAssignment, WarmMinimalSettings } from './contract.ts';
+import type { AssignedPromptSource, AssignedToolSource, InventorySource, SourceAssignment, WarmMinimalSettings } from './contract.ts';
 /** Read-only generated Remote face consumed by the controller. */
 export interface WarmMinimalInventoryRemote {
     /** Query the current contribution inventory. */
@@ -17,10 +17,10 @@ export interface WarmMinimalCardView {
     writable: boolean;
     /** Effective settings plus browser-local staged edits. */
     draft: WarmMinimalSettings | undefined;
-    /** Prompt and context sources, with section/context names merged. */
-    promptSources: readonly AssignedSource[];
-    /** Tool sources and their contributed tool names. */
-    toolSources: readonly AssignedSource[];
+    /** Prompt and context sources with their contribution kinds retained. */
+    promptSources: readonly AssignedPromptSource[];
+    /** Tool sources with their model-visible names and descriptions. */
+    toolSources: readonly AssignedToolSource[];
     /** Whether the browser holds edits not yet accepted by the Host. */
     dirty: boolean;
     /** Whether staged fields are crossing the settings scope. */
@@ -80,8 +80,9 @@ export declare class WarmMinimalCardController implements WarmMinimalCardObserva
     private project;
     private publish;
 }
-/** Project dynamic inventory separately from the settings write model. */
-declare function projectSources(inventory: readonly InventorySource[], kind: 'prompt' | 'tool', assignments: Readonly<Record<string, SourceAssignment>>): AssignedSource[];
-declare function shortSource(source: string): string;
-export { projectSources, shortSource };
+/** Project prompt inventory separately from the settings write model. */
+declare function projectPromptSources(inventory: readonly InventorySource[], assignments: Readonly<Record<string, SourceAssignment>>): AssignedPromptSource[];
+/** Project tool inventory separately from the settings write model. */
+declare function projectToolSources(inventory: readonly InventorySource[], assignments: Readonly<Record<string, SourceAssignment>>): AssignedToolSource[];
+export { projectPromptSources, projectToolSources };
 //# sourceMappingURL=controller.d.ts.map

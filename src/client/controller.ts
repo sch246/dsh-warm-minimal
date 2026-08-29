@@ -3,7 +3,7 @@
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type {
-  AssignedSource, InventorySource, SourceAssignment, WarmMinimalSettings,
+  AssignedPromptSource, AssignedToolSource, InventorySource, SourceAssignment, WarmMinimalSettings,
 } from './contract.ts'
 
 /** Read-only generated Remote face consumed by the controller. */
@@ -22,10 +22,10 @@ export interface WarmMinimalCardView {
   writable: boolean
   /** Effective settings plus browser-local staged edits. */
   draft: WarmMinimalSettings | undefined
-  /** Prompt and context sources, with section/context names merged. */
-  promptSources: readonly AssignedSource[]
-  /** Tool sources and their contributed tool names. */
-  toolSources: readonly AssignedSource[]
+  /** Prompt and context sources with their contribution kinds retained. */
+  promptSources: readonly AssignedPromptSource[]
+  /** Tool sources with their model-visible names and descriptions. */
+  toolSources: readonly AssignedToolSource[]
   /** Whether the browser holds edits not yet accepted by the Host. */
   dirty: boolean
   /** Whether staged fields are crossing the settings scope. */
@@ -210,8 +210,8 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
       revision: snapshot.revision,
       writable: snapshot.writable,
       draft,
-      promptSources: draft === undefined ? [] : projectSources(inventory, 'prompt', draft.promptAssignments),
-      toolSources: draft === undefined ? [] : projectSources(inventory, 'tool', draft.toolAssignments),
+      promptSources: draft === undefined ? [] : projectPromptSources(inventory, draft.promptAssignments),
+      toolSources: draft === undefined ? [] : projectToolSources(inventory, draft.toolAssignments),
       dirty: Object.keys(this.staged).length > 0,
       saving: this.saving,
       failure: this.failure,
@@ -225,34 +225,46 @@ export class WarmMinimalCardController implements WarmMinimalCardObservable {
   }
 }
 
-/** Project dynamic inventory separately from the settings write model. */
-function projectSources(
+/** Project prompt inventory separately from the settings write model. */
+function projectPromptSources(
   inventory: readonly InventorySource[],
-  kind: 'prompt' | 'tool',
   assignments: Readonly<Record<string, SourceAssignment>>,
-): AssignedSource[] {
+): AssignedPromptSource[] {
   return inventory.flatMap((entry) => {
-    const names = kind === 'prompt' ? unique([...entry.sections, ...entry.contexts]) : unique(entry.tools)
-    if (names.length === 0) return []
+    if (entry.sections.length === 0 && entry.contexts.length === 0) return []
     return [{
       source: entry.source,
-      shortSource: shortSource(entry.source),
-      names,
-      assignment: assignments[entry.source] ?? 'child-only',
+      sections: [...entry.sections],
+      contexts: [...entry.contexts],
+      assignment: assignments[entry.source] ?? entry.promptDefault,
     }]
   }).sort((left, right) => left.source.localeCompare(right.source))
 }
 
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values)]
-}
-
-function shortSource(source: string): string {
-  return source.length <= 52 ? source : `${source.slice(0, 27)}…${source.slice(-20)}`
+/** Project tool inventory separately from the settings write model. */
+function projectToolSources(
+  inventory: readonly InventorySource[],
+  assignments: Readonly<Record<string, SourceAssignment>>,
+): AssignedToolSource[] {
+  return inventory.flatMap((entry) => {
+    if (entry.tools.length === 0) return []
+    return [{
+      source: entry.source,
+      tools: entry.tools.map(tool => ({ ...tool })),
+      assignment: assignments[entry.source] ?? entry.toolDefault,
+    }]
+  }).sort((left, right) => left.source.localeCompare(right.source))
 }
 
 function cloneInventorySource(source: InventorySource): InventorySource {
-  return { source: source.source, sections: [...source.sections], contexts: [...source.contexts], tools: [...source.tools] }
+  return {
+    source: source.source,
+    promptDefault: source.promptDefault,
+    toolDefault: source.toolDefault,
+    sections: [...source.sections],
+    contexts: [...source.contexts],
+    tools: source.tools.map(tool => ({ ...tool })),
+  }
 }
 
 function cloneField<T>(value: T): T {
@@ -268,4 +280,4 @@ function sameField(left: unknown, right: unknown): boolean {
     && leftEntries.every(([key, value]) => (right as Record<string, unknown>)[key] === value)
 }
 
-export { projectSources, shortSource }
+export { projectPromptSources, projectToolSources }

@@ -1,11 +1,13 @@
 const ROSTER_ASSIGNMENTS = new Map([
-  ['persona', 'shared'],
-  ['agent-instructions', 'shared'],
+  ['persona', 'parent-only'],
+  ['worker-persona', 'child-only'],
+  ['agent-instructions', 'child-only'],
   ['persistent-shell:persistent-bash', 'shared'],
   ['persistent-shell:persistent-pwsh', 'shared'],
   ['filesystem:str-replace-editor', 'shared'],
   ['tool-fs', 'child-only'],
   ['tool-fs-search', 'child-only'],
+  ['tool-jobs', 'child-only'],
   ['tool-skill', 'shared'],
   ['tool-goal', 'parent-only'],
   ['planning:plan-mode', 'parent-only'],
@@ -13,6 +15,9 @@ const ROSTER_ASSIGNMENTS = new Map([
   ['delegation:tool-subagent-list-agents', 'parent-only'],
   ['delegation:tool-subagent', 'parent-only'],
   ['delegation:tool-subagent-fork', 'parent-only'],
+  ['delegation:tool-subagent-codex', 'parent-only'],
+  ['delegation:tool-subagent-claude-code', 'parent-only'],
+  ['delegation:workflow-worker-thread', 'parent-only'],
   ['delegation:tool-workflow', 'parent-only'],
   ['delegation:tool-ralph', 'parent-only'],
   ['tool-ask-user', 'parent-only'],
@@ -47,4 +52,3 @@ export function applyPresetProjection(ctx, { hostSourceId, registerRoster }) {
 }
 
 export const PACKAGE_ROSTER_ENTRY_IDS = Object.freeze([...ROSTER_ASSIGNMENTS.keys()])
-

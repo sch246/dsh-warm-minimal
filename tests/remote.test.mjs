@@ -5,13 +5,15 @@ import { WarmMinimalRemote } from '../lib/remote.js'
 import { TYPERT } from '../lib/typert.host.js'
 
 describe('warm-minimal inventory Remote', () => {
-  it('returns only stable source ids and contribution names', async () => {
+  it('returns stable source ids, roster defaults, and readable contributions', async () => {
     const ctx = new Context()
     const snapshot = [{
       source: 'host-source:plugin-row',
+      promptDefault: 'parent-only',
+      toolDefault: 'shared',
       sections: ['persona'],
       contexts: ['workspace'],
-      tools: ['bash'],
+      tools: [{ name: 'bash', description: 'Run commands.' }],
     }]
     const remote = new WarmMinimalRemote(ctx, {
       queryInventory: async () => structuredClone(snapshot),

@@ -54,9 +54,9 @@ function allowed(assignment, role) {
   return assignment === 'shared' || assignment === `${role}-only`
 }
 
-function groupedInventory(inventory) {
+function groupedInventory(inventory, defaultAssignmentFor) {
   const sources = new Map()
-  for (const kind of ['sections', 'contexts', 'tools']) {
+  for (const kind of ['sections', 'contexts']) {
     for (const entry of inventory[kind]) {
       let row = sources.get(entry.source)
       if (row === undefined) {
@@ -66,11 +66,26 @@ function groupedInventory(inventory) {
       if (!row[kind].includes(entry.name)) row[kind].push(entry.name)
     }
   }
+  for (const entry of inventory.tools) {
+    let row = sources.get(entry.source)
+    if (row === undefined) {
+      row = { source: entry.source, sections: [], contexts: [], tools: [] }
+      sources.set(entry.source, row)
+    }
+    const index = row.tools.findIndex(tool => tool.name === entry.name)
+    const tool = entry.description === undefined
+      ? { name: entry.name }
+      : { name: entry.name, description: entry.description }
+    if (index === -1) row.tools.push(tool)
+    else if (row.tools[index].description === undefined && tool.description !== undefined) row.tools[index] = tool
+  }
   return [...sources.values()].map(row => ({
     source: row.source,
+    promptDefault: defaultAssignmentFor('prompt', row.source),
+    toolDefault: defaultAssignmentFor('tool', row.source),
     sections: [...row.sections],
     contexts: [...row.contexts],
-    tools: [...row.tools],
+    tools: row.tools.map(tool => ({ ...tool })),
   }))
 }
 
@@ -93,6 +108,13 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
       }
     }
     return merged
+  }
+
+  const defaultAssignmentFor = (kind, source) => assignmentFor(source, {}, rosterFor(kind))
+
+  const resolvedAssignmentFor = (kind, source, config) => {
+    const saved = kind === 'tool' ? config.toolAssignments : config.promptAssignments
+    return saved[source] ?? defaultAssignmentFor(kind, source)
   }
 
   const registerRoster = ({ promptAssignments, toolAssignments }) => {
@@ -127,8 +149,7 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
     if (state !== undefined && !state.promoted) return true
     const config = getConfig()
     const kind = candidate.kind === 'tool' ? 'tool' : 'prompt'
-    const saved = kind === 'tool' ? config.toolAssignments : config.promptAssignments
-    return allowed(assignmentFor(candidate.source, saved, rosterFor(kind)), role)
+    return allowed(resolvedAssignmentFor(kind, candidate.source, config), role)
   }
 
   async function runBootstrap(ctx, agent, state) {
@@ -189,9 +210,12 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
       ],
       tools: [
         ...observed.filter(candidate => candidate.kind === 'tool').map(candidate => ({ name: candidate.name, source: candidate.source })),
-        ...sourceInventory.tools,
+        ...sourceInventory.tools.map((entry, index) => ({
+          ...entry,
+          description: assembly.tools[index]?.description,
+        })),
       ],
-    })
+    }, defaultAssignmentFor)
     const agent = context.agent
     if (agent === undefined) return assembly
     const state = active.get(agent.session)
@@ -199,15 +223,13 @@ export function createWarmRuntime({ agents, promptAssemblySourceInventory, getCo
     if (resolveSessionPreset(agent.session) !== 'warm-minimal') return assembly
     const config = getConfig()
     const role = roleOf(agents, agent)
-    const promptRoster = rosterFor('prompt')
-    const toolRoster = rosterFor('tool')
-    const filter = (entries, sources, saved, roster) => entries.filter((_entry, index) => {
+    const filter = (entries, sources, kind) => entries.filter((_entry, index) => {
       const source = sources[index]?.source
-      return source !== undefined && allowed(assignmentFor(source, saved, roster), role)
+      return source !== undefined && allowed(resolvedAssignmentFor(kind, source, config), role)
     })
-    const sections = filter(assembly.sections, sourceInventory.sections, config.promptAssignments, promptRoster)
-    const contexts = filter(assembly.contexts, sourceInventory.contexts, config.promptAssignments, promptRoster)
-    const tools = filter(assembly.tools, sourceInventory.tools, config.toolAssignments, toolRoster)
+    const sections = filter(assembly.sections, sourceInventory.sections, 'prompt')
+    const contexts = filter(assembly.contexts, sourceInventory.contexts, 'prompt')
+    const tools = filter(assembly.tools, sourceInventory.tools, 'tool')
     return {
       ...assembly,
       sections: role === 'parent' && config.guidance.length > 0

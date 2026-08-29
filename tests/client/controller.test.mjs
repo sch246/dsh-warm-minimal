@@ -53,11 +53,23 @@ function remoteDouble() {
           value: [
             {
               source: 'source:known',
+              promptDefault: 'parent-only',
+              toolDefault: 'shared',
               sections: ['persona', 'duplicate'],
               contexts: ['workspace', 'duplicate'],
-              tools: ['bash', 'str_replace_editor'],
+              tools: [
+                { name: 'bash', description: 'Run commands.' },
+                { name: 'str_replace_editor' },
+              ],
             },
-            { source: 'unknown:very-long-source-identity-that-needs-a-short-browser-value:tail', sections: ['extra'], contexts: [], tools: [] },
+            {
+              source: 'unknown:very-long-source-identity-that-needs-a-short-browser-value:tail',
+              promptDefault: 'shared',
+              toolDefault: 'child-only',
+              sections: ['extra'],
+              contexts: [],
+              tools: [],
+            },
           ],
         }
       },
@@ -66,7 +78,7 @@ function remoteDouble() {
 }
 
 describe('WarmMinimalCardController', () => {
-  it('reads inventory only through Remote and merges prompt section/context names', async () => {
+  it('reads inventory defaults through Remote and retains prompt, context, and tool detail', async () => {
     const host = scopeDouble()
     const inventory = remoteDouble()
     const controller = new WarmMinimalCardController(host.scope, inventory.remote)
@@ -75,11 +87,20 @@ describe('WarmMinimalCardController', () => {
 
     assert.equal(inventory.calls, 1)
     assert.deepEqual(controller.getSnapshot().promptSources[0], {
-      source: 'source:known', shortSource: 'source:known',
-      names: ['persona', 'duplicate', 'workspace'], assignment: 'shared',
+      source: 'source:known',
+      sections: ['persona', 'duplicate'],
+      contexts: ['workspace', 'duplicate'],
+      assignment: 'shared',
     })
-    assert.equal(controller.getSnapshot().promptSources[1].assignment, 'child-only')
-    assert.deepEqual(controller.getSnapshot().toolSources[0].names, ['bash', 'str_replace_editor'])
+    assert.equal(controller.getSnapshot().promptSources[1].assignment, 'shared')
+    assert.deepEqual(controller.getSnapshot().toolSources[0], {
+      source: 'source:known',
+      tools: [
+        { name: 'bash', description: 'Run commands.' },
+        { name: 'str_replace_editor' },
+      ],
+      assignment: 'child-only',
+    })
   })
 
   it('saves only the five settings fields through settingsScope and never inventory metadata', async () => {
@@ -103,7 +124,7 @@ describe('WarmMinimalCardController', () => {
     })
     assert.deepEqual(host.writes[4].value, { 'source:known': 'shared' })
     assert.equal(JSON.stringify(host.writes).includes('persona'), false)
-    assert.equal(JSON.stringify(host.writes).includes('shortSource'), false)
+    assert.equal(JSON.stringify(host.writes).includes('description'), false)
     assert.equal(controller.getSnapshot().dirty, false)
   })
 

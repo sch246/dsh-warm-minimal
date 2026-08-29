@@ -37,7 +37,7 @@ describe('warm-minimal package-owned roster', () => {
 
     for (const expected of [
       'persona',
-      'warm-projection',
+      'worker-persona',
       'agent-instructions',
       'persistent-shell/pty',
       'persistent-shell/terminal-bash',
@@ -48,6 +48,7 @@ describe('warm-minimal package-owned roster', () => {
       'filesystem/str-replace-editor',
       'tool-fs',
       'tool-fs-search',
+      'tool-jobs',
       'skill-filesystem',
       'tool-skill',
       'tool-goal',
@@ -76,7 +77,7 @@ describe('warm-minimal package-owned roster', () => {
     const preset = await readFile(presetUrl, 'utf8')
 
     assert.match(
-      topLevelBlock(preset, 'warm-projection'),
+      topLevelBlock(preset, 'worker-persona'),
       /name: dsh-warm-minimal\/projection/,
     )
     assert.doesNotMatch(
@@ -87,16 +88,20 @@ describe('warm-minimal package-owned roster', () => {
       preset,
       /^\s*name: '@deepseek-ai\/dsh-tool-(?:bash|pwsh)'\s*$/m,
     )
-    assert.doesNotMatch(preset, /@deepseek-ai\/dsh-tool-jobs/)
+    assert.match(preset, /@deepseek-ai\/dsh-tool-jobs/)
   })
 
   it('keeps persona extensible and copies the selected runtime settings', async () => {
     const preset = await readFile(presetUrl, 'utf8')
     const persona = topLevelBlock(preset, 'persona')
+    const workerPersona = topLevelBlock(preset, 'worker-persona')
 
     assert.match(persona, /text: You are a helpful software engineer assistant\./)
     assert.doesNotMatch(persona, /\bcomplete:/)
     assert.doesNotMatch(persona, /\bincludeRuntimeContext:/)
+    assert.match(workerPersona, /workerPersona: You are a coding agent powered by the \{\{model\}\} model\. Your working directory is \{\{cwd\}\}\./)
+    assert.doesNotMatch(workerPersona, /\bcomplete:/)
+    assert.doesNotMatch(workerPersona, /@deepseek-ai\/dsh-persona/)
 
     for (const expected of [
       /maxBytes: 65536/,
