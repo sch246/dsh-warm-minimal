@@ -66,7 +66,7 @@ DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
 
 - Host 为 prompt section、context 和单个 tool schema 提供不进入模型 wire 的稳定来源 ID。
 - `SystemPrompt.admitSources()` 在 complete prompt 选择和动态内容求值前执行来源准入；工具按 schema 独立过滤。
-- preset projection 使用 Loader tree 的精确 entry ID 与工具名建立已知默认值，不把 provider 的分配隐式授予它后来出现的新工具。
+- preset projection 把 package-owned roster 的相对 Loader entry ID 接到当前 preset 的完整前缀；顶层与 group 内 entry 都不依赖插件激活顺序，工具默认值仍精确到 entry ID 与工具名，不会隐式授予后来出现的新工具。
 - 运行时根据当前 agent 关系区分主代理与子代理，并在 assembly waterfall 后处理监听器新加入的未知来源。
 - Plugins 配置卡通过 Typert Remote 做 scope-only assembly，读取 inventory 时不创建 session、turn 或模型请求。
 - bootstrap 的消息 ID 使用 `dsh-warm-minimal:bootstrap:` 前缀；Chat、Trajectory、持久化与恢复沿用 Harness 原生事件顺序。

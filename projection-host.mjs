@@ -1,5 +1,5 @@
 import Schema from '@deepseek-ai/schemastery'
-import { hostSourceId, PERSONA_ORDER } from '@deepseek-ai/dsh-system-prompt'
+import { hostSourceIdForEntry, PERSONA_ORDER } from '@deepseek-ai/dsh-system-prompt'
 import { applyPresetProjection } from './projection.mjs'
 
 export const name = 'dsh-warm-minimal-roster-projection'
@@ -17,7 +17,7 @@ export function apply(ctx, config) {
     text: config.workerPersona,
   }), 'dsh-warm-minimal: child-only worker persona')
   return applyPresetProjection(ctx, {
-    hostSourceId,
+    hostSourceIdForEntry,
     registerRoster: defaults => ctx.warmMinimalRuntime.registerRoster(defaults),
   })
 }

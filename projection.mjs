@@ -4,9 +4,9 @@ const PACKAGE_ROSTER = new Map([
   ['persona', { prompt: 'parent-only', tools: [] }],
   ['worker-persona', { prompt: 'child-only', tools: [] }],
   ['agent-instructions', { prompt: 'shared', tools: [] }],
-  ['persistent-shell:persistent-bash', { prompt: 'shared', tools: [['bash', 'shared']] }],
-  ['persistent-shell:persistent-pwsh', { prompt: 'shared', tools: [['pwsh', 'shared']] }],
-  ['filesystem:str-replace-editor', { prompt: 'shared', tools: [['str_replace_editor', 'shared']] }],
+  ['persistent-bash', { prompt: 'shared', tools: [['bash', 'shared']] }],
+  ['persistent-pwsh', { prompt: 'shared', tools: [['pwsh', 'shared']] }],
+  ['str-replace-editor', { prompt: 'shared', tools: [['str_replace_editor', 'shared']] }],
   ['tool-fs', { prompt: 'child-only', tools: [
     ['read', 'child-only'],
     ['edit', 'child-only'],
@@ -29,13 +29,13 @@ const PACKAGE_ROSTER = new Map([
     ['create_goal', 'parent-only'],
     ['update_goal', 'parent-only'],
   ] }],
-  ['planning:plan-mode', { prompt: 'parent-only', tools: [['exit_plan_mode', 'parent-only']] }],
-  ['delegation:tool-subagent-control', { prompt: 'parent-only', tools: [
+  ['plan-mode', { prompt: 'parent-only', tools: [['exit_plan_mode', 'parent-only']] }],
+  ['tool-subagent-control', { prompt: 'parent-only', tools: [
     ['send_message', 'parent-only'],
     ['interrupt_agent', 'parent-only'],
   ] }],
-  ['delegation:tool-subagent-list-agents', { prompt: 'parent-only', tools: [['list_agents', 'parent-only']] }],
-  ['delegation:tool-subagent', { prompt: 'parent-only', tools: [['subagent', 'parent-only']] }],
+  ['tool-subagent-list-agents', { prompt: 'parent-only', tools: [['list_agents', 'parent-only']] }],
+  ['tool-subagent', { prompt: 'parent-only', tools: [['subagent', 'parent-only']] }],
   ['tool-ask-user', { prompt: 'parent-only', tools: [['ask_user_question', 'parent-only']] }],
   ['tool-todo', { prompt: 'parent-only', tools: [['todo_write', 'parent-only']] }],
   ['tool-web', { prompt: 'child-only', tools: [
@@ -54,16 +54,32 @@ function owningEntry(ctx) {
   }
 }
 
+function owningTreePrefix(owner) {
+  const localId = owner.options?.id
+  if (typeof localId !== 'string' || localId.length === 0) {
+    throw new Error('dsh-warm-minimal: roster projection owner has no local Loader entry id')
+  }
+  if (owner.id === localId) return ''
+  const suffix = `:${localId}`
+  if (typeof owner.id !== 'string' || !owner.id.endsWith(suffix)) {
+    throw new Error('dsh-warm-minimal: roster projection owner has an inconsistent Loader entry path')
+  }
+  return owner.id.slice(0, -localId.length)
+}
+
 /** Project exact Loader entry ids and exact tool names to package defaults. */
-export function applyPresetProjection(ctx, { hostSourceId, registerRoster }) {
+export function applyPresetProjection(ctx, { hostSourceIdForEntry, registerRoster }) {
   const owner = owningEntry(ctx)
   if (owner === undefined) throw new Error('dsh-warm-minimal: roster projection is not owned by a Loader entry')
+  const prefix = owningTreePrefix(owner)
   const promptAssignments = {}
   const toolAssignments = {}
-  for (const entry of owner.parent.tree.entries()) {
-    const defaults = PACKAGE_ROSTER.get(entry.id)
-    if (defaults === undefined || entry.fiber === undefined) continue
-    const source = hostSourceId(entry.fiber.ctx)
+  for (const [relativeId, defaults] of PACKAGE_ROSTER) {
+    const entry = {
+      id: `${prefix}${relativeId}`,
+      parent: { tree: owner.parent.tree },
+    }
+    const source = hostSourceIdForEntry(entry)
     promptAssignments[source] = defaults.prompt
     for (const [name, assignment] of defaults.tools) {
       toolAssignments[makeToolSchemaId(source, name)] = assignment

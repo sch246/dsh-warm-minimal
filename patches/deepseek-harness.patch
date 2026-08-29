@@ -1,1156 +1,171 @@
 diff --git a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.i18n.yaml b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.i18n.yaml
-new file mode 100644
-index 0000000000000000000000000000000000000000..4480915345802ccec271599b997116e7f454f88c
---- /dev/null
+index 4480915345..f0704db863 100644
+--- a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.i18n.yaml
 +++ b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.i18n.yaml
-@@ -0,0 +1,6 @@
-+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-+# side as of the last confirmed-consistent state. Both languages carry equal authority;
-+# after editing either side, bring the other along and re-record with:
-+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md
-+2026-08-29-model-input-host-provenance.md: 863df9a6ae9ba3b911ef303e2935286af2e4654d
-+2026-08-29-model-input-host-provenance.zh.md: f2e6fb14c99091b364b8f8a45e08dba72bbeaa93
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md
+-2026-08-29-model-input-host-provenance.md: 863df9a6ae9ba3b911ef303e2935286af2e4654d
+-2026-08-29-model-input-host-provenance.zh.md: f2e6fb14c99091b364b8f8a45e08dba72bbeaa93
++2026-08-29-model-input-host-provenance.md: 83691b5e346ce07d8ffd2fcc8167b274715d6ac5
++2026-08-29-model-input-host-provenance.zh.md: 393107b91104df8ec0465dcff879bc5af4b647bd
 diff --git a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md
-new file mode 100644
-index 0000000000000000000000000000000000000000..863df9a6ae9ba3b911ef303e2935286af2e4654d
---- /dev/null
+index 863df9a6ae..83691b5e34 100644
+--- a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md
 +++ b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.md
-@@ -0,0 +1,35 @@
-+# Agent Note: model-input host provenance
-+
-+Status: implemented
-+
-+English | [中文](2026-08-29-model-input-host-provenance.zh.md)
-+
-+## Problem
-+
-+Host policy needs to identify which configured plugin contributed each model-visible prompt section, runtime context, and tool schema before deciding what an assembly may retain. Contribution names are model-facing registry keys, not owner identities, and Cordis plugin display names are optional and non-unique. Adding provenance as assembly fields would also expose host policy metadata to LLM requests and JSON transports.
-+
-+## Decision
-+
-+`dsh-system-prompt` captures a branded `HostSourceId` when each section, context, or schema provider registers. It walks the actual calling Cordis fiber to its owning Loader Entry and combines the entry's full configured path with a stable tree namespace. A file-backed tree derives an opaque namespace from its resolved configuration filename, so a standing preset keeps its sources across process and fiber replacement while two preset files may reuse row ids without collision. Root Loader entries use their root namespace. A registration outside Loader composition receives the single recognizable `UNKNOWN_HOST_SOURCE_ID`; display names and callback names never substitute for configured identity, and source ids do not expose filenames.
-+
-+The registry stores source beside its registration. Scoped merging therefore selects the source and contribution together, including same-name shadows. `dsh-tools` applies the same rule to each tool definition and returns per-schema source ids through its dynamic prompt provider, so one provider invocation can project tools from different owners without collapsing their provenance to the tools service.
-+
-+Assembly entry objects are keys in a private `WeakMap`. `promptAssemblySourceInventory()` derives a current ordered inventory from those identities. Object-spreading an assembly retains the entry identities and their provenance; a listener that creates or copies an entry receives the explicit unknown source. No source is an enumerable assembly, section, context, or tool field, so normal request construction and JSON serialization cannot transmit it.
-+
-+`SystemPrompt.admitSources()` registers synchronous predicates in the same global or scoped layers as prompt contributions. Every effective predicate observes every effective registry candidate and all must accept it. Sections are admitted before complete-section selection and text evaluation, contexts before text evaluation, and dynamic tool results schema by schema using each schema's effective source. A rejected complete section cannot be restored after the waterfall. The waterfall remains responsible for entries its listeners create because those entries do not come from the registry.
-+
-+## Consequences
-+
-+- Host policy can admit registry contributions by unambiguous live configured-plugin ownership without importing Loader, inspecting Cordis internals, or mutating wire objects.
-+- A source id remains a persistent policy key while its file-backed tree keeps the same resolved filename and configured entry ids. Changing either intentionally creates a new source.
-+- Direct programmatic plugins remain observable as unknown. A future host that needs out-of-Loader identity must add a separate explicit registration identity rather than infer a display or callback name.
-+- Provenance follows retained entry identity through a waterfall. Reconstructed entries deliberately lose attribution instead of inheriting it by matching names.
-+- Admission predicates compose conjunctively across global and inherited scoped layers, retain independent effect lifetimes, and still observe candidates that another predicate rejects so inventory collection is complete.
-+
-+## Alternatives considered
-+
-+- **Use contribution names or Cordis `fiber.name` / `runtime.name`** — rejected because these values describe presentation or registry slots, can repeat, and do not identify the configured owner.
-+- **Use bare Loader `entry.id` or Cordis fiber uid** — rejected because bare entry ids can repeat across standing preset files, while fiber uid changes across reload and is cleared on disposal.
-+- **Add source fields to `PromptAssembly` and `ToolSchema`** — rejected because ordinary spread and JSON transport would make host policy metadata model-visible and wire-visible.
-+- **Require every registrar to pass a source id** — rejected for Loader composition because its stable tree namespace and configured entry path are automatic. Explicit ids remain the correct extension for provenance outside Loader.
-+- **Filter only in `system-prompt/assemble` waterfall listeners** — rejected because complete-section restoration can override listener filtering and registry providers would already have been evaluated. Listener-created entries remain outside registry admission by design.
+@@ -10,7 +10,7 @@ Host policy needs to identify which configured plugin contributed each model-vis
+ 
+ ## Decision
+ 
+-`dsh-system-prompt` captures a branded `HostSourceId` when each section, context, or schema provider registers. It walks the actual calling Cordis fiber to its owning Loader Entry and combines the entry's full configured path with a stable tree namespace. A file-backed tree derives an opaque namespace from its resolved configuration filename, so a standing preset keeps its sources across process and fiber replacement while two preset files may reuse row ids without collision. Root Loader entries use their root namespace. A registration outside Loader composition receives the single recognizable `UNKNOWN_HOST_SOURCE_ID`; display names and callback names never substitute for configured identity, and source ids do not expose filenames.
++`dsh-system-prompt` captures a branded `HostSourceId` when each section, context, or schema provider registers. It walks the actual calling Cordis fiber to its owning Loader Entry and combines the entry's full configured path with a stable tree namespace. The same resolver accepts an Entry declaration before its fiber activates, so policy owned by a configured tree can classify all declared siblings without depending on plugin startup order. A file-backed tree derives an opaque namespace from its resolved configuration filename, so a standing preset keeps its sources across process and fiber replacement while two preset files may reuse row ids without collision. Root Loader entries use their root namespace. A registration outside Loader composition receives the single recognizable `UNKNOWN_HOST_SOURCE_ID`; display names and callback names never substitute for configured identity, and source ids do not expose filenames.
+ 
+ The registry stores source beside its registration. Scoped merging therefore selects the source and contribution together, including same-name shadows. `dsh-tools` applies the same rule to each tool definition and returns per-schema source ids through its dynamic prompt provider, so one provider invocation can project tools from different owners without collapsing their provenance to the tools service.
+ 
+@@ -22,6 +22,7 @@ Assembly entry objects are keys in a private `WeakMap`. `promptAssemblySourceInv
+ 
+ - Host policy can admit registry contributions by unambiguous live configured-plugin ownership without importing Loader, inspecting Cordis internals, or mutating wire objects.
+ - A source id remains a persistent policy key while its file-backed tree keeps the same resolved filename and configured entry ids. Changing either intentionally creates a new source.
++- A configured tree can resolve source ids for inactive siblings before their plugins register contributions; the declaration and a later active context produce the same id.
+ - Direct programmatic plugins remain observable as unknown. A future host that needs out-of-Loader identity must add a separate explicit registration identity rather than infer a display or callback name.
+ - Provenance follows retained entry identity through a waterfall. Reconstructed entries deliberately lose attribution instead of inheriting it by matching names.
+ - Admission predicates compose conjunctively across global and inherited scoped layers, retain independent effect lifetimes, and still observe candidates that another predicate rejects so inventory collection is complete.
 diff --git a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.zh.md b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.zh.md
-new file mode 100644
-index 0000000000000000000000000000000000000000..f2e6fb14c99091b364b8f8a45e08dba72bbeaa93
---- /dev/null
+index f2e6fb14c9..393107b911 100644
+--- a/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.zh.md
 +++ b/.agents/notes/implemented/architecture/2026-08-29-model-input-host-provenance.zh.md
-@@ -0,0 +1,35 @@
-+# Agent Note: 模型输入的 Host provenance
-+
-+Status: implemented
-+
-+[English](2026-08-29-model-input-host-provenance.md) | 中文
-+
-+## Problem
-+
-+Host 策略需要在决定组装可以保留哪些内容之前，识别每个面向模型的提示词段、运行时上下文和工具 schema 来自哪个已配置插件。贡献名称是面向模型的注册表键，不是 owner 标识；Cordis 插件展示名则可缺席且不唯一。若把 provenance 加为 assembly 字段，还会把 Host 策略元数据暴露给 LLM request 和 JSON transport。
-+
-+## Decision
-+
-+`dsh-system-prompt` 在每个段、上下文或 schema provider 注册时捕获 branded `HostSourceId`。它从实际调用方 Cordis fiber 向上查找所属 Loader Entry，并把 entry 的完整配置 path 与稳定 tree namespace 组合起来。文件树从解析后的配置文件名派生不透明 namespace，因此 standing preset 在进程与 fiber 替换后保持 source，不同 preset 文件也可以无碰撞地复用 row id。根 Loader entry 使用其 root namespace。Loader 组合之外的注册使用唯一且可识别的 `UNKNOWN_HOST_SOURCE_ID`；展示名和 callback 名绝不代替配置身份，source id 也不会暴露文件名。
-+
-+注册表把 source 与注册内容保存在一起。因此作用域合并会同时选择贡献及其 source，包括同名 shadow。`dsh-tools` 对每个工具定义采用同一规则，并通过动态提示词 provider 返回逐 schema source id，所以一次 provider 调用可以投影来自不同 owner 的工具，而不会把它们的 provenance 都压成 tools service。
-+
-+Assembly 条目对象作为私有 `WeakMap` 的键。`promptAssemblySourceInventory()` 从这些对象身份派生当前有序 inventory。对 assembly 做对象 spread 会保留条目身份及其 provenance；监听器新建或复制的条目使用显式 unknown source。Source 不是 assembly、section、context 或 tool 的可枚举字段，因此普通 request 构造和 JSON 序列化无法传输它。
-+
-+`SystemPrompt.admitSources()` 在与提示词贡献相同的全局或作用域层中注册同步 predicate。每个有效 predicate 都观察每个有效注册表候选项，且必须全部接受。段在 complete 段选择与文本求值前准入；上下文在文本求值前准入；动态工具结果则按每个 schema 的有效 source 逐项准入。被拒绝的 complete 段无法在 waterfall 后恢复。Waterfall 监听器新建的条目并非来自注册表，因此仍由该监听器负责。
-+
-+## Consequences
-+
-+- Host 策略可以按无歧义的 live 已配置插件 owner 准入注册表贡献，无需导入 Loader、检查 Cordis 内部字段或修改 wire 对象。
-+- 文件树保持相同解析文件名与配置 entry id 时，source id 就是持久策略键；主动修改任一项会创建另一个 source。
-+- 直接编程挂载的插件保持可观察的 unknown。未来若 Host 需要 Loader 外身份，必须新增独立的显式注册身份，而不能推断展示名或 callback 名称。
-+- Provenance 在 waterfall 中跟随被保留的条目身份。重建的条目会有意失去归属，而不会按名称继承。
-+- Admission predicate 在全局层和继承的作用域层之间按合取方式组合，并保持独立 effect 生命周期；即使其他 predicate 已拒绝某候选项，它仍会被观察，从而让 inventory 收集完整。
-+
-+## Alternatives considered
-+
-+- **使用贡献名称或 Cordis `fiber.name` / `runtime.name`**——否决：这些值描述展示或注册槽，可能重复，无法识别已配置 owner。
-+- **使用裸 Loader `entry.id` 或 Cordis fiber uid**——否决：裸 entry id 可能在不同 standing preset 文件之间重复；fiber uid 则在 reload 后变化，并在 dispose 时清空。
-+- **给 `PromptAssembly` 和 `ToolSchema` 增加 source 字段**——否决：普通 spread 和 JSON transport 会让 Host 策略元数据进入模型与 wire。
-+- **要求每个注册方传 source id**——否决：Loader 组合的稳定 tree namespace 与配置 entry path 可以自动取得。Loader 外 provenance 仍应使用显式 id 扩展。
-+- **只在 `system-prompt/assemble` waterfall 监听器中过滤**——否决：complete 段恢复可能覆盖监听器过滤，而且注册表 provider 此时已经求值。监听器新建的条目按设计仍在注册表准入之外。
+@@ -10,7 +10,7 @@ Host 策略需要在决定组装可以保留哪些内容之前，识别每个面
+ 
+ ## Decision
+ 
+-`dsh-system-prompt` 在每个段、上下文或 schema provider 注册时捕获 branded `HostSourceId`。它从实际调用方 Cordis fiber 向上查找所属 Loader Entry，并把 entry 的完整配置 path 与稳定 tree namespace 组合起来。文件树从解析后的配置文件名派生不透明 namespace，因此 standing preset 在进程与 fiber 替换后保持 source，不同 preset 文件也可以无碰撞地复用 row id。根 Loader entry 使用其 root namespace。Loader 组合之外的注册使用唯一且可识别的 `UNKNOWN_HOST_SOURCE_ID`；展示名和 callback 名绝不代替配置身份，source id 也不会暴露文件名。
++`dsh-system-prompt` 在每个段、上下文或 schema provider 注册时捕获 branded `HostSourceId`。它从实际调用方 Cordis fiber 向上查找所属 Loader Entry，并把 entry 的完整配置 path 与稳定 tree namespace 组合起来。同一 resolver 也接受 fiber 激活前的 Entry 声明，因此配置 tree 所属策略可以分类全部已声明 sibling，而不依赖插件启动顺序。文件树从解析后的配置文件名派生不透明 namespace，因此 standing preset 在进程与 fiber 替换后保持 source，不同 preset 文件也可以无碰撞地复用 row id。根 Loader entry 使用其 root namespace。Loader 组合之外的注册使用唯一且可识别的 `UNKNOWN_HOST_SOURCE_ID`；展示名和 callback 名绝不代替配置身份，source id 也不会暴露文件名。
+ 
+ 注册表把 source 与注册内容保存在一起。因此作用域合并会同时选择贡献及其 source，包括同名 shadow。`dsh-tools` 对每个工具定义采用同一规则，并通过动态提示词 provider 返回逐 schema source id，所以一次 provider 调用可以投影来自不同 owner 的工具，而不会把它们的 provenance 都压成 tools service。
+ 
+@@ -22,6 +22,7 @@ Assembly 条目对象作为私有 `WeakMap` 的键。`promptAssemblySourceInvent
+ 
+ - Host 策略可以按无歧义的 live 已配置插件 owner 准入注册表贡献，无需导入 Loader、检查 Cordis 内部字段或修改 wire 对象。
+ - 文件树保持相同解析文件名与配置 entry id 时，source id 就是持久策略键；主动修改任一项会创建另一个 source。
++- 配置 tree 可以在 sibling 插件注册贡献前解析未激活 sibling 的 source id；声明与其后激活的 context 会生成相同 id。
+ - 直接编程挂载的插件保持可观察的 unknown。未来若 Host 需要 Loader 外身份，必须新增独立的显式注册身份，而不能推断展示名或 callback 名称。
+ - Provenance 在 waterfall 中跟随被保留的条目身份。重建的条目会有意失去归属，而不会按名称继承。
+ - Admission predicate 在全局层和继承的作用域层之间按合取方式组合，并保持独立 effect 生命周期；即使其他 predicate 已拒绝某候选项，它仍会被观察，从而让 inventory 收集完整。
 diff --git a/packages/core/system-prompt/README.i18n.yaml b/packages/core/system-prompt/README.i18n.yaml
-index dd68b6a139bd8c49bca9c80df04143e4f88a6e4a..a471a44d1fcb0bd8ee1d46b064e1d3d3d24ddfae 100644
+index a471a44d1f..4c9d8fb1ea 100644
 --- a/packages/core/system-prompt/README.i18n.yaml
 +++ b/packages/core/system-prompt/README.i18n.yaml
 @@ -2,5 +2,5 @@
  # side as of the last confirmed-consistent state. Both languages carry equal authority;
  # after editing either side, bring the other along and re-record with:
  #   pnpm run verify-translation-pairing --write packages/core/system-prompt/README.md
--README.md: d750a507e628e7609af542227e4528d4d4934ce8
--README.zh.md: ec5b32d742b96c8044a3707c35f15e30ba642b4f
-+README.md: f0f54aa0ab6c9685a360b873e3d365aa3c0fb99f
-+README.zh.md: b59cdf8ed53103bae8022e59a2721dc98234f414
+-README.md: f0f54aa0ab6c9685a360b873e3d365aa3c0fb99f
+-README.zh.md: b59cdf8ed53103bae8022e59a2721dc98234f414
++README.md: 33cd885c86faf68a768b3d3f3a99fb260ef74e97
++README.zh.md: f91ed391e35ae2e8c9f2b1f89dd5797a57a397c3
 diff --git a/packages/core/system-prompt/README.md b/packages/core/system-prompt/README.md
-index d750a507e628e7609af542227e4528d4d4934ce8..f0f54aa0ab6c9685a360b873e3d365aa3c0fb99f 100644
+index f0f54aa0ab..33cd885c86 100644
 --- a/packages/core/system-prompt/README.md
 +++ b/packages/core/system-prompt/README.md
-@@ -20,9 +20,15 @@ System prompt assembly registry. Plugins contribute ordered sections, tool schem
- - `ctx.systemPrompt.section(section: PromptSection): () => void` Contribute a section. The layer is the calling context's scope: `agent.ctx` contributes to that agent alone, shadowing a same-named global section there. A `complete: true` section becomes the exact complete prompt after the assembly waterfall; more than one effective complete section rejects assembly. Duplicate names within one layer and non-finite orders throw. Disposed with the calling fiber.
- - `ctx.systemPrompt.context(context: PromptContext): () => void` Contribute ordered dynamic context for the calling scope. Providers are evaluated for each eligible assembly and become a sourced runtime-context snapshot in model history under the shipped loop.
- - `ctx.systemPrompt.suppressRuntimeContext(): () => void` Suppress every dynamic-context contribution for the calling scope. Multiple registrations compose independently; disposing the returned effect restores context when no suppressor remains.
--- `ctx.systemPrompt.tools(provider: (context: AssembleContext) => ToolProviderResult): () => void` Contribute tool schemas, evaluated at each assembly with that assembly's context. `ToolProviderResult` = `{ schemas, knownNames? }`: `schemas` is the post-restriction visible set; `knownNames` is the pre-restriction universe used by `toolOrder`. A provider must not return a schema named `TOOL_ORDER_REST`. Scoped providers are consulted only for their scope's assemblies. Disposed with the calling fiber.
-+- `ctx.systemPrompt.tools(provider: (context: AssembleContext) => ToolProviderResult): () => void` Contribute tool schemas, evaluated at each assembly with that assembly's context. `ToolProviderResult` = `{ schemas, knownNames?, sourceIds? }`: `schemas` is the post-restriction visible set; `knownNames` is the pre-restriction universe used by `toolOrder`; `sourceIds`, when present, must contain one source for each schema in the same order. A provider must not return a schema named `TOOL_ORDER_REST`. Scoped providers are consulted only for their scope's assemblies. Disposed with the calling fiber.
- - `ctx.systemPrompt.variable(name: string, provider: (context) => string | undefined): () => void` Contribute a prompt variable, referenced from section text as `{{name}}`. Scoped variables shadow a same-named global for that agent. Duplicate-in-layer or unreferenceable names throw; `undefined` means "no value for this assembly". Disposed with the calling fiber.
--- `ctx.systemPrompt.assemble(context?: AssembleContext): Promise<PromptAssembly>` Assemble the prompt for one caller: the global layer merged with `context.scope`'s layer, with tool schemas detached before the transform waterfall. Runs through the scope-filtered `system-prompt/assemble` waterfall, then restores an effective complete section as the sole prompt section and enforces any active runtime-context suppressor. An optional `context.signal` explicitly controls this assembly request; providers and listeners may cooperate with it but must not retain it for another turn. Rejects for multiple complete sections, when a configured `toolOrder` names a tool outside the providers' `knownNames` universe, or when a provider returns the reserved rest-entry name.
-+- `ctx.systemPrompt.assemble(context?: AssembleContext): Promise<PromptAssembly>` Assemble the prompt for one caller: the global layer merged with `context.scope`'s layer, with tool schemas detached before the transform waterfall. Runs through the scope-filtered `system-prompt/assemble` waterfall, then restores an effective complete section as the sole prompt section and enforces any active runtime-context suppressor. An optional `context.signal` explicitly controls this assembly request; providers and listeners may cooperate with it but must not retain it for another turn. Rejects for multiple complete sections, when a configured `toolOrder` names a tool outside the providers' `knownNames` universe, when a provider's `sourceIds` do not correspond one-to-one with its schemas, or when a provider returns the reserved rest-entry name.
-+
-+<!-- @meta-intent:begin dsh-warm-minimal (purpose: document the non-wire host provenance query) -->
-+- `hostSourceId(ctx): HostSourceId` resolves the calling Cordis context to the owning entry's stable tree namespace and full Loader-tree path. File-backed trees derive an opaque namespace from the resolved configuration filename, so the same preset survives process and fiber replacement while different presets may reuse row ids safely; nested subtrees include their outer entry path. Registrations outside Loader composition receive `UNKNOWN_HOST_SOURCE_ID`; `isUnknownHostSourceId()` distinguishes that case without interpreting the string.
-+- `promptAssemblySourceInventory(assembly): PromptAssemblySourceInventory` returns the source of each effective section, context, and tool schema in current assembly order. Scoped shadows report the winning registration, dynamic tool schemas are attributed individually, and listener-created or copied entries report the unknown source. Provenance is stored outside assembly objects: it is absent from object enumeration and JSON serialization, while spreading the assembly preserves inventory because its entry objects remain the same.
-+- `ctx.systemPrompt.admitSources(predicate: ModelSourceAdmissionPredicate): () => void` registers source admission for the calling scope. Every effective global and inherited scoped predicate observes every effective registry candidate as `(AssembleContext, { kind, name, source })`; all predicates must accept before a section, context, or tool schema enters assembly. Sections are filtered before complete-section selection and text evaluation, contexts before text evaluation, and dynamic tools schema by schema using each schema's effective source. Disposal removes that exact predicate. Waterfall listeners own entries they create because registry admission has already completed.
-+<!-- @meta-intent:end dsh-warm-minimal -->
+@@ -26,6 +26,7 @@ System prompt assembly registry. Plugins contribute ordered sections, tool schem
  
- ### Live events
- 
-@@ -33,6 +39,10 @@ System prompt assembly registry. Plugins contribute ordered sections, tool schem
- - `AssembleContext` — what one `assemble()` call is FOR. Merge-extensible; declares `scope?: ScopeKey` (the layer selector) and `signal?: AbortSignal` (the explicit request control capability) here, while `dsh-agent` declares `agent?: Agent` (the typed DX field — never set without `scope`; use `assembleContextFor(agent, signal)`). Providers must tolerate absent fields because a bare `assemble()` carries an empty, scope-less, signal-less context. `signal` is a request value, not part of the ambient Agent execution frame.
- - `PromptSection` — `{ name, order, text, complete? }`. Sections are concatenated in ascending `order`. Order bands: `-100` is the harness identity, `0` the deployment persona, tool guidance uses `100–199`. One effective `complete` section suppresses all other sections after cooperative assembly.
- - `PromptAssembly` — `{ sections: AssembledSection[], tools: ToolSchema[], variables: Record<string, string | undefined> }`. Section texts arrive resolved but not yet interpolated; `variables` holds every registered variable resolved against the context. Tool schemas are part of the assembly by design: "what the model is told it can do" is one coherent thing, even though adapters transmit schemas as a separate wire field.
-+<!-- @meta-intent:begin dsh-warm-minimal (purpose: define the provenance id authority) -->
-+- `HostSourceId` — branded stable tree namespace plus full Loader-tree path, captured when a registration is made. It is a persistent policy key while a file-backed tree keeps its resolved filename and configured entry ids; changing either deliberately creates another source. Plugin display names and function names never supply identity, filenames are not exposed in the id, and contexts with no owning Loader entry use the single explicit unknown id.
-+- `ModelSourceCandidate` — `{ kind: 'section' | 'context' | 'tool', name, source }`, the non-wire registry candidate passed to source admission predicates.
-+<!-- @meta-intent:end dsh-warm-minimal -->
- - `renderPrompt(assembly)` — interpolates `{{variable}}` references in each section, drops empty sections, joins with blank lines. STRICT: an unknown reference (`Object.hasOwn` lookup — prototype names like `{{constructor}}` are unknown), a registered-but-valueless reference, a malformed complete `{{…}}` group, or a `{{` that opens no complete group while a `}}` still follows (`{{{model}}}`) throws — fail loud beats shipping a malformed prompt. A lone `{{` with no `}}` anywhere after it passes through verbatim; substituted values are never re-scanned.
- 
- Merge-extensible: plugins can declare extra fields on `PromptAssembly` and `AssembleContext` via declaration merging.
+ <!-- @meta-intent:begin dsh-warm-minimal (purpose: document the non-wire host provenance query) -->
+ - `hostSourceId(ctx): HostSourceId` resolves the calling Cordis context to the owning entry's stable tree namespace and full Loader-tree path. File-backed trees derive an opaque namespace from the resolved configuration filename, so the same preset survives process and fiber replacement while different presets may reuse row ids safely; nested subtrees include their outer entry path. Registrations outside Loader composition receive `UNKNOWN_HOST_SOURCE_ID`; `isUnknownHostSourceId()` distinguishes that case without interpreting the string.
++- `hostSourceIdForEntry(entry): HostSourceId` resolves the same identity directly from a Loader entry declaration. The entry need not have an active fiber, so tree-owned policy can classify every declared sibling during startup without depending on plugin activation order.
+ - `promptAssemblySourceInventory(assembly): PromptAssemblySourceInventory` returns the source of each effective section, context, and tool schema in current assembly order. Scoped shadows report the winning registration, dynamic tool schemas are attributed individually, and listener-created or copied entries report the unknown source. Provenance is stored outside assembly objects: it is absent from object enumeration and JSON serialization, while spreading the assembly preserves inventory because its entry objects remain the same.
+ - `ctx.systemPrompt.admitSources(predicate: ModelSourceAdmissionPredicate): () => void` registers source admission for the calling scope. Every effective global and inherited scoped predicate observes every effective registry candidate as `(AssembleContext, { kind, name, source })`; all predicates must accept before a section, context, or tool schema enters assembly. Sections are filtered before complete-section selection and text evaluation, contexts before text evaluation, and dynamic tools schema by schema using each schema's effective source. Disposal removes that exact predicate. Waterfall listeners own entries they create because registry admission has already completed.
+ <!-- @meta-intent:end dsh-warm-minimal -->
 diff --git a/packages/core/system-prompt/README.zh.md b/packages/core/system-prompt/README.zh.md
-index ec5b32d742b96c8044a3707c35f15e30ba642b4f..b59cdf8ed53103bae8022e59a2721dc98234f414 100644
+index b59cdf8ed5..f91ed391e3 100644
 --- a/packages/core/system-prompt/README.zh.md
 +++ b/packages/core/system-prompt/README.zh.md
-@@ -20,9 +20,15 @@
- - `ctx.systemPrompt.section(section: PromptSection): () => void`：贡献一个段。层由调用上下文的作用域决定：`agent.ctx` 只为该 agent 贡献，并在该处遮蔽同名全局段。一个 `complete: true` 段会在组装 waterfall 之后成为精确的完整提示词；有效 complete 段超过一个时，组装会被拒绝。同一层中的重复名称和非有限顺序会抛出。随调用 fiber 一并 dispose（资源释放）。
- - `ctx.systemPrompt.context(context: PromptContext): () => void`：为调用作用域贡献有序动态上下文。每次符合条件的组装都会求值提供方，并在随附循环下成为模型历史中带来源的 runtime-context 快照。
- - `ctx.systemPrompt.suppressRuntimeContext(): () => void`：抑制调用作用域的所有动态上下文贡献。多个注册会独立组合；只有当不再存在抑制器时，dispose 返回的 effect 才会恢复上下文。
--- `ctx.systemPrompt.tools(provider: (context: AssembleContext) => ToolProviderResult): () => void`：贡献工具 schema；每次组装时使用该次组装的上下文求值。`ToolProviderResult` = `{ schemas, knownNames? }`：`schemas` 是限制后的可见集合；`knownNames` 是限制前由 `toolOrder` 使用的全集。提供方不得返回名为 `TOOL_ORDER_REST` 的 schema。带作用域提供方只在其作用域的组装中查询。随调用 fiber 一并 dispose。
-+- `ctx.systemPrompt.tools(provider: (context: AssembleContext) => ToolProviderResult): () => void`：贡献工具 schema；每次组装时使用该次组装的上下文求值。`ToolProviderResult` = `{ schemas, knownNames?, sourceIds? }`：`schemas` 是限制后的可见集合；`knownNames` 是限制前由 `toolOrder` 使用的全集；`sourceIds` 若存在，则必须按相同顺序为每个 schema 提供一个 source。提供方不得返回名为 `TOOL_ORDER_REST` 的 schema。带作用域提供方只在其作用域的组装中查询。随调用 fiber 一并 dispose。
- - `ctx.systemPrompt.variable(name: string, provider: (context) => string | undefined): () => void`：贡献提示词变量，在段文本中以 `{{name}}` 引用。带作用域变量会为该 agent 遮蔽同名全局变量。同层重复或无法引用的名称会抛出；`undefined` 表示「本次组装没有值」。随调用 fiber 一并 dispose。
--- `ctx.systemPrompt.assemble(context?: AssembleContext): Promise<PromptAssembly>`：为一个调用方组装提示词：将全局层与 `context.scope` 的层合并，并在变换 waterfall 前分离工具 schema。它经过按作用域筛选的 `system-prompt/assemble` waterfall，之后将一个有效的 complete 段恢复为唯一的提示词段，并实施任何活动的 runtime-context 抑制器。可选的 `context.signal` 显式控制本次组装请求；提供方与监听器可以配合该信号，但不得将它保留给另一轮次。存在多个 complete 段、已配置的 `toolOrder` 指名提供方 `knownNames` 全集以外的工具，或提供方返回保留的其余项名称时，调用会被拒绝。
-+- `ctx.systemPrompt.assemble(context?: AssembleContext): Promise<PromptAssembly>`：为一个调用方组装提示词：将全局层与 `context.scope` 的层合并，并在变换 waterfall 前分离工具 schema。它经过按作用域筛选的 `system-prompt/assemble` waterfall，之后将一个有效的 complete 段恢复为唯一的提示词段，并实施任何活动的 runtime-context 抑制器。可选的 `context.signal` 显式控制本次组装请求；提供方与监听器可以配合该信号，但不得将它保留给另一轮次。存在多个 complete 段、已配置的 `toolOrder` 指名提供方 `knownNames` 全集以外的工具、提供方的 `sourceIds` 未与 schema 一一对应，或提供方返回保留的其余项名称时，调用会被拒绝。
-+
-+<!-- @meta-intent:begin dsh-warm-minimal (purpose: document the non-wire host provenance query) -->
-+- `hostSourceId(ctx): HostSourceId`：把调用方 Cordis context 解析为所属 entry 的稳定 tree namespace 与完整 Loader-tree path。文件树从解析后的配置文件名派生不透明 namespace，因此同一 preset 在进程或 fiber 替换后保持不变，不同 preset 则可安全复用 row id；嵌套 subtree 会包含外层 entry path。Loader 组合之外的注册使用 `UNKNOWN_HOST_SOURCE_ID`；`isUnknownHostSourceId()` 无需解释字符串即可识别该情况。
-+- `promptAssemblySourceInventory(assembly): PromptAssemblySourceInventory`：按当前组装顺序返回每个有效段、上下文和工具 schema 的来源。作用域遮蔽报告胜出的注册，动态工具 schema 逐项归属，监听器新建或复制的条目报告 unknown 来源。Provenance 保存在组装对象之外：对象枚举和 JSON 序列化都不含它；assembly spread 保留条目对象身份，因此 inventory 仍可查询。
-+- `ctx.systemPrompt.admitSources(predicate: ModelSourceAdmissionPredicate): () => void`：为调用作用域注册 source admission。每个有效的全局和继承的作用域 predicate 都会以 `(AssembleContext, { kind, name, source })` 观察每个有效注册表候选项；只有全部 predicate 接受，段、上下文或工具 schema 才会进入组装。段在选择 complete 段和求值文本前筛选；上下文在求值文本前筛选；动态工具则按每个 schema 的有效 source 逐项筛选。Dispose 会移除该确切 predicate。注册表准入已经完成，因此 waterfall 监听器对其新建条目负责。
-+<!-- @meta-intent:end dsh-warm-minimal -->
+@@ -26,6 +26,7 @@
  
- <a id="live-events"></a>
- 
-@@ -35,6 +41,10 @@
- - `AssembleContext`：说明一次 `assemble()` 调用的用途。它可通过合并扩展；此处声明 `scope?: ScopeKey`（层选择器）与 `signal?: AbortSignal`（显式请求控制能力），而 `dsh-agent` 声明 `agent?: Agent`（类型化 DX 字段；绝不能在没有 `scope` 时设置，应使用 `assembleContextFor(agent, signal)`）。提供方必须容忍字段缺席，因为裸 `assemble()` 携带的是无作用域、无信号的空上下文。`signal` 是请求值，不是环境 Agent 执行 frame 的一部分。
- - `PromptSection`：`{ name, order, text, complete? }`。各段按 `order` 升序拼接。顺序区间：`-100` 是 harness 身份，`0` 是部署 persona，工具引导使用 `100–199`。协作式组装完成后，一个有效的 `complete` 段会抑制其他所有段。
- - `PromptAssembly`：`{ sections: AssembledSection[], tools: ToolSchema[], variables: Record<string, string | undefined> }`。各段文本到达时已求值，但尚未插值；`variables` 保存所有已注册变量在当前上下文中求得的值。工具 schema 按设计属于组装结果：「模型获知自己能做什么」是一个连贯整体，尽管适配器把 schema 作为独立 wire 字段传输。
-+<!-- @meta-intent:begin dsh-warm-minimal (purpose: define the provenance id authority) -->
-+- `HostSourceId`：注册时捕获的 branded 稳定 tree namespace 与完整 Loader-tree path。文件树保持解析后的文件名及配置 entry id 时，它就是持久策略键；主动修改任一项会创建另一个 source。插件展示名和函数名不提供身份，id 不暴露文件名；没有所属 Loader Entry 的 context 使用唯一的显式 unknown id。
-+- `ModelSourceCandidate`：`{ kind: 'section' | 'context' | 'tool', name, source }`，传给 source admission predicate 的非 wire 注册表候选项。
-+<!-- @meta-intent:end dsh-warm-minimal -->
- - `renderPrompt(assembly)`：插值每个段中的 `{{variable}}` 引用，删除空段，并用空行连接。严格规则：未知引用（使用 `Object.hasOwn` 查找，因此 `{{constructor}}` 等原型名称未知）、已注册但无值的引用、格式错误的完整 `{{…}}` 组，或出现 `{{` 却没有形成完整组、而后文仍有 `}}`（`{{{model}}}`），都会抛出异常；明确失败胜过交付格式错误的提示词。孤立的 `{{` 如果后面任何位置都没有 `}}`，会按字面量通过；替换值绝不再次扫描。
- 
- 可通过合并扩展：插件可以借助声明合并，为 `PromptAssembly` 和 `AssembleContext` 声明额外字段。
-diff --git a/packages/core/system-prompt/package.json b/packages/core/system-prompt/package.json
-index 6b09b326d76c7a48929e2f2855e01715ebfd09b6..06956677ded9ba05d75f00127427e6fff0be2b26 100644
---- a/packages/core/system-prompt/package.json
-+++ b/packages/core/system-prompt/package.json
-@@ -32,6 +32,7 @@
-   ],
-   "license": "MIT",
-   "peerDependencies": {
-+    "@deepseek-ai/dsh-brand": "workspace:^",
-     "@deepseek-ai/dsh-invariants": "workspace:^",
-     "@deepseek-ai/dsh-llm": "workspace:^",
-     "@deepseek-ai/dsh-scope": "workspace:^",
-@@ -41,6 +42,8 @@
-     "@deepseek-ai/schemastery": "workspace:^"
-   },
-   "devDependencies": {
-+    "@deepseek-ai/dsh-brand": "workspace:^",
-+    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-     "@deepseek-ai/dsh-invariants": "workspace:^",
-     "@deepseek-ai/dsh-llm": "workspace:^",
-     "@deepseek-ai/dsh-scope": "workspace:^",
+ <!-- @meta-intent:begin dsh-warm-minimal (purpose: document the non-wire host provenance query) -->
+ - `hostSourceId(ctx): HostSourceId`：把调用方 Cordis context 解析为所属 entry 的稳定 tree namespace 与完整 Loader-tree path。文件树从解析后的配置文件名派生不透明 namespace，因此同一 preset 在进程或 fiber 替换后保持不变，不同 preset 则可安全复用 row id；嵌套 subtree 会包含外层 entry path。Loader 组合之外的注册使用 `UNKNOWN_HOST_SOURCE_ID`；`isUnknownHostSourceId()` 无需解释字符串即可识别该情况。
++- `hostSourceIdForEntry(entry): HostSourceId`：直接从 Loader entry 声明解析相同身份。该 entry 无需拥有活动 fiber，因此 tree 所属策略可以在启动期间分类全部已声明 sibling，而不依赖插件激活顺序。
+ - `promptAssemblySourceInventory(assembly): PromptAssemblySourceInventory`：按当前组装顺序返回每个有效段、上下文和工具 schema 的来源。作用域遮蔽报告胜出的注册，动态工具 schema 逐项归属，监听器新建或复制的条目报告 unknown 来源。Provenance 保存在组装对象之外：对象枚举和 JSON 序列化都不含它；assembly spread 保留条目对象身份，因此 inventory 仍可查询。
+ - `ctx.systemPrompt.admitSources(predicate: ModelSourceAdmissionPredicate): () => void`：为调用作用域注册 source admission。每个有效的全局和继承的作用域 predicate 都会以 `(AssembleContext, { kind, name, source })` 观察每个有效注册表候选项；只有全部 predicate 接受，段、上下文或工具 schema 才会进入组装。段在选择 complete 段和求值文本前筛选；上下文在求值文本前筛选；动态工具则按每个 schema 的有效 source 逐项筛选。Dispose 会移除该确切 predicate。注册表准入已经完成，因此 waterfall 监听器对其新建条目负责。
+ <!-- @meta-intent:end dsh-warm-minimal -->
 diff --git a/packages/core/system-prompt/src/index.ts b/packages/core/system-prompt/src/index.ts
-index ffc052e0b9b1a7c1e3eefa0851ac1499266d02ea..168b6caf51cdef3d415ac2700a885f522ec582d6 100644
+index 168b6caf51..55f1ef1f3d 100644
 --- a/packages/core/system-prompt/src/index.ts
 +++ b/packages/core/system-prompt/src/index.ts
-@@ -4,11 +4,122 @@
-  * @module @deepseek-ai/dsh-system-prompt
-  */
+@@ -19,23 +19,33 @@ export type HostSourceId = Branded<'HostSourceId'>
+ /** Source used when a registration has no owning Cordis Loader entry instance. */
+ export const UNKNOWN_HOST_SOURCE_ID = 'host-source:unknown' as HostSourceId
  
-+import { createHash } from 'node:crypto'
- import { Context, Service } from '@deepseek-ai/cordis'
- import z from '@deepseek-ai/schemastery'
- import { AnonymousEntries, NamedEntries, ScopedLayers, scopeTarget } from '@deepseek-ai/dsh-scope'
- import type { ScopeKey, ScopeLayer, Scoped } from '@deepseek-ai/dsh-scope'
- import type { ContextSnapshotSection, ToolSchema } from '@deepseek-ai/dsh-llm'
-+import type { Branded } from '@deepseek-ai/dsh-brand'
-+
-+// @meta-intent:begin dsh-warm-minimal (purpose: expose stable registration provenance without wire fields)
-+/** Stable Loader-tree identity for one configured plugin source. */
-+export type HostSourceId = Branded<'HostSourceId'>
-+
-+/** Source used when a registration has no owning Cordis Loader entry instance. */
-+export const UNKNOWN_HOST_SOURCE_ID = 'host-source:unknown' as HostSourceId
-+
-+interface LoaderEntry {
-+  readonly id: string
-+  readonly parent?: { readonly tree?: { readonly filename?: string } }
-+}
-+
-+interface EntryFiber {
-+  readonly entry?: LoaderEntry
-+  readonly parent: { readonly fiber: EntryFiber }
-+}
-+
-+/** Stable namespace for a configured entry tree without exposing its filename. */
-+function entryTreeNamespace(entry: LoaderEntry): string {
-+  const filename = entry.parent?.tree?.filename
-+  if (filename === undefined) return 'root'
-+  return `file-${createHash('sha256').update(filename).digest('hex')}`
-+}
-+
-+/**
-+ * Resolve the configured Loader entry that owns the calling Cordis context.
-+ * @param ctx - registration context whose active fiber owns the contribution.
-+ * @returns its stable tree namespace and full entry path, or {@link UNKNOWN_HOST_SOURCE_ID} outside Loader composition.
-+ */
-+export function hostSourceId(ctx: Context): HostSourceId {
-+  let fiber = ctx.fiber as unknown as EntryFiber
-+  while (true) {
-+    if (fiber.entry !== undefined) {
-+      return `loader-entry:${entryTreeNamespace(fiber.entry)}:${fiber.entry.id}` as HostSourceId
-+    }
-+    const parent = fiber.parent.fiber
-+    if (fiber === parent) return UNKNOWN_HOST_SOURCE_ID
-+    fiber = parent
-+  }
-+}
-+
-+/**
-+ * Test whether a source lacks an owning Cordis Loader Entry instance.
-+ * @param source - source identifier to test.
-+ * @returns whether the source is the explicit unknown identifier.
-+ */
-+export function isUnknownHostSourceId(source: HostSourceId): boolean {
-+  return source === UNKNOWN_HOST_SOURCE_ID
-+}
-+
-+/** One effective assembly entry and the registration source that supplied it. */
-+export interface PromptAssemblySourceEntry {
-+  /** Effective section, context, or tool name. */
-+  readonly name: string
-+  /** Owning Loader entry path, or {@link UNKNOWN_HOST_SOURCE_ID}. */
-+  readonly source: HostSourceId
-+}
-+
-+/** Sources of every effective model-visible assembly entry. */
-+export interface PromptAssemblySourceInventory {
-+  readonly sections: readonly PromptAssemblySourceEntry[]
-+  readonly contexts: readonly PromptAssemblySourceEntry[]
-+  readonly tools: readonly PromptAssemblySourceEntry[]
-+}
-+
-+/** Registry contribution considered for model-source admission. */
-+export interface ModelSourceCandidate {
-+  /** Registry kind whose contribution may enter assembly. */
-+  readonly kind: 'section' | 'context' | 'tool'
-+  /** Effective contribution name. */
-+  readonly name: string
-+  /** Source captured by the owning registry entry. */
-+  readonly source: HostSourceId
-+}
-+
-+/** Decide whether one registry contribution may enter an assembly. */
-+export type ModelSourceAdmissionPredicate = (
-+  context: AssembleContext,
-+  candidate: ModelSourceCandidate,
-+) => boolean
-+
-+const assemblyEntrySources = new WeakMap<object, HostSourceId>()
-+
-+/** Associate one detached assembly entry with its non-wire source. */
-+function markAssemblySource<T extends object>(entry: T, source: HostSourceId): T {
-+  assemblyEntrySources.set(entry, source)
-+  return entry
-+}
-+
-+/**
-+ * Read the effective source inventory during or after prompt assembly.
-+ * Entries created or copied by waterfall listeners have the explicit unknown source.
-+ * @param assembly - current assembly value, including a listener-returned object spread.
-+ * @returns a fresh non-wire inventory in the assembly's current order.
-+ */
-+export function promptAssemblySourceInventory(assembly: PromptAssembly): PromptAssemblySourceInventory {
-+  const inventory = (entries: readonly { name: string }[]): PromptAssemblySourceEntry[] =>
-+    entries.map(entry => ({
-+      name: entry.name,
-+      source: assemblyEntrySources.get(entry) ?? UNKNOWN_HOST_SOURCE_ID,
-+    }))
-+  return {
-+    sections: inventory(assembly.sections),
-+    contexts: inventory(assembly.contexts),
-+    tools: inventory(assembly.tools),
-+  }
-+}
-+// @meta-intent:end dsh-warm-minimal
- 
- declare module '@deepseek-ai/cordis' {
-   interface Context {
-@@ -106,6 +217,10 @@ export interface ToolProviderResult {
-   readonly schemas: readonly ToolSchema[]
-   /** The pre-restriction name universe for config validation (defaults to `schemas`' names). */
-   readonly knownNames?: readonly string[]
-+  // @meta-intent:begin dsh-warm-minimal (purpose: carry per-schema provenance outside tool wire fields)
-+  /** Source for every schema in the same order; omission attributes all schemas to the provider. */
-+  readonly sourceIds?: readonly HostSourceId[]
-+  // @meta-intent:end dsh-warm-minimal
+-interface LoaderEntry {
++interface LoaderEntryIdentity {
+   readonly id: string
+   readonly parent?: { readonly tree?: { readonly filename?: string } }
  }
  
+ interface EntryFiber {
+-  readonly entry?: LoaderEntry
++  readonly entry?: LoaderEntryIdentity
+   readonly parent: { readonly fiber: EntryFiber }
+ }
+ 
+ /** Stable namespace for a configured entry tree without exposing its filename. */
+-function entryTreeNamespace(entry: LoaderEntry): string {
++function entryTreeNamespace(entry: LoaderEntryIdentity): string {
+   const filename = entry.parent?.tree?.filename
+   if (filename === undefined) return 'root'
+   return `file-${createHash('sha256').update(filename).digest('hex')}`
+ }
+ 
++/**
++ * Resolve a configured Loader entry declaration to its stable source identity.
++ * The entry does not need an active fiber, so an owner may classify sibling declarations during tree startup.
++ * @param entry - Loader entry declaration with its full id and owning tree.
++ * @returns its stable tree namespace and full entry path.
++ */
++export function hostSourceIdForEntry(entry: LoaderEntryIdentity): HostSourceId {
++  return `loader-entry:${entryTreeNamespace(entry)}:${entry.id}` as HostSourceId
++}
++
  /**
-@@ -294,19 +409,30 @@ function interpolate(
-   return result + text.slice(last)
- }
- 
-+// @meta-intent:begin dsh-warm-minimal (purpose: keep source and contribution under one registry authority)
- /** One tool-schema provider stored in a prompt layer. */
--type ToolProvider = (context: AssembleContext) => ToolProviderResult
-+interface RegisteredToolProvider {
-+  readonly provide: (context: AssembleContext) => ToolProviderResult
-+  readonly source: HostSourceId
-+}
-+
-+interface RegisteredValue<T> {
-+  readonly value: T
-+  readonly source: HostSourceId
-+}
- 
- /** One prompt-variable provider stored in a prompt layer. */
- type VariableProvider = (context: AssembleContext) => string | undefined
- 
- /** All prompt registrations owned by one global or scoped layer. */
- class PromptLayer implements ScopeLayer {
--  readonly sections: NamedEntries<PromptSection>
--  readonly contexts: NamedEntries<PromptContext>
-+  readonly sections: NamedEntries<RegisteredValue<PromptSection>>
-+  readonly contexts: NamedEntries<RegisteredValue<PromptContext>>
-   readonly runtimeContextSuppressors = new AnonymousEntries<true>()
--  readonly toolProviders = new AnonymousEntries<ToolProvider>()
-+  readonly toolProviders = new AnonymousEntries<RegisteredToolProvider>()
-+  readonly sourceAdmissions = new AnonymousEntries<ModelSourceAdmissionPredicate>()
-   readonly variables: NamedEntries<VariableProvider>
-+  // @meta-intent:end dsh-warm-minimal
- 
-   /**
-    * Create one prompt layer with diagnostics specific to its ownership scope.
-@@ -330,6 +456,9 @@ class PromptLayer implements ScopeLayer {
-       && this.contexts.isEmpty()
-       && this.runtimeContextSuppressors.isEmpty()
-       && this.toolProviders.isEmpty()
-+      // @meta-intent:begin dsh-warm-minimal (purpose: include source policy in scoped layer lifetime)
-+      && this.sourceAdmissions.isEmpty()
-+      // @meta-intent:end dsh-warm-minimal
-       && this.variables.isEmpty()
-   }
- }
-@@ -384,7 +513,9 @@ export class SystemPrompt extends Service {
+  * Resolve the configured Loader entry that owns the calling Cordis context.
+  * @param ctx - registration context whose active fiber owns the contribution.
+@@ -45,7 +55,7 @@ export function hostSourceId(ctx: Context): HostSourceId {
+   let fiber = ctx.fiber as unknown as EntryFiber
+   while (true) {
+     if (fiber.entry !== undefined) {
+-      return `loader-entry:${entryTreeNamespace(fiber.entry)}:${fiber.entry.id}` as HostSourceId
++      return hostSourceIdForEntry(fiber.entry)
      }
-     return this.layers.effect(
-       this.ctx,
--      layer => layer.sections.insert(section.name, section),
-+      // @meta-intent:begin dsh-warm-minimal (purpose: capture the actual registration fiber before assembly)
-+      layer => layer.sections.insert(section.name, { value: section, source: hostSourceId(this.ctx) }),
-+      // @meta-intent:end dsh-warm-minimal
-       { label: 'systemPrompt.section()' },
-     )
-   }
-@@ -401,7 +532,9 @@ export class SystemPrompt extends Service {
-     }
-     return this.layers.effect(
-       this.ctx,
--      layer => layer.contexts.insert(context.name, context),
-+      // @meta-intent:begin dsh-warm-minimal (purpose: capture the actual registration fiber before assembly)
-+      layer => layer.contexts.insert(context.name, { value: context, source: hostSourceId(this.ctx) }),
-+      // @meta-intent:end dsh-warm-minimal
-       { label: 'systemPrompt.context()' },
-     )
-   }
-@@ -430,11 +563,30 @@ export class SystemPrompt extends Service {
-   tools(provider: (context: AssembleContext) => ToolProviderResult): () => void {
-     return this.layers.effect(
-       this.ctx,
--      layer => layer.toolProviders.append(provider),
-+      // @meta-intent:begin dsh-warm-minimal (purpose: capture the actual registration fiber before dynamic schema projection)
-+      layer => layer.toolProviders.append({ provide: provider, source: hostSourceId(this.ctx) }),
-+      // @meta-intent:end dsh-warm-minimal
-       { label: 'systemPrompt.tools()' },
-     )
-   }
- 
-+  // @meta-intent:begin dsh-warm-minimal (purpose: admit registry model inputs by their non-wire host source)
-+  /**
-+   * Register a model-source admission predicate in the calling context's
-+   * scope. Global and inherited scoped predicates all run for every effective
-+   * registry candidate; all must accept before that candidate enters assembly.
-+   * @param predicate - synchronous admission decision for one candidate.
-+   * @returns the exact Cordis effect disposer.
-+   */
-+  admitSources(predicate: ModelSourceAdmissionPredicate): () => void {
-+    return this.layers.effect(
-+      this.ctx,
-+      layer => layer.sourceAdmissions.append(predicate),
-+      { label: 'systemPrompt.admitSources()' },
-+    )
-+  }
-+  // @meta-intent:end dsh-warm-minimal
-+
-   /**
-    * Register a prompt variable in the calling context's scope. Scoped values
-    * shadow globals; invalid or duplicate names throw. A provider may return
-@@ -467,6 +619,19 @@ export class SystemPrompt extends Service {
-   async assemble(context: AssembleContext = {}): Promise<PromptAssembly> {
-     const scope = context.scope
-     const scopeLayers = this.layers.chainLayers(scope)
-+    // @meta-intent:begin dsh-warm-minimal (purpose: apply all effective host-source policy before registry assembly)
-+    const sourceAdmissions = [
-+      ...this.layers.global.sourceAdmissions.values(),
-+      ...scopeLayers.flatMap(layer => [...layer.sourceAdmissions.values()]),
-+    ]
-+    const admits = (candidate: ModelSourceCandidate): boolean => {
-+      let accepted = true
-+      for (const predicate of sourceAdmissions) {
-+        if (!predicate(context, candidate)) accepted = false
-+      }
-+      return accepted
-+    }
-+    // @meta-intent:end dsh-warm-minimal
-     const runtimeContextSuppressed = !this.layers.global.runtimeContextSuppressors.isEmpty()
-       || scopeLayers.some(layer => !layer.runtimeContextSuppressors.isEmpty())
-     // Scoped variables shadow globals.
-@@ -490,42 +655,70 @@ export class SystemPrompt extends Service {
-     ]
-     const collected: ToolSchema[] = []
-     const knownNames = new Set<string>()
-+    // @meta-intent:begin dsh-warm-minimal (purpose: attach winning registration sources to detached assembly entries)
-     for (const provider of providers) {
--      const result = provider(context)
--      const schemas = result.schemas.map(({ name, description, parameters }): ToolSchema => ({
--        name,
--        description,
--        parameters: structuredClone(parameters),
--      }))
--      const acceptedKnownNames = result.knownNames ?? schemas.map(tool => tool.name)
-+      const result = provider.provide(context)
-+      if (result.sourceIds !== undefined && result.sourceIds.length !== result.schemas.length) {
-+        throw new Error(`tool schema provider returned ${result.schemas.length} schema(s) but ${result.sourceIds.length} source id(s)`)
-+      }
-+      const schemas = result.schemas.flatMap(({ name, description, parameters }, index): ToolSchema[] => {
-+        const source = result.sourceIds === undefined ? provider.source : result.sourceIds[index]
-+        if (source === undefined) {
-+          throw new Error(`tool schema provider omitted the source id corresponding to schema ${JSON.stringify(name)}`)
-+        }
-+        if (!admits({ kind: 'tool', name, source })) return []
-+        return [markAssemblySource({
-+          name,
-+          description,
-+          parameters: structuredClone(parameters),
-+        }, source)]
-+      })
-+      const acceptedKnownNames = result.knownNames ?? result.schemas.map(tool => tool.name)
-       collected.push(...schemas)
-       for (const name of acceptedKnownNames) knownNames.add(name)
-     }
--    const sectionDefinitions = [...sectionByName.values()].sort((a, b) => a.order - b.order)
--    const completeSections = sectionDefinitions.filter(section => section.complete === true)
-+    const sectionDefinitions = [...sectionByName.values()]
-+      .filter(registration => admits({
-+        kind: 'section',
-+        name: registration.value.name,
-+        source: registration.source,
-+      }))
-+      .sort((a, b) => a.value.order - b.value.order)
-+    const contextDefinitions = [...contextByName.values()]
-+      .filter(registration => admits({
-+        kind: 'context',
-+        name: registration.value.name,
-+        source: registration.source,
-+      }))
-+      .sort((a, b) => a.value.order - b.value.order)
-+    const completeSections = sectionDefinitions.filter(section => section.value.complete === true)
-     if (completeSections.length > 1) {
--      throw new Error(`multiple complete prompt sections are active: ${completeSections.map(section => JSON.stringify(section.name)).join(', ')}`)
-+      throw new Error(`multiple complete prompt sections are active: ${completeSections.map(section => JSON.stringify(section.value.name)).join(', ')}`)
-     }
-     let completeSection: AssembledSection | undefined
-     const sections = sectionDefinitions
--      .map((section) => {
--        const assembled = {
-+      .map((registration) => {
-+        const section = registration.value
-+        const assembled = markAssemblySource({
-           name: section.name,
-           text: typeof section.text === 'function' ? section.text(context) : section.text,
--        }
--        if (section.complete === true) completeSection = { ...assembled }
-+        }, registration.source)
-+        if (section.complete === true) completeSection = markAssemblySource({ ...assembled }, registration.source)
-         return assembled
-       })
-     const assembly: PromptAssembly = {
-       sections,
-       contexts: runtimeContextSuppressed
-         ? []
--        : [...contextByName.values()]
--          .sort((a, b) => a.order - b.order)
--          .map(entry => ({
--            name: entry.name,
--            text: typeof entry.text === 'function' ? entry.text(context) : entry.text,
--          })),
-+        : contextDefinitions
-+          .map((registration) => {
-+            const entry = registration.value
-+            return markAssemblySource({
-+              name: entry.name,
-+              text: typeof entry.text === 'function' ? entry.text(context) : entry.text,
-+            }, registration.source)
-+          }),
-+      // @meta-intent:end dsh-warm-minimal
-       tools: orderTools(collected, this.toolOrder, knownNames),
-       variables,
-     }
+     const parent = fiber.parent.fiber
+     if (fiber === parent) return UNKNOWN_HOST_SOURCE_ID
 diff --git a/packages/core/system-prompt/tests/provenance.spec.ts b/packages/core/system-prompt/tests/provenance.spec.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..fc6e752e6fe6031257995f0522a2c2b4f169de4b
---- /dev/null
+index fc6e752e6f..f03abe28e7 100644
+--- a/packages/core/system-prompt/tests/provenance.spec.ts
 +++ b/packages/core/system-prompt/tests/provenance.spec.ts
-@@ -0,0 +1,322 @@
-+import { describe, expect, it } from 'vitest'
-+import { Context } from '@deepseek-ai/cordis'
-+import Loader from '@deepseek-ai/cordis-plugin-loader'
-+import { createScope } from '@deepseek-ai/dsh-scope'
-+import SystemPrompt, {
-+  UNKNOWN_HOST_SOURCE_ID,
-+  hostSourceId,
-+  isUnknownHostSourceId,
-+  promptAssemblySourceInventory,
-+} from '@deepseek-ai/dsh-system-prompt'
-+import type { AssembleContext, HostSourceId, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
-+
-+// @meta-intent:begin dsh-warm-minimal (purpose: prove prompt provenance is stable, shadow-aware, and absent from wire objects)
-+async function setup(): Promise<Context> {
-+  const ctx = new Context()
-+  await ctx.plugin(Loader)
-+  await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
-+  return ctx
-+}
-+
-+async function load(
-+  ctx: Context,
-+  builtin: string,
-+  plugin: ((ctx: Context) => void) & { inject?: string[] },
-+): Promise<HostSourceId> {
-+  ctx.loader.builtins[builtin] = plugin
-+  const id = await ctx.loader.create({ name: `cordis:${builtin}` })
-+  await ctx.loader.await()
-+  const fiber = ctx.loader.resolve(id).fiber
-+  if (fiber === undefined) throw new Error(`test Loader entry ${id} has no active fiber`)
-+  return hostSourceId(fiber.ctx)
-+}
-+
-+function sourceOf(assembly: PromptAssembly, kind: 'sections' | 'contexts' | 'tools', name: string): string | undefined {
-+  return promptAssemblySourceInventory(assembly)[kind].find(entry => entry.name === name)?.source
-+}
-+
-+describe('prompt assembly host provenance', () => {
-+  it('separates direct file-backed trees while keeping each configured path stable', () => {
-+    const source = (filename: string): HostSourceId => hostSourceId({
+@@ -5,6 +5,7 @@ import { createScope } from '@deepseek-ai/dsh-scope'
+ import SystemPrompt, {
+   UNKNOWN_HOST_SOURCE_ID,
+   hostSourceId,
++  hostSourceIdForEntry,
+   isUnknownHostSourceId,
+   promptAssemblySourceInventory,
+ } from '@deepseek-ai/dsh-system-prompt'
+@@ -36,6 +37,18 @@ function sourceOf(assembly: PromptAssembly, kind: 'sections' | 'contexts' | 'too
+ }
+ 
+ describe('prompt assembly host provenance', () => {
++  it('derives the same source before and after a Loader entry mounts', () => {
++    const entry = { id: 'nested:tool', parent: { tree: { filename: '/presets/warm-minimal.cordis.yml' } } }
++    const mounted = hostSourceId({
 +      fiber: {
-+        entry: { id: 'same-row', parent: { tree: { filename } } },
++        entry,
 +        parent: { fiber: undefined },
 +      },
 +    } as unknown as Context)
 +
-+    expect(source('/presets/warm-minimal.cordis.yml')).toBe(source('/presets/warm-minimal.cordis.yml'))
-+    expect(source('/presets/warm-minimal.cordis.yml')).not.toBe(source('/presets/other.cordis.yml'))
-+    expect(source('/presets/warm-minimal.cordis.yml')).not.toContain('/presets/')
++    expect(hostSourceIdForEntry(entry)).toBe(mounted)
 +  })
 +
-+  it('keeps the configured entry path stable across fiber and process replacement', async () => {
-+    const first = await setup()
-+    const section = (text: string) => Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'owned', order: 1, text })
-+    }, { inject: ['systemPrompt'] })
-+    first.loader.builtins['provenance-first'] = section('first')
-+    await first.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-first' }])
-+    await first.loader.await()
-+    const firstSource = sourceOf(await first.systemPrompt.assemble(), 'sections', 'owned')
-+    expect(firstSource).toBeDefined()
-+
-+    first.loader.builtins['provenance-replacement'] = section('replacement')
-+    await first.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-replacement' }])
-+    await first.loader.await()
-+    expect(sourceOf(await first.systemPrompt.assemble(), 'sections', 'owned')).toBe(firstSource)
-+
-+    const second = await setup()
-+    second.loader.builtins['provenance-second-tree'] = section('second tree')
-+    await second.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-second-tree' }])
-+    await second.loader.await()
-+    expect(sourceOf(await second.systemPrompt.assemble(), 'sections', 'owned')).toBe(firstSource)
-+
-+    const third = await setup()
-+    third.loader.builtins['provenance-distinct-row'] = section('distinct row')
-+    await third.loader.root.update([{ id: 'other-row', name: 'cordis:provenance-distinct-row' }])
-+    await third.loader.await()
-+    expect(sourceOf(await third.systemPrompt.assemble(), 'sections', 'owned')).not.toBe(firstSource)
-+  })
-+
-+  it('uses the winning global or scoped registration source after shadowing', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    const global = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'shared', order: 1, text: 'global' })
-+      inner.systemPrompt.context({ name: 'shared-context', order: 1, text: 'global' })
-+    }, { inject: ['systemPrompt'] })
-+    const globalSource = await load(ctx, 'provenance-global', global)
-+
-+    const scoped = Object.assign((inner: Context) => {
-+      const scope = createScope(inner, key)
-+      scope.ctx.systemPrompt.section({ name: 'shared', order: 1, text: 'scoped' })
-+      scope.ctx.systemPrompt.context({ name: 'shared-context', order: 1, text: 'scoped' })
-+    }, { inject: ['systemPrompt'] })
-+    const scopedSource = await load(ctx, 'provenance-scoped', scoped)
-+
-+    const globalAssembly = await ctx.systemPrompt.assemble()
-+    expect(sourceOf(globalAssembly, 'sections', 'shared')).toBe(globalSource)
-+    expect(sourceOf(globalAssembly, 'contexts', 'shared-context')).toBe(globalSource)
-+
-+    const scopedAssembly = await ctx.systemPrompt.assemble({ scope: key })
-+    expect(sourceOf(scopedAssembly, 'sections', 'shared')).toBe(scopedSource)
-+    expect(sourceOf(scopedAssembly, 'contexts', 'shared-context')).toBe(scopedSource)
-+  })
-+
-+  it('attributes every schema from a changing multi-tool provider', async () => {
-+    const ctx = await setup()
-+    let expanded = false
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.tools(() => ({
-+        schemas: [
-+          { name: 'alpha', description: 'a', parameters: {} },
-+          ...expanded ? [{ name: 'beta', description: 'b', parameters: {} }] : [],
-+        ],
-+      }))
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-dynamic-tools', plugin)
-+
-+    expect(promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools)
-+      .toEqual([{ name: 'alpha', source }])
-+    expanded = true
-+    expect(promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools)
-+      .toEqual([{ name: 'alpha', source }, { name: 'beta', source }])
-+  })
-+
-+  it('rejects source arrays that cannot correspond one-to-one with dynamic schemas', async () => {
-+    const ctx = await setup()
-+    const schema = { name: 'alpha', description: 'a', parameters: {} }
-+    const wrongLength = ctx.systemPrompt.tools(() => ({ schemas: [schema], sourceIds: [] }))
-+    await expect(ctx.systemPrompt.assemble()).rejects.toThrow('returned 1 schema(s) but 0 source id(s)')
-+    wrongLength()
-+
-+    ctx.systemPrompt.tools(() => ({
-+      schemas: [schema],
-+      sourceIds: [undefined as unknown as HostSourceId],
-+    }))
-+    await expect(ctx.systemPrompt.assemble()).rejects.toThrow('omitted the source id corresponding to schema "alpha"')
-+  })
-+
-+  it('marks unowned and listener-created entries unknown', async () => {
-+    const ctx = await setup()
-+    ctx.systemPrompt.section({ name: 'direct', order: 1, text: 'direct' })
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections.push({ name: 'listener', text: 'listener' })
-+      return next()
-+    })
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(sourceOf(assembly, 'sections', 'direct')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(sourceOf(assembly, 'sections', 'listener')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(isUnknownHostSourceId(UNKNOWN_HOST_SOURCE_ID)).toBe(true)
-+  })
-+
-+  it('keeps inventory queryable across waterfall next and object spread without serializing metadata', async () => {
-+    const ctx = await setup()
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'owned', order: 1, text: 'owned' })
-+      inner.systemPrompt.context({ name: 'owned-context', order: 1, text: 'owned' })
-+      inner.systemPrompt.tools(() => ({ schemas: [{ name: 'owned-tool', description: 'owned', parameters: {} }] }))
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-waterfall', plugin)
-+    let before: ReturnType<typeof promptAssemblySourceInventory> | undefined
-+    let after: ReturnType<typeof promptAssemblySourceInventory> | undefined
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      before = promptAssemblySourceInventory(assembly)
-+      const transformed = await next()
-+      after = promptAssemblySourceInventory(transformed)
-+      return {
-+        ...transformed,
-+        sections: transformed.sections.map(section => section.name === 'owned' ? { ...section } : section),
-+      }
-+    })
-+    ctx.on('system-prompt/assemble', async (_assembly, _context, next) => ({ ...await next() }))
-+
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(before?.sections.find(entry => entry.name === 'owned')?.source).toBe(source)
-+    expect(after?.contexts.find(entry => entry.name === 'owned-context')?.source).toBe(source)
-+    expect(sourceOf(assembly, 'sections', 'owned')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(sourceOf(assembly, 'tools', 'owned-tool')).toBe(source)
-+    expect(Object.keys(assembly).sort()).toEqual(['contexts', 'sections', 'tools', 'variables'])
-+    expect(JSON.stringify(assembly)).not.toContain('loader-entry:')
-+    expect(Object.keys(assembly.tools[0] ?? {}).sort()).toEqual(['description', 'name', 'parameters'])
-+  })
-+
-+  it('restores a complete section with its registration source after the waterfall', async () => {
-+    const ctx = await setup()
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'complete', order: 1, text: 'owned', complete: true })
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-complete', plugin)
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections = [{ name: 'replacement', text: 'replacement' }]
-+      return next()
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(assembly.sections).toEqual([{ name: 'complete', text: 'owned' }])
-+    expect(sourceOf(assembly, 'sections', 'complete')).toBe(source)
-+  })
-+
-+  it('excludes a child-only complete source before selection and provider evaluation', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    let child: ReturnType<typeof createScope> | undefined
-+    let completeCalls = 0
-+    const source = await load(ctx, 'provenance-complete-admission', Object.assign((inner: Context) => {
-+      child = createScope(inner, key)
-+      child.ctx.systemPrompt.section({
-+        name: 'child-complete',
-+        order: 1,
-+        text: () => { completeCalls += 1; return 'complete' },
-+        complete: true,
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    if (child === undefined) throw new Error('test child scope was not created')
-+    child.ctx.systemPrompt.admitSources((_context, candidate) => candidate.source !== source)
-+    ctx.systemPrompt.section({ name: 'ordinary', order: 2, text: 'ordinary' })
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections.push({ name: 'listener', text: 'listener' })
-+      return next()
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble({ scope: key })
-+    expect(completeCalls).toBe(0)
-+    expect(assembly.sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'ordinary',
-+      'listener',
-+    ])
-+  })
-+
-+  it('filters contexts and dynamic tool schemas by effective source before assembly', async () => {
-+    const ctx = await setup()
-+    let allowedCalls = 0
-+    const allowedSource = await load(ctx, 'provenance-admission-allowed', Object.assign((inner: Context) => {
-+      inner.systemPrompt.context({
-+        name: 'allowed-context',
-+        order: 1,
-+        text: () => { allowedCalls += 1; return 'allowed' },
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    let blockedCalls = 0
-+    const blockedSource = await load(ctx, 'provenance-admission-blocked', Object.assign((inner: Context) => {
-+      inner.systemPrompt.context({
-+        name: 'blocked-context',
-+        order: 2,
-+        text: () => { blockedCalls += 1; return 'blocked' },
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    ctx.systemPrompt.tools(() => ({
-+      schemas: [
-+        { name: 'allowed-tool', description: 'allowed', parameters: {} },
-+        { name: 'blocked-tool', description: 'blocked', parameters: {} },
-+      ],
-+      sourceIds: [allowedSource, blockedSource],
-+    }))
-+    const firstSeen: string[] = []
-+    const secondSeen: string[] = []
-+    const assemblyContext = { inventory: 'request' } as AssembleContext
-+    const seenContexts: AssembleContext[] = []
-+    ctx.systemPrompt.admitSources((context, candidate) => {
-+      seenContexts.push(context)
-+      firstSeen.push(`${candidate.kind}:${candidate.name}`)
-+      return candidate.source !== blockedSource
-+    })
-+    ctx.systemPrompt.admitSources((_context, candidate) => {
-+      secondSeen.push(`${candidate.kind}:${candidate.name}`)
-+      return true
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble(assemblyContext)
-+    expect(assembly.contexts).toEqual([{ name: 'allowed-context', text: 'allowed' }])
-+    expect(assembly.tools.map(tool => tool.name)).toEqual(['allowed-tool'])
-+    expect(allowedCalls).toBe(1)
-+    expect(blockedCalls).toBe(0)
-+    expect(firstSeen).toContain('context:blocked-context')
-+    expect(firstSeen).toContain('tool:blocked-tool')
-+    expect(secondSeen).toEqual(firstSeen)
-+    expect(seenContexts.every(context => context === assemblyContext)).toBe(true)
-+    expect(Object.keys(assembly).sort()).toEqual(['contexts', 'sections', 'tools', 'variables'])
-+    expect(Object.keys(assembly.tools[0] ?? {}).sort()).toEqual(['description', 'name', 'parameters'])
-+    expect(JSON.stringify(assembly)).not.toContain('loader-entry:')
-+  })
-+
-+  it('composes global and scoped admissions and disposes each exact effect', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    let scope: ReturnType<typeof createScope> | undefined
-+    await ctx.plugin(Object.assign((inner: Context) => {
-+      scope = createScope(inner, key)
-+    }, { inject: ['systemPrompt'] }))
-+    if (scope === undefined) throw new Error('test scope was not created')
-+    ctx.systemPrompt.section({ name: 'global-denied', order: 1, text: 'global denied' })
-+    ctx.systemPrompt.section({ name: 'global-kept', order: 2, text: 'global kept' })
-+    scope.ctx.systemPrompt.section({ name: 'scoped-denied', order: 3, text: 'scoped denied' })
-+    const disposeGlobal = ctx.systemPrompt.admitSources((_context, candidate) => candidate.name !== 'global-denied')
-+    const disposeScoped = scope.ctx.systemPrompt.admitSources((_context, candidate) => candidate.name !== 'scoped-denied')
-+
-+    expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+    ])
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+    ])
-+
-+    disposeScoped()
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+      'scoped-denied',
-+    ])
-+    disposeGlobal()
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-denied',
-+      'global-kept',
-+      'scoped-denied',
-+    ])
-+  })
-+})
-+// @meta-intent:end dsh-warm-minimal
-diff --git a/packages/core/system-prompt/tsconfig.json b/packages/core/system-prompt/tsconfig.json
-index 6fe8d764a35d6a5913a5241d411f422430bbcf8a..3a1151e3039c84c58655af8a2b42322a511fe86e 100644
---- a/packages/core/system-prompt/tsconfig.json
-+++ b/packages/core/system-prompt/tsconfig.json
-@@ -8,6 +8,9 @@
-     "src"
-   ],
-   "references": [
-+    {
-+      "path": "../../util/brand"
-+    },
-     {
-       "path": "../../../vendor/cosmokit"
-     },
-diff --git a/packages/core/tools/package.json b/packages/core/tools/package.json
-index aa567e811fe4960f314b79f80e62b8a04ffddde1..04b9a2ed823ca0824f6d238b3d6c2f0a3b97a674 100644
---- a/packages/core/tools/package.json
-+++ b/packages/core/tools/package.json
-@@ -55,6 +55,7 @@
-     "@deepseek-ai/schemastery": "workspace:^"
-   },
-   "devDependencies": {
-+    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-     "@deepseek-ai/dsh-agent": "workspace:^",
-     "@deepseek-ai/dsh-code-runtime": "workspace:^",
-     "@deepseek-ai/dsh-invariants": "workspace:^",
-diff --git a/packages/core/tools/src/index.ts b/packages/core/tools/src/index.ts
-index 377015feb3c329207f540046beadb08208b6c920..7a1e3734256b151a7770f5790c6463968c49e66c 100644
---- a/packages/core/tools/src/index.ts
-+++ b/packages/core/tools/src/index.ts
-@@ -13,7 +13,10 @@ import { assertNever, deepFreeze, HarnessError } from '@deepseek-ai/dsh-llm'
- import type { Agent } from '@deepseek-ai/dsh-agent'
- import { snapshotJsonValue } from '@deepseek-ai/dsh-session'
- import type { JsonValue, UserMessage } from '@deepseek-ai/dsh-session'
--import type { ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
-+// @meta-intent:begin dsh-warm-minimal (purpose: use the prompt registry's single host-source vocabulary)
-+import { hostSourceId } from '@deepseek-ai/dsh-system-prompt'
-+import type { HostSourceId, ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
-+// @meta-intent:end dsh-warm-minimal
- import type { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
- // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
- // augmentation. The seam stays optional at runtime — see `serviceAsk`.
-@@ -694,12 +697,23 @@ interface CompiledToolRestriction {
- interface ToolView {
-   /** Visible definitions after restrictions, scoped shadowing, and transport insertion. */
-   readonly visible: ReadonlyMap<string, ToolDefinition>
-+  // @meta-intent:begin dsh-warm-minimal (purpose: resolve visibility and provenance together)
-+  /** Registration source for each entry in {@link visible}. */
-+  readonly sources: ReadonlyMap<string, HostSourceId>
-+  // @meta-intent:end dsh-warm-minimal
-   /** Pre-restriction capability names used by prompt-order validation. */
-   readonly knownNames: ReadonlySet<string>
-   /** Current global names that a scoped restriction may name. */
-   readonly restrictableNames: ReadonlySet<string>
- }
- 
-+// @meta-intent:begin dsh-warm-minimal (purpose: preserve each dynamic tool registration's owning Loader entry)
-+interface RegisteredTool {
-+  readonly definition: ToolDefinition
-+  readonly source: HostSourceId
-+}
-+// @meta-intent:end dsh-warm-minimal
-+
- /**
-  * A monotonic execution guard evaluated after every `tools/pre-execute`
-  * listener and before the tool body. Returning a reason denies the call;
-@@ -712,7 +726,9 @@ export type ToolGuard = (execution: Readonly<ToolExecution>) => string | undefin
- 
- /** One scope's complete tool-registry contribution. */
- class ToolLayer implements ScopeLayer {
--  readonly tools: NamedEntries<ToolDefinition>
-+  // @meta-intent:begin dsh-warm-minimal (purpose: prevent source drift from the registered definition)
-+  readonly tools: NamedEntries<RegisteredTool>
-+  // @meta-intent:end dsh-warm-minimal
-   readonly restrictions = new AnonymousEntries<CompiledToolRestriction>()
-   readonly guards = new AnonymousEntries<ToolGuard>()
-   /**
-@@ -978,11 +994,22 @@ export class ToolRuntime extends Service {
-    * Restrictions do not make known tools invalid, but a mode collapse does.
-    */
-   private wireSchemas(scope?: ScopeKey): ToolProviderResult {
-+    // @meta-intent:begin dsh-warm-minimal (purpose: project each dynamic schema with its winning tool source)
-     const view = this.view(scope)
-     const mode = this.modeFor(scope)
-+    const visible = [...view.visible.entries()]
-+    const sourceOf = (name: string): HostSourceId => {
-+      const source = view.sources.get(name)
-+      if (source === undefined) throw new Error(`tool registry has no source for visible tool ${JSON.stringify(name)}`)
-+      return source
-+    }
-     if (mode === 'native') {
--      const schemas = [...view.visible.values()].map(definition => this.schemaOf(definition, false))
--      return { schemas, knownNames: [...view.knownNames] }
-+      const schemas = visible.map(([, definition]) => this.schemaOf(definition, false))
-+      return {
-+        schemas,
-+        knownNames: [...view.knownNames],
-+        sourceIds: visible.map(([name]) => sourceOf(name)),
-+      }
-     }
-     // Validate the runtime language BEFORE projecting schemas: schemaOf reads
-     // run_code's language-aware description/parameters getters, whose own
-@@ -990,14 +1017,24 @@ export class ToolRuntime extends Service {
-     // renderer-table rejection the canonical assembly-time error for a
-     // language with no SDK renderer.
-     this.requireCodeRuntime(mode)
--    const schemas = [...view.visible.values()].map(definition => this.schemaOf(definition, false))
-+    const projected = visible.map(([name, definition]) => ({
-+      schema: this.schemaOf(definition, false),
-+      source: sourceOf(name),
-+    }))
-     if (mode === 'code') {
-+      const transport = projected.filter(entry => entry.schema.name === RUN_CODE_NAME)
-       return {
--        schemas: schemas.filter(schema => schema.name === RUN_CODE_NAME),
-+        schemas: transport.map(entry => entry.schema),
-         knownNames: [RUN_CODE_NAME],
-+        sourceIds: transport.map(entry => entry.source),
-       }
-     }
--    return { schemas, knownNames: [...view.knownNames, RUN_CODE_NAME] }
-+    return {
-+      schemas: projected.map(entry => entry.schema),
-+      knownNames: [...view.knownNames, RUN_CODE_NAME],
-+      sourceIds: projected.map(entry => entry.source),
-+    }
-+    // @meta-intent:end dsh-warm-minimal
-   }
- 
-   /**
-@@ -1056,7 +1093,9 @@ export class ToolRuntime extends Service {
-     }
-     return this.layers.effect(
-       this.ctx,
--      layer => layer.tools.insert(name, definition),
-+      // @meta-intent:begin dsh-warm-minimal (purpose: capture each tool's actual registration fiber)
-+      layer => layer.tools.insert(name, { definition, source: hostSourceId(this.ctx) }),
-+      // @meta-intent:end dsh-warm-minimal
-       { label: 'tools.register()' },
-     )
-   }
-@@ -1158,27 +1197,33 @@ export class ToolRuntime extends Service {
-     const own = this.layers.peek(scope)
-     // Inherited surface, nearest ancestor last: a nearer scope's same-name
-     // entry shadows a farther one, and the global layer is the farthest.
--    const inherited = new Map<string, ToolDefinition>(this.layers.global.tools.entries())
-+    // @meta-intent:begin dsh-warm-minimal (purpose: select tool definition and source through the same shadow path)
-+    const inherited = new Map<string, RegisteredTool>(this.layers.global.tools.entries())
-     for (const layer of layers) {
-       if (layer === own) continue
--      for (const [name, definition] of layer.tools.entries()) inherited.set(name, definition)
-+      for (const [name, registration] of layer.tools.entries()) inherited.set(name, registration)
-     }
-     const visible = new Map<string, ToolDefinition>()
-+    const sources = new Map<string, HostSourceId>()
-     const knownNames = new Set<string>()
-     const restrictableNames = new Set<string>()
--    for (const [name, definition] of inherited) {
-+    for (const [name, registration] of inherited) {
-       knownNames.add(name)
-       restrictableNames.add(name)
-       // Restrictions intersect across the whole chain: any scope on it may
-       // mask an inherited name for everything nested inside it.
--      if (layers.every(layer => layer.admits(name))) visible.set(name, definition)
-+      if (layers.every(layer => layer.admits(name))) {
-+        visible.set(name, registration.definition)
-+        sources.set(name, registration.source)
-+      }
-     }
-     // The scope's own registrations last, shadowing an inherited name and
-     // outside the filter above.
-     if (own !== undefined) {
--      for (const [name, definition] of own.tools.entries()) {
-+      for (const [name, registration] of own.tools.entries()) {
-         knownNames.add(name)
--        visible.set(name, definition)
-+        visible.set(name, registration.definition)
-+        sources.set(name, registration.source)
-       }
-     }
-     // Presentation infrastructure is resolved last and outside capability
-@@ -1188,8 +1233,10 @@ export class ToolRuntime extends Service {
-     // dispatch table because some other agent in the process presents it.
-     if (this.modeFor(scope) !== 'native') {
-       visible.set(RUN_CODE_NAME, this.requireCodeTransport())
-+      sources.set(RUN_CODE_NAME, hostSourceId(this.ctx))
-     }
--    return { visible, knownNames, restrictableNames }
-+    return { visible, sources, knownNames, restrictableNames }
-+    // @meta-intent:end dsh-warm-minimal
-   }
- 
-   /**
-diff --git a/packages/core/tools/tests/provenance.spec.ts b/packages/core/tools/tests/provenance.spec.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..3f0fddb3169f1774e12c381230e169ff7c884e9c
---- /dev/null
-+++ b/packages/core/tools/tests/provenance.spec.ts
-@@ -0,0 +1,61 @@
-+import { describe, expect, it } from 'vitest'
-+import { Context } from '@deepseek-ai/cordis'
-+import Loader from '@deepseek-ai/cordis-plugin-loader'
-+import { createScope } from '@deepseek-ai/dsh-scope'
-+import SystemPrompt, { hostSourceId, promptAssemblySourceInventory } from '@deepseek-ai/dsh-system-prompt'
-+import type { HostSourceId } from '@deepseek-ai/dsh-system-prompt'
-+import ToolRuntime, { defineTool } from '@deepseek-ai/dsh-tools'
-+
-+// @meta-intent:begin dsh-warm-minimal (purpose: prove tool schemas retain each winning tool registration's source)
-+function tool(name: string, description: string) {
-+  return defineTool({
-+    name,
-+    description,
-+    parameters: {},
-+    output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
-+    execute: () => Promise.resolve(description),
-+  })
-+}
-+
-+async function load(ctx: Context, builtin: string, plugin: ((ctx: Context) => void) & { inject?: string[] }): Promise<HostSourceId> {
-+  ctx.loader.builtins[builtin] = plugin
-+  const id = await ctx.loader.create({ name: `cordis:${builtin}` })
-+  await ctx.loader.await()
-+  const fiber = ctx.loader.resolve(id).fiber
-+  if (fiber === undefined) throw new Error(`test Loader entry ${id} has no active fiber`)
-+  return hostSourceId(fiber.ctx)
-+}
-+
-+describe('tool registration host provenance', () => {
-+  it('projects per-tool sources for multiple registrations and a scoped shadow', async () => {
-+    const ctx = new Context()
-+    await ctx.plugin(Loader)
-+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
-+    await ctx.plugin(ToolRuntime)
-+    const key = {}
-+    const global = Object.assign((inner: Context) => {
-+      inner.tools.register(tool('shared', 'global'))
-+      inner.tools.register(tool('global-only', 'global'))
-+    }, { inject: ['tools'] })
-+    const globalSource = await load(ctx, 'tool-source-global', global)
-+    const scoped = Object.assign((inner: Context) => {
-+      const scope = createScope(inner, key)
-+      scope.ctx.tools.register(tool('shared', 'scoped'))
-+      scope.ctx.tools.register(tool('scoped-only', 'scoped'))
-+    }, { inject: ['tools', 'systemPrompt'] })
-+    const scopedSource = await load(ctx, 'tool-source-scoped', scoped)
-+
-+    const globalInventory = promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools
-+    expect(globalInventory).toEqual([
-+      { name: 'global-only', source: globalSource },
-+      { name: 'shared', source: globalSource },
-+    ])
-+    const scopedInventory = promptAssemblySourceInventory(await ctx.systemPrompt.assemble({ scope: key })).tools
-+    expect(scopedInventory).toEqual([
-+      { name: 'global-only', source: globalSource },
-+      { name: 'scoped-only', source: scopedSource },
-+      { name: 'shared', source: scopedSource },
-+    ])
-+  })
-+})
-+// @meta-intent:end dsh-warm-minimal
-diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
-index 737a21eea64d9ab25ed35258719442ae55376710..65ee31b0890d7a76425e8ea33460cceca42614a0 100644
---- a/pnpm-lock.yaml
-+++ b/pnpm-lock.yaml
-@@ -3764,6 +3764,12 @@ importers:
-       '@deepseek-ai/cordis':
-         specifier: workspace:^
-         version: link:../../../vendor/cordis
-+      '@deepseek-ai/cordis-plugin-loader':
-+        specifier: workspace:^
-+        version: link:../../../vendor/loader
-+      '@deepseek-ai/dsh-brand':
-+        specifier: workspace:^
-+        version: link:../../util/brand
-       '@deepseek-ai/dsh-invariants':
-         specifier: workspace:^
-         version: link:../../runtime-diagnostics/invariants
-@@ -3783,6 +3789,9 @@ importers:
-       '@deepseek-ai/cordis':
-         specifier: workspace:^
-         version: link:../../../vendor/cordis
-+      '@deepseek-ai/cordis-plugin-loader':
-+        specifier: workspace:^
-+        version: link:../../../vendor/loader
-       '@deepseek-ai/dsh-agent':
-         specifier: workspace:^
-         version: link:../agent
+   it('separates direct file-backed trees while keeping each configured path stable', () => {
+     const source = (filename: string): HostSourceId => hostSourceId({
+       fiber: {

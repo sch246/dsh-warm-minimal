@@ -11,7 +11,7 @@ const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const patchPath = join(packageRoot, 'patches/deepseek-harness.patch')
 const presetSource = join(packageRoot, 'presets/warm-minimal')
 const legacyPresetPath = join(packageRoot, 'tests/warm-minimal-0.1.agent.cordis.yml')
-const baseline = 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e'
+const baseline = '1f8dd5ef4b1dd2811b03ef3e1ce0e2bb0c7487cc'
 const legacyAgentSha256 = 'c952e72ff87cb09e6d2700dcf806c6584a67cf867adcd103ec822a6c538d4f87'
 const sourceCheckout = process.env.DSH_LIFECYCLE_TEST_SOURCE ?? '/root/deepseek-harness'
 
@@ -192,8 +192,8 @@ describe('package-owned Harness patch lifecycle', () => {
       const ownedPath = join(repository, 'packages/core/system-prompt/src/index.ts')
       const exactOwnedContent = await readFile(ownedPath, 'utf8')
       await writeFile(ownedPath, exactOwnedContent.replace(
-        '@meta-intent:begin dsh-warm-minimal',
-        '@meta-intent:begin locally-drifted-warm-minimal',
+        'export function hostSourceIdForEntry',
+        'export function locallyDriftedHostSourceIdForEntry',
       ))
       const logBeforeDrift = await readOptional(env.DSH_TEST_DSH_LOG)
       const refused = run('bash', [setup], { env })

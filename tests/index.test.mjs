@@ -459,30 +459,54 @@ describe('warm-minimal runtime seam', () => {
   })
 })
 describe('preset-plane roster projection', () => {
-  it('maps only exact complete entry ids through hostSourceId', () => {
+  it('projects declared siblings before their fibers mount', () => {
     const entries = [
-      { id: 'persona', fiber: { ctx: { token: 'persona' } } },
-      { id: 'delegation:tool-subagent', fiber: { ctx: { token: 'delegate' } } },
-      { id: 'nested:persona', fiber: { ctx: { token: 'same-name-wrong-path' } } },
-      { id: 'unknown-row', fiber: { ctx: { token: 'unknown' } } },
+      { id: 'include:agent-presets:persona' },
+      { id: 'include:agent-presets:tool-web' },
+      { id: 'another-preset:persona' },
     ]
+    const owner = {
+      id: 'include:agent-presets:worker-persona',
+      options: { id: 'worker-persona' },
+      parent: { tree: { entries: () => entries } },
+    }
+    const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
+    let defaults
+    applyPresetProjection(ctx, {
+      hostSourceIdForEntry: entry => `source:${entry.id}`,
+      registerRoster(value) { defaults = value; return () => {} },
+    })
+
+    assert.equal(defaults.promptAssignments['source:include:agent-presets:persona'], 'parent-only')
+    assert.equal(defaults.promptAssignments['source:include:agent-presets:persistent-bash'], 'shared')
+    assert.equal(defaults.promptAssignments['source:include:agent-presets:tool-subagent'], 'parent-only')
+    assert.equal(defaults.promptAssignments['source:another-preset:persona'], undefined)
+    assert.equal(
+      defaults.toolAssignments[toolId('source:include:agent-presets:tool-web', 'web_search')],
+      'child-only',
+    )
+    assert.equal(
+      defaults.toolAssignments[toolId('source:include:agent-presets:persistent-bash', 'bash')],
+      'shared',
+    )
+  })
+
+  it('returns the roster disposer without deriving defaults for undeclared paths', () => {
+    const entries = []
     const tree = { entries: () => entries }
-    const owner = { parent: { tree } }
+    const owner = { id: 'worker-persona', options: { id: 'worker-persona' }, parent: { tree } }
     const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
     let defaults
     const dispose = () => {}
     const returned = applyPresetProjection(ctx, {
-      hostSourceId: entryCtx => `source:${entryCtx.token}`,
+      hostSourceIdForEntry: entry => `source:${entry.id}`,
       registerRoster(value) { defaults = value; return dispose },
     })
     assert.equal(returned, dispose)
-    assert.deepEqual(defaults.promptAssignments, {
-      'source:persona': 'parent-only',
-      'source:delegate': 'parent-only',
-    })
-    assert.deepEqual(defaults.toolAssignments, {
-      [toolId('source:delegate', 'subagent')]: 'parent-only',
-    })
+    assert.equal(defaults.promptAssignments['source:persona'], 'parent-only')
+    assert.equal(defaults.promptAssignments['source:nested:persona'], undefined)
+    assert.equal(defaults.toolAssignments[toolId('source:tool-subagent', 'subagent')], 'parent-only')
+    assert.equal(defaults.toolAssignments[toolId('source:unknown-row', 'subagent')], undefined)
     assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('nested:persona'), false)
   })
 
@@ -491,50 +515,62 @@ describe('preset-plane roster projection', () => {
       { id: 'persona', fiber: { ctx: { token: 'parent-persona' } } },
       { id: 'worker-persona', fiber: { ctx: { token: 'worker-persona' } } },
       { id: 'agent-instructions', fiber: { ctx: { token: 'agents' } } },
-      { id: 'persistent-shell:persistent-bash', fiber: { ctx: { token: 'shell' } } },
-      { id: 'filesystem:str-replace-editor', fiber: { ctx: { token: 'editor' } } },
+      { id: 'persistent-bash', fiber: { ctx: { token: 'shell' } } },
+      { id: 'str-replace-editor', fiber: { ctx: { token: 'editor' } } },
       { id: 'tool-skill', fiber: { ctx: { token: 'skill' } } },
       { id: 'tool-jobs', fiber: { ctx: { token: 'jobs' } } },
       { id: 'tool-web', fiber: { ctx: { token: 'web' } } },
     ]
-    const owner = { parent: { tree: { entries: () => entries } } }
+    const owner = {
+      id: 'worker-persona',
+      options: { id: 'worker-persona' },
+      parent: { tree: { entries: () => entries } },
+    }
     const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
     let defaults
     applyPresetProjection(ctx, {
-      hostSourceId: entryCtx => `source:${entryCtx.token}`,
+      hostSourceIdForEntry: entry => `source:${entry.id}`,
       registerRoster(value) { defaults = value; return () => {} },
     })
 
-    assert.deepEqual(defaults.promptAssignments, {
-      'source:parent-persona': 'parent-only',
+    assert.deepEqual({
+      'source:persona': defaults.promptAssignments['source:persona'],
+      'source:worker-persona': defaults.promptAssignments['source:worker-persona'],
+      'source:agent-instructions': defaults.promptAssignments['source:agent-instructions'],
+      'source:persistent-bash': defaults.promptAssignments['source:persistent-bash'],
+      'source:str-replace-editor': defaults.promptAssignments['source:str-replace-editor'],
+      'source:tool-skill': defaults.promptAssignments['source:tool-skill'],
+      'source:tool-jobs': defaults.promptAssignments['source:tool-jobs'],
+      'source:tool-web': defaults.promptAssignments['source:tool-web'],
+    }, {
+      'source:persona': 'parent-only',
       'source:worker-persona': 'child-only',
-      'source:agents': 'shared',
-      'source:shell': 'shared',
-      'source:editor': 'shared',
-      'source:skill': 'shared',
-      'source:jobs': 'child-only',
-      'source:web': 'child-only',
+      'source:agent-instructions': 'shared',
+      'source:persistent-bash': 'shared',
+      'source:str-replace-editor': 'shared',
+      'source:tool-skill': 'shared',
+      'source:tool-jobs': 'child-only',
+      'source:tool-web': 'child-only',
     })
-    assert.deepEqual(defaults.toolAssignments, {
-      [toolId('source:shell', 'bash')]: 'shared',
-      [toolId('source:editor', 'str_replace_editor')]: 'shared',
-      [toolId('source:skill', 'skill')]: 'shared',
-      [toolId('source:jobs', 'job_output')]: 'child-only',
-      [toolId('source:jobs', 'job_list')]: 'child-only',
-      [toolId('source:jobs', 'job_kill')]: 'child-only',
-      [toolId('source:web', 'web_search')]: 'child-only',
-      [toolId('source:web', 'web_fetch')]: 'child-only',
-    })
-    assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('delegation:tool-subagent-fork'), false)
+    assert.equal(defaults.toolAssignments[toolId('source:persistent-bash', 'bash')], 'shared')
+    assert.equal(defaults.toolAssignments[toolId('source:str-replace-editor', 'str_replace_editor')], 'shared')
+    assert.equal(defaults.toolAssignments[toolId('source:tool-skill', 'skill')], 'shared')
+    assert.equal(defaults.toolAssignments[toolId('source:tool-jobs', 'job_output')], 'child-only')
+    assert.equal(defaults.toolAssignments[toolId('source:tool-web', 'web_search')], 'child-only')
+    assert.equal(PACKAGE_ROSTER_ENTRY_IDS.includes('tool-subagent-fork'), false)
   })
 
   it('declares exact per-tool defaults for the complete known DSH roster', () => {
     const entries = PACKAGE_ROSTER_ENTRY_IDS.map(id => ({ id, fiber: { ctx: { token: id } } }))
-    const owner = { parent: { tree: { entries: () => entries } } }
+    const owner = {
+      id: 'worker-persona',
+      options: { id: 'worker-persona' },
+      parent: { tree: { entries: () => entries } },
+    }
     const ctx = { fiber: { entry: owner, parent: { fiber: undefined } } }
     let defaults
     applyPresetProjection(ctx, {
-      hostSourceId: entryCtx => `source:${entryCtx.token}`,
+      hostSourceIdForEntry: entry => `source:${entry.id}`,
       registerRoster(value) { defaults = value; return () => {} },
     })
     const expected = (source, names, assignment) => Object.fromEntries(
@@ -542,18 +578,18 @@ describe('preset-plane roster projection', () => {
     )
 
     assert.deepEqual(defaults.toolAssignments, {
-      ...expected('persistent-shell:persistent-bash', ['bash'], 'shared'),
-      ...expected('persistent-shell:persistent-pwsh', ['pwsh'], 'shared'),
-      ...expected('filesystem:str-replace-editor', ['str_replace_editor'], 'shared'),
+      ...expected('persistent-bash', ['bash'], 'shared'),
+      ...expected('persistent-pwsh', ['pwsh'], 'shared'),
+      ...expected('str-replace-editor', ['str_replace_editor'], 'shared'),
       ...expected('tool-fs', ['read', 'edit', 'write', 'read_image'], 'child-only'),
       ...expected('tool-fs-search', ['glob', 'grep'], 'child-only'),
       ...expected('tool-jobs', ['job_output', 'job_list', 'job_kill'], 'child-only'),
       ...expected('tool-skill', ['skill'], 'shared'),
       ...expected('tool-goal', ['get_goal', 'create_goal', 'update_goal'], 'parent-only'),
-      ...expected('planning:plan-mode', ['exit_plan_mode'], 'parent-only'),
-      ...expected('delegation:tool-subagent-control', ['send_message', 'interrupt_agent'], 'parent-only'),
-      ...expected('delegation:tool-subagent-list-agents', ['list_agents'], 'parent-only'),
-      ...expected('delegation:tool-subagent', ['subagent'], 'parent-only'),
+      ...expected('plan-mode', ['exit_plan_mode'], 'parent-only'),
+      ...expected('tool-subagent-control', ['send_message', 'interrupt_agent'], 'parent-only'),
+      ...expected('tool-subagent-list-agents', ['list_agents'], 'parent-only'),
+      ...expected('tool-subagent', ['subagent'], 'parent-only'),
       ...expected('tool-ask-user', ['ask_user_question'], 'parent-only'),
       ...expected('tool-todo', ['todo_write'], 'parent-only'),
       ...expected('tool-web', ['web_search', 'web_fetch'], 'child-only'),

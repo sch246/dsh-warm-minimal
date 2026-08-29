@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { describe, it } from 'node:test'
+import { PACKAGE_ROSTER_ENTRY_IDS } from '../projection.mjs'
 
 const presetUrl = new URL('../presets/warm-minimal/agent.cordis.yml', import.meta.url)
 
@@ -23,6 +24,10 @@ function entryPaths(source) {
   return paths
 }
 
+function entryIds(source) {
+  return new Set([...source.matchAll(/^\s*- id: ([a-z0-9-]+)$/gm)].map(match => match[1]))
+}
+
 function topLevelBlock(source, id) {
   const start = source.indexOf(`- id: ${id}\n`)
   assert.notEqual(start, -1, `missing top-level entry: ${id}`)
@@ -34,6 +39,7 @@ describe('warm-minimal package-owned roster', () => {
   it('mounts the broader roster under stable entry paths', async () => {
     const preset = await readFile(presetUrl, 'utf8')
     const paths = entryPaths(preset)
+    const ids = entryIds(preset)
 
     for (const expected of [
       'persona',
@@ -64,6 +70,9 @@ describe('warm-minimal package-owned roster', () => {
       'tool-web',
     ]) {
       assert.equal(paths.has(expected), true, `missing stable entry path: ${expected}`)
+    }
+    for (const id of PACKAGE_ROSTER_ENTRY_IDS) {
+      assert.equal(ids.has(id), true, `roster default has no Loader entry: ${id}`)
     }
   })
 
