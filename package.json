@@ -60,6 +60,7 @@
     "lib/typert.remote-client.d.ts",
     "cordis.patch.yml",
     "presets",
+    "patches",
     "scripts",
     "README.md",
     "LICENSE"
