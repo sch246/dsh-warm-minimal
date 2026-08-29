@@ -18,9 +18,9 @@
 
 bootstrap 之后，或关闭 bootstrap 后从首轮开始：
 
-- 主代理默认拥有 persona、AGENTS、持久 shell、编辑器、窄用途 skill、目标/计划、委派/工作流、用户交互和 todo；
+- 主代理默认拥有 persona、有限 AGENTS、持久 shell、编辑器、窄用途 skill、目标/计划、一个紧凑的 delegate、用户交互、协调和 todo；
 - 子代理默认使用复制的 Standard persona，并拥有 AGENTS、持久 shell、编辑器、skill、文件系统发现、搜索、后台 jobs 与 Web；
-- 未知来源默认仅对子代理开放；
+- 未知 prompt/context 来源和未知单个工具 schema 默认仅对子代理开放；
 - 隐藏只影响模型可见的 prompt、context 和 tool schema，不改变可执行工具注册表，也不会拒绝主代理显式形成的调用。
 
 主代理会收到一条很短的协调提示：
@@ -39,9 +39,9 @@ Web UI 的 **设置 → 插件 → Warm minimal** 保留一个紧凑摘要卡；
 - bootstrap 的用户消息；
 - bootstrap 后的主代理协调提示；
 - prompt/context 来源分配；
-- tool 来源分配。
+- 单个 tool schema 分配。
 
-Prompt/context 与工具来源列表可以独立展开。每个来源使用三个并列的单选项选择 `仅主代理`、`仅子代理` 或 `通用`，不使用下拉框；工具行显示模型可见的工具名与说明预览，完整 source ID 只在展开详情中显示。保存值只包含 bootstrap 三项与两张稳定 source ID 到分配值的映射。已知来源的默认值由运行时 roster 的同一解析器提供，未知来源才回落为 `仅子代理`。来源名称、工具说明和其它 inventory 元数据由 Host 只读查询返回，不会被浏览器草稿写回配置。
+Prompt/context 与工具列表可以独立展开。每个 prompt/context 来源和每个单独工具 schema 都使用三个并列的单选项选择 `仅主代理`、`仅子代理` 或 `通用`，不使用下拉框；一个 provider 提供的多个工具仍各占一行、各自保存。工具行突出模型可见的工具名与说明预览，完整 provider source 只在展开详情中显示。保存值只包含 bootstrap 三项、稳定 prompt source ID 映射和绑定 `provider source + tool name` 的稳定 tool-schema ID 映射。已知项目的默认值由运行时 roster 的同一解析器提供，未知项目才回落为 `仅子代理`。来源名称、工具说明和其它 inventory 元数据由 Host 只读查询返回，不会被浏览器草稿写回配置。
 
 ## 安装
 
@@ -60,13 +60,13 @@ DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
 # powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-安装器先验证并应用 `patches/deepseek-harness.patch`，再安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
+安装器先验证并应用 `patches/deepseek-harness.patch`，再安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。精确匹配 package 0.1 发行内容的旧 preset 会自动升级，旧 marker 下发生过任何内容修改的 preset 仍会停止并要求显式复核。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
 
 ## 实现
 
 - Host 为 prompt section、context 和单个 tool schema 提供不进入模型 wire 的稳定来源 ID。
 - `SystemPrompt.admitSources()` 在 complete prompt 选择和动态内容求值前执行来源准入；工具按 schema 独立过滤。
-- preset projection 使用 Loader tree 的精确 entry ID 建立已知来源默认值，不从贡献名称猜测归属。
+- preset projection 使用 Loader tree 的精确 entry ID 与工具名建立已知默认值，不把 provider 的分配隐式授予它后来出现的新工具。
 - 运行时根据当前 agent 关系区分主代理与子代理，并在 assembly waterfall 后处理监听器新加入的未知来源。
 - Plugins 配置卡通过 Typert Remote 做 scope-only assembly，读取 inventory 时不创建 session、turn 或模型请求。
 - bootstrap 的消息 ID 使用 `dsh-warm-minimal:bootstrap:` 前缀；Chat、Trajectory、持久化与恢复沿用 Harness 原生事件顺序。

@@ -30,3 +30,11 @@ Source-only focused tests cannot establish installed preset freshness. Lifecycle
 ## Classification
 
 Per-tool assignment is an `intent_revision` because the prior STATE explicitly named tool-source rows. The all-child-only screenshot is an `implementation_mismatch` caused by stale installed composition. The current realization remains draft.
+
+## Realization evidence
+
+Plugin commits `83c3781`, `70de5b2`, and `fecda5c` implement the corrected projection without accepting or activating it. Tool assignment identity now binds the Host source and tool name; Remote inventory, admission, post-waterfall filtering, browser state, and persistence operate on one row per tool schema. Description and parameter changes do not alter the ID, malformed or legacy provider-scoped keys fail loud, exact known defaults come from the package roster, and unknown schemas remain child-only. Explicit registered-tool execution is unchanged.
+
+The Plugins editor keeps prompt/context rows source-scoped but renders each tool independently with its name, description preview, provider provenance, and native three-slot radio control. Focused component evidence includes two tools from one provider with different effective assignments and save identities.
+
+The package lifecycle now recognizes only the exact 0.1 package-owned preset payload as automatically upgradeable. A retained old marker with modified content, an unknown owner, and a drifted current install remain protected from implicit replacement or removal. No setup command, live profile write, service restart, model request, or realization acceptance occurred while recording this evidence; the supplied live deployment remains stale until separately authorized activation and verification.
