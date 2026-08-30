@@ -1,6 +1,6 @@
 /** Staged Plugins-card form over one official settings namespace scope. */
 
-import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type {
   AssignedPromptSource,

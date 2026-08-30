@@ -1,6 +1,6 @@
 /** Package-owned browser styles; the out-of-tree bundle has no CSS sidecar. */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 
 const PLUGIN_ID = 'dsh-warm-minimal'
 
