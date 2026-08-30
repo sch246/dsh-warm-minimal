@@ -11,7 +11,7 @@ const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const patchPath = join(packageRoot, 'patches/deepseek-harness.patch')
 const presetSource = join(packageRoot, 'presets/warm-minimal')
 const legacyPresetPath = join(packageRoot, 'tests/warm-minimal-0.1.agent.cordis.yml')
-const baseline = '1f8dd5ef4b1dd2811b03ef3e1ce0e2bb0c7487cc'
+const baseline = 'cd5ef8148158c3a752a658978873241fdf8e2bbc'
 const legacyAgentSha256 = 'c952e72ff87cb09e6d2700dcf806c6584a67cf867adcd103ec822a6c538d4f87'
 const sourceCheckout = process.env.DSH_LIFECYCLE_TEST_SOURCE ?? '/root/deepseek-harness'
 
