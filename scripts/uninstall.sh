@@ -6,6 +6,7 @@ DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
 PROFILE="${DSH_PROFILE:-web}"
 CHECKOUT_INPUT="${DSH_CHECKOUT:-/root/deepseek-harness}"
 PATCH="$REPO_DIR/patches/deepseek-harness.patch"
+TARGET_REVISION="0a53fb55bea101816fa226bb964ae2bed71c343b"
 SRC="$REPO_DIR/presets/warm-minimal"
 DEST="$DSH_HOME_DIR/.agent-presets/warm-minimal"
 OWNER_MARKER=".dsh-warm-minimal-owned"
@@ -29,6 +30,12 @@ fi
 if [ ! -f "$CHECKOUT/package.json" ] \
   || ! grep -Fq '"name": "@deepseek-ai/dsh-root"' "$CHECKOUT/package.json"; then
   echo "uninstall: DSH_CHECKOUT is not a DeepSeek Harness repository: $CHECKOUT" >&2
+  exit 1
+fi
+ACTUAL_REVISION="$(git -C "$CHECKOUT" rev-parse HEAD)"
+if [ "$ACTUAL_REVISION" != "$TARGET_REVISION" ]; then
+  echo "uninstall: unsupported DeepSeek Harness revision: $ACTUAL_REVISION" >&2
+  echo "uninstall: this package targets dsh-v0.1.2-alpha.2 at $TARGET_REVISION" >&2
   exit 1
 fi
 if [ ! -f "$PATCH" ]; then

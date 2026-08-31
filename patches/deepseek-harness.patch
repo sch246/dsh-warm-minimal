@@ -1,6 +1,6 @@
 diff --git a/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.i18n.yaml b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.i18n.yaml
 new file mode 100644
-index 0000000000000000000000000000000000000000..682671940f2f3689f314c72f2af1eee93e5e7fed
+index 0000000000000000000000000000000000000000..8c1a22a352bff068ddc8a09f9bcb3c3fae62b23a
 --- /dev/null
 +++ b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.i18n.yaml
 @@ -0,0 +1,6 @@
@@ -8,11 +8,11 @@ index 0000000000000000000000000000000000000000..682671940f2f3689f314c72f2af1eee9
 +# side as of the last confirmed-consistent state. Both languages carry equal authority;
 +# after editing either side, bring the other along and re-record with:
 +#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.md
-+2026-08-30-model-input-host-provenance.md: 21134991aa9876c285ea25289c5efeba0fec7714
-+2026-08-30-model-input-host-provenance.zh.md: 5b9f650a7a7435de1f8be2cbc78d182d1eccd084
++2026-08-30-model-input-host-provenance.md: 0e1fe1c3647dbd8af4eced9df6cfe05473d5e702
++2026-08-30-model-input-host-provenance.zh.md: a7fea68e7879a2bc23dd67b115bf82ebac74d130
 diff --git a/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.md b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..21134991aa9876c285ea25289c5efeba0fec7714
+index 0000000000000000000000000000000000000000..0e1fe1c3647dbd8af4eced9df6cfe05473d5e702
 --- /dev/null
 +++ b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.md
 @@ -0,0 +1,43 @@
@@ -40,7 +40,7 @@ index 0000000000000000000000000000000000000000..21134991aa9876c285ea25289c5efeba
 +
 +## Verification
 +
-+The system-prompt provenance suite pins stable pre-mount and mounted identities, file-tree separation without path disclosure, scoped winners, dynamic multi-schema providers, strict source-array correspondence, unknown listener entries, non-wire metadata, complete-section restoration, pre-evaluation admission, predicate composition, and disposal. The tools provenance suite pins per-tool sources across scoped shadowing and the PTC transport without restoring native schemas. Existing system-prompt ordering tests continue to pin sparse first-party allocation and code-unit tie breaking, while the scoped tools suite continues to pin inherited restrictions and own-registration exemption.
++The alpha.2 Host typecheck covers the source-aware system-prompt and tools registries together. Cordis catalog generation projects the new types and service method from their maintained source. Runtime behavior requires installation-level request-header evidence from the package that selects and applies source admission.
 +
 +## Alternatives considered
 +
@@ -61,7 +61,7 @@ index 0000000000000000000000000000000000000000..21134991aa9876c285ea25289c5efeba
 +The system-prompt package gains a narrow dependency on the shared branding library, and the tools registry stores one additional branded value per registration. These costs replace plugin-specific ownership mirrors and keep prompt and tool resolution as the single authority.
 diff --git a/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.zh.md b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.zh.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..5b9f650a7a7435de1f8be2cbc78d182d1eccd084
+index 0000000000000000000000000000000000000000..a7fea68e7879a2bc23dd67b115bf82ebac74d130
 --- /dev/null
 +++ b/.agents/notes/implemented/architecture/2026-08-30-model-input-host-provenance.zh.md
 @@ -0,0 +1,43 @@
@@ -89,7 +89,7 @@ index 0000000000000000000000000000000000000000..5b9f650a7a7435de1f8be2cbc78d182d
 +
 +## 验证
 +
-+system-prompt 来源测试固定了挂载前与挂载后的稳定标识、不披露路径的文件 tree 区分、作用域胜出项、动态多 schema 提供方、严格的来源数组对应关系、unknown 监听器条目、非 wire metadata、complete 段恢复、求值前准入、predicate 组合与 disposal。tools 来源测试固定了跨作用域遮蔽的逐工具来源，以及不恢复 Native schema 的 PTC transport。现有 system-prompt 排序测试继续固定稀疏 first-party 分配与代码单元同序比较，而作用域 tools 测试继续固定继承限制和自身注册豁免。
++alpha.2 Host typecheck 会一起覆盖来源感知的 system-prompt 与 tools registry。Cordis catalog 生成会从维护源投影新增类型和 service 方法。运行时行为需要由选择并应用来源准入的 package 提供安装级 request header 证据。
 +
 +## 考虑过的替代方案
 +
@@ -109,19 +109,19 @@ index 0000000000000000000000000000000000000000..5b9f650a7a7435de1f8be2cbc78d182d
 +
 +system-prompt 包增加了对共享 branding library 的窄依赖，而 tools 注册表为每项注册多存储一个带品牌的值。这些成本取代插件专用的所有权镜像，并让提示词和工具解析继续作为单一权威。
 diff --git a/docs/subsystems/system-prompt.i18n.yaml b/docs/subsystems/system-prompt.i18n.yaml
-index bf08fc3825afd2217d20dd8bb1d718183cbd72f9..f7a81596e91b790d30a20d960a5d3cb16c16f482 100644
+index 773247656a364b57aaf4b7dfd5edbe269602e7c8..b0b112a4c0e6ff78b0f8aee901fd068c3f6c4077 100644
 --- a/docs/subsystems/system-prompt.i18n.yaml
 +++ b/docs/subsystems/system-prompt.i18n.yaml
 @@ -2,5 +2,5 @@
  # side as of the last confirmed-consistent state. Both languages carry equal authority;
  # after editing either side, bring the other along and re-record with:
  #   pnpm run verify-translation-pairing --write docs/subsystems/system-prompt.md
--system-prompt.md: 68eab4f5c93f14675d548c0fa635c5f3f3ce70a7
--system-prompt.zh.md: 086555593e507da03aea3e83a55017e0aa839fcb
-+system-prompt.md: 2f2cbaaaabd63281941a560418c0f129f813ea2d
-+system-prompt.zh.md: f3fff9254091b7ad2a49c7f5b759b372467b668b
+-system-prompt.md: 502daab50a908bfbf5dcae480771c0baa0827849
+-system-prompt.zh.md: 95e33eb6bbea7d271c4f70948388fe2deef420a9
++system-prompt.md: 3b8eed886b5209c1ebf467bb858892cd09ed9b60
++system-prompt.zh.md: 1df8610c7391a1ca6e3dfa8cdedabb643528167f
 diff --git a/docs/subsystems/system-prompt.md b/docs/subsystems/system-prompt.md
-index 68eab4f5c93f14675d548c0fa635c5f3f3ce70a7..2f2cbaaaabd63281941a560418c0f129f813ea2d 100644
+index 502daab50a908bfbf5dcae480771c0baa0827849..3b8eed886b5209c1ebf467bb858892cd09ed9b60 100644
 --- a/docs/subsystems/system-prompt.md
 +++ b/docs/subsystems/system-prompt.md
 @@ -23,9 +23,65 @@ interface AssembleContext {
@@ -200,7 +200,7 @@ index 68eab4f5c93f14675d548c0fa635c5f3f3ce70a7..2f2cbaaaabd63281941a560418c0f129
  }
  ```
  
-@@ -134,6 +192,15 @@ suppressRuntimeContext(): () => void
+@@ -147,6 +205,15 @@ suppressRuntimeContext(): () => void
   */
  tools(provider: (context: AssembleContext) => ToolProviderResult): () => void
  
@@ -217,7 +217,7 @@ index 68eab4f5c93f14675d548c0fa635c5f3f3ce70a7..2f2cbaaaabd63281941a560418c0f129
   * Register a prompt variable in the calling context's scope. Scoped values
   * shadow globals; invalid or duplicate names throw. A provider may return
 diff --git a/docs/subsystems/system-prompt.zh.md b/docs/subsystems/system-prompt.zh.md
-index 086555593e507da03aea3e83a55017e0aa839fcb..f3fff9254091b7ad2a49c7f5b759b372467b668b 100644
+index 95e33eb6bbea7d271c4f70948388fe2deef420a9..1df8610c7391a1ca6e3dfa8cdedabb643528167f 100644
 --- a/docs/subsystems/system-prompt.zh.md
 +++ b/docs/subsystems/system-prompt.zh.md
 @@ -23,9 +23,65 @@ interface AssembleContext {
@@ -296,7 +296,7 @@ index 086555593e507da03aea3e83a55017e0aa839fcb..f3fff9254091b7ad2a49c7f5b759b372
  }
  ```
  
-@@ -134,6 +192,15 @@ suppressRuntimeContext(): () => void
+@@ -147,6 +205,15 @@ suppressRuntimeContext(): () => void
   */
  tools(provider: (context: AssembleContext) => ToolProviderResult): () => void
  
@@ -313,19 +313,19 @@ index 086555593e507da03aea3e83a55017e0aa839fcb..f3fff9254091b7ad2a49c7f5b759b372
   * Register a prompt variable in the calling context's scope. Scoped values
   * shadow globals; invalid or duplicate names throw. A provider may return
 diff --git a/packages/core/system-prompt/README.i18n.yaml b/packages/core/system-prompt/README.i18n.yaml
-index 9f63454ce49fae807badabe7847e9a86dd9a72e3..a3b484cbd59ae43b96ec90c02f985a55729f9a5d 100644
+index eedcf5a9c6ddc308295941e947584f78a85cc3eb..66dd83772826c162e0b840ccff9d5827038536d8 100644
 --- a/packages/core/system-prompt/README.i18n.yaml
 +++ b/packages/core/system-prompt/README.i18n.yaml
 @@ -2,5 +2,5 @@
  # side as of the last confirmed-consistent state. Both languages carry equal authority;
  # after editing either side, bring the other along and re-record with:
  #   pnpm run verify-translation-pairing --write packages/core/system-prompt/README.md
--README.md: 8509e51dad8b1c57db58f5f23189ddb1595c301d
--README.zh.md: bb9fb0d5e6d49ec56b6ee49b154c14eda8ac66c9
-+README.md: 2c82ecc338c614e5b9f3da9a846179f496db4ca1
-+README.zh.md: 06f03ef1e6abaeed19e084650811a895482b521d
+-README.md: 74fcc91442f3779a1361c2f337a61908c6ff316c
+-README.zh.md: 40bd97a942cec876d714e2b00457d0baa48bb99c
++README.md: e9d23f3a41057fe0ef358fba8d4a6535ba1fb761
++README.zh.md: bf7fb813b540cc04e3d25d4b3ad651fa28e571b4
 diff --git a/packages/core/system-prompt/README.md b/packages/core/system-prompt/README.md
-index 8509e51dad8b1c57db58f5f23189ddb1595c301d..2c82ecc338c614e5b9f3da9a846179f496db4ca1 100644
+index 74fcc91442f3779a1361c2f337a61908c6ff316c..e9d23f3a41057fe0ef358fba8d4a6535ba1fb761 100644
 --- a/packages/core/system-prompt/README.md
 +++ b/packages/core/system-prompt/README.md
 @@ -73,6 +73,10 @@ ctx.systemPrompt.variable('cwd', ({ agent }) => agent?.session.header.cwd)
@@ -349,7 +349,7 @@ index 8509e51dad8b1c57db58f5f23189ddb1595c301d..2c82ecc338c614e5b9f3da9a846179f4
  ### Source map
  
 diff --git a/packages/core/system-prompt/README.zh.md b/packages/core/system-prompt/README.zh.md
-index bb9fb0d5e6d49ec56b6ee49b154c14eda8ac66c9..06f03ef1e6abaeed19e084650811a895482b521d 100644
+index 40bd97a942cec876d714e2b00457d0baa48bb99c..bf7fb813b540cc04e3d25d4b3ad651fa28e571b4 100644
 --- a/packages/core/system-prompt/README.zh.md
 +++ b/packages/core/system-prompt/README.zh.md
 @@ -73,6 +73,10 @@ ctx.systemPrompt.variable('cwd', ({ agent }) => agent?.session.header.cwd)
@@ -373,7 +373,7 @@ index bb9fb0d5e6d49ec56b6ee49b154c14eda8ac66c9..06f03ef1e6abaeed19e084650811a895
  ### 源码地图
  
 diff --git a/packages/core/system-prompt/package.json b/packages/core/system-prompt/package.json
-index 584aa1b0b3f8e280559747186c726f4c3154aae6..2cfde286b9f17257d0b06c511ca83c055752f327 100644
+index b0f34fb471fe0ea08ec4645e85a579b8cad0e4c0..ef97e01580a6722c40ca3cfb7c1bf424e944dc9e 100644
 --- a/packages/core/system-prompt/package.json
 +++ b/packages/core/system-prompt/package.json
 @@ -32,6 +32,7 @@
@@ -384,20 +384,19 @@ index 584aa1b0b3f8e280559747186c726f4c3154aae6..2cfde286b9f17257d0b06c511ca83c05
      "@deepseek-ai/dsh-invariants": "workspace:^",
      "@deepseek-ai/dsh-llm": "workspace:^",
      "@deepseek-ai/dsh-scope": "workspace:^",
-@@ -41,6 +42,8 @@
+@@ -41,6 +42,7 @@
      "@deepseek-ai/schemastery": "workspace:^"
    },
    "devDependencies": {
-+    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
 +    "@deepseek-ai/dsh-brand": "workspace:^",
      "@deepseek-ai/dsh-invariants": "workspace:^",
      "@deepseek-ai/dsh-llm": "workspace:^",
      "@deepseek-ai/dsh-scope": "workspace:^",
 diff --git a/packages/core/system-prompt/src/index.ts b/packages/core/system-prompt/src/index.ts
-index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae1fcdd6c6 100644
+index fba1b51f50bc3f98d1d40b9424bb690a68489518..028c6365195a8bbeb01230b8ce11a054ac1101af 100644
 --- a/packages/core/system-prompt/src/index.ts
 +++ b/packages/core/system-prompt/src/index.ts
-@@ -4,11 +4,136 @@
+@@ -4,11 +4,137 @@
   * @module @deepseek-ai/dsh-system-prompt
   */
  
@@ -409,6 +408,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
  import type { ContextSnapshotSection, ToolSchema } from '@deepseek-ai/dsh-llm'
 +import type { Branded } from '@deepseek-ai/dsh-brand'
 +
++// @meta-intent dsh-warm-minimal: stable model-input source provenance.
 +/** Stable Loader-tree identity for one configured plugin source. */
 +export type HostSourceId = Branded<'HostSourceId'>
 +
@@ -534,21 +534,23 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
  
  declare module '@deepseek-ai/cordis' {
    interface Context {
-@@ -106,6 +231,8 @@ export interface ToolProviderResult {
+@@ -105,6 +231,9 @@ export interface ToolProviderResult {
    readonly schemas: readonly ToolSchema[]
    /** The pre-restriction name universe for config validation (defaults to `schemas`' names). */
    readonly knownNames?: readonly string[]
++  // @meta-intent dsh-warm-minimal: per-schema source provenance.
 +  /** Source for every schema in the same order; omission attributes all schemas to the provider. */
 +  readonly sourceIds?: readonly HostSourceId[]
  }
  
  /**
-@@ -345,18 +472,28 @@ function interpolate(
+@@ -345,18 +474,29 @@ function interpolate(
    return result + text.slice(last)
  }
  
 -/** One tool-schema provider stored in a prompt layer. */
 -type ToolProvider = (context: AssembleContext) => ToolProviderResult
++// @meta-intent dsh-warm-minimal: source-aware prompt registries.
 +/** One tool-schema provider stored with its registration source. */
 +interface RegisteredToolProvider {
 +  readonly provide: (context: AssembleContext) => ToolProviderResult
@@ -577,7 +579,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
    readonly variables: NamedEntries<VariableProvider>
  
    /**
-@@ -381,6 +518,7 @@ class PromptLayer implements ScopeLayer {
+@@ -381,6 +521,7 @@ class PromptLayer implements ScopeLayer {
        && this.contexts.isEmpty()
        && this.runtimeContextSuppressors.isEmpty()
        && this.toolProviders.isEmpty()
@@ -585,7 +587,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
        && this.variables.isEmpty()
    }
  }
-@@ -435,7 +573,7 @@ export class SystemPrompt extends Service {
+@@ -435,7 +576,7 @@ export class SystemPrompt extends Service {
      }
      return this.layers.effect(
        this.ctx,
@@ -594,7 +596,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
        { label: 'systemPrompt.section()' },
      )
    }
-@@ -452,7 +590,7 @@ export class SystemPrompt extends Service {
+@@ -470,7 +611,7 @@ export class SystemPrompt extends Service {
      }
      return this.layers.effect(
        this.ctx,
@@ -603,7 +605,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
        { label: 'systemPrompt.context()' },
      )
    }
-@@ -481,11 +619,26 @@ export class SystemPrompt extends Service {
+@@ -499,11 +640,27 @@ export class SystemPrompt extends Service {
    tools(provider: (context: AssembleContext) => ToolProviderResult): () => void {
      return this.layers.effect(
        this.ctx,
@@ -613,6 +615,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
      )
    }
  
++  // @meta-intent dsh-warm-minimal: scoped model-source admission.
 +  /**
 +   * Register a model-source admission predicate in the calling context's
 +   * scope. Global and every matching scope-chain predicate run for every
@@ -631,10 +634,11 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
    /**
     * Register a prompt variable in the calling context's scope. Scoped values
     * shadow globals; invalid or duplicate names throw. A provider may return
-@@ -518,6 +671,17 @@ export class SystemPrompt extends Service {
+@@ -536,6 +693,18 @@ export class SystemPrompt extends Service {
    async assemble(context: AssembleContext = {}): Promise<PromptAssembly> {
      const scope = context.scope
      const scopeLayers = this.layers.chainLayers(scope)
++    // @meta-intent dsh-warm-minimal: pre-evaluation source admission.
 +    const sourceAdmissions = [
 +      ...this.layers.global.sourceAdmissions.values(),
 +      ...scopeLayers.flatMap(layer => [...layer.sourceAdmissions.values()]),
@@ -649,7 +653,7 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
      const runtimeContextSuppressed = !this.layers.global.runtimeContextSuppressors.isEmpty()
        || scopeLayers.some(layer => !layer.runtimeContextSuppressors.isEmpty())
      // Scoped variables shadow globals.
-@@ -542,41 +706,68 @@ export class SystemPrompt extends Service {
+@@ -560,41 +729,68 @@ export class SystemPrompt extends Service {
      const collected: ToolSchema[] = []
      const knownNames = new Set<string>()
      for (const provider of providers) {
@@ -735,345 +739,6 @@ index f0f07159712aa4f0caaf761c13493ad7f0b8ec07..e37ac0462a28060010b93f4b896a9aae
        tools: orderTools(collected, this.toolOrder, knownNames),
        variables,
      }
-diff --git a/packages/core/system-prompt/tests/provenance.spec.ts b/packages/core/system-prompt/tests/provenance.spec.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..383c267b29cbf93beae9a4d576a0f71fd556c1a1
---- /dev/null
-+++ b/packages/core/system-prompt/tests/provenance.spec.ts
-@@ -0,0 +1,333 @@
-+import { describe, expect, it } from 'vitest'
-+import { Context } from '@deepseek-ai/cordis'
-+import Loader from '@deepseek-ai/cordis-plugin-loader'
-+import { createScope } from '@deepseek-ai/dsh-scope'
-+import SystemPrompt, {
-+  UNKNOWN_HOST_SOURCE_ID,
-+  hostSourceId,
-+  hostSourceIdForEntry,
-+  isUnknownHostSourceId,
-+  promptAssemblySourceInventory,
-+} from '@deepseek-ai/dsh-system-prompt'
-+import type { AssembleContext, HostSourceId, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
-+
-+async function setup(): Promise<Context> {
-+  const ctx = new Context()
-+  await ctx.plugin(Loader)
-+  await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
-+  return ctx
-+}
-+
-+async function load(
-+  ctx: Context,
-+  builtin: string,
-+  plugin: ((ctx: Context) => void) & { inject?: string[] },
-+): Promise<HostSourceId> {
-+  ctx.loader.builtins[builtin] = plugin
-+  const id = await ctx.loader.create({ name: `cordis:${builtin}` })
-+  await ctx.loader.await()
-+  const fiber = ctx.loader.resolve(id).fiber
-+  if (fiber === undefined) throw new Error(`test Loader entry ${id} has no active fiber`)
-+  return hostSourceId(fiber.ctx)
-+}
-+
-+function sourceOf(assembly: PromptAssembly, kind: 'sections' | 'contexts' | 'tools', name: string): string | undefined {
-+  return promptAssemblySourceInventory(assembly)[kind].find(entry => entry.name === name)?.source
-+}
-+
-+describe('prompt assembly host provenance', () => {
-+  it('derives the same source before and after a Loader entry mounts', () => {
-+    const entry = { id: 'nested:tool', parent: { tree: { filename: '/presets/warm-minimal.cordis.yml' } } }
-+    const mounted = hostSourceId({
-+      fiber: {
-+        entry,
-+        parent: { fiber: undefined },
-+      },
-+    } as unknown as Context)
-+
-+    expect(hostSourceIdForEntry(entry)).toBe(mounted)
-+  })
-+
-+  it('separates file-backed trees while keeping each configured path stable', () => {
-+    const source = (filename: string): HostSourceId => hostSourceId({
-+      fiber: {
-+        entry: { id: 'same-row', parent: { tree: { filename } } },
-+        parent: { fiber: undefined },
-+      },
-+    } as unknown as Context)
-+
-+    expect(source('/presets/warm-minimal.cordis.yml')).toBe(source('/presets/warm-minimal.cordis.yml'))
-+    expect(source('/presets/warm-minimal.cordis.yml')).not.toBe(source('/presets/other.cordis.yml'))
-+    expect(source('/presets/warm-minimal.cordis.yml')).not.toContain('/presets/')
-+  })
-+
-+  it('keeps the configured entry path stable across fiber and process replacement', async () => {
-+    const first = await setup()
-+    const section = (text: string) => Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'owned', order: 1, text })
-+    }, { inject: ['systemPrompt'] })
-+    first.loader.builtins['provenance-first'] = section('first')
-+    await first.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-first' }])
-+    await first.loader.await()
-+    const firstSource = sourceOf(await first.systemPrompt.assemble(), 'sections', 'owned')
-+    expect(firstSource).toBeDefined()
-+
-+    first.loader.builtins['provenance-replacement'] = section('replacement')
-+    await first.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-replacement' }])
-+    await first.loader.await()
-+    expect(sourceOf(await first.systemPrompt.assemble(), 'sections', 'owned')).toBe(firstSource)
-+
-+    const second = await setup()
-+    second.loader.builtins['provenance-second-tree'] = section('second tree')
-+    await second.loader.root.update([{ id: 'same-row', name: 'cordis:provenance-second-tree' }])
-+    await second.loader.await()
-+    expect(sourceOf(await second.systemPrompt.assemble(), 'sections', 'owned')).toBe(firstSource)
-+
-+    const third = await setup()
-+    third.loader.builtins['provenance-distinct-row'] = section('distinct row')
-+    await third.loader.root.update([{ id: 'other-row', name: 'cordis:provenance-distinct-row' }])
-+    await third.loader.await()
-+    expect(sourceOf(await third.systemPrompt.assemble(), 'sections', 'owned')).not.toBe(firstSource)
-+  })
-+
-+  it('uses the winning global or scoped registration source after shadowing', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    const global = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'shared', order: 1, text: 'global' })
-+      inner.systemPrompt.context({ name: 'shared-context', order: 1, text: 'global' })
-+    }, { inject: ['systemPrompt'] })
-+    const globalSource = await load(ctx, 'provenance-global', global)
-+
-+    const scoped = Object.assign((inner: Context) => {
-+      const scope = createScope(inner, key)
-+      scope.ctx.systemPrompt.section({ name: 'shared', order: 1, text: 'scoped' })
-+      scope.ctx.systemPrompt.context({ name: 'shared-context', order: 1, text: 'scoped' })
-+    }, { inject: ['systemPrompt'] })
-+    const scopedSource = await load(ctx, 'provenance-scoped', scoped)
-+
-+    const globalAssembly = await ctx.systemPrompt.assemble()
-+    expect(sourceOf(globalAssembly, 'sections', 'shared')).toBe(globalSource)
-+    expect(sourceOf(globalAssembly, 'contexts', 'shared-context')).toBe(globalSource)
-+
-+    const scopedAssembly = await ctx.systemPrompt.assemble({ scope: key })
-+    expect(sourceOf(scopedAssembly, 'sections', 'shared')).toBe(scopedSource)
-+    expect(sourceOf(scopedAssembly, 'contexts', 'shared-context')).toBe(scopedSource)
-+  })
-+
-+  it('attributes every schema from a changing multi-tool provider', async () => {
-+    const ctx = await setup()
-+    let expanded = false
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.tools(() => ({
-+        schemas: [
-+          { name: 'alpha', description: 'a', parameters: {} },
-+          ...expanded ? [{ name: 'beta', description: 'b', parameters: {} }] : [],
-+        ],
-+      }))
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-dynamic-tools', plugin)
-+
-+    expect(promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools)
-+      .toEqual([{ name: 'alpha', source }])
-+    expanded = true
-+    expect(promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools)
-+      .toEqual([{ name: 'alpha', source }, { name: 'beta', source }])
-+  })
-+
-+  it('rejects source arrays that cannot correspond one-to-one with dynamic schemas', async () => {
-+    const ctx = await setup()
-+    const schema = { name: 'alpha', description: 'a', parameters: {} }
-+    const wrongLength = ctx.systemPrompt.tools(() => ({ schemas: [schema], sourceIds: [] }))
-+    await expect(ctx.systemPrompt.assemble()).rejects.toThrow('returned 1 schema(s) but 0 source id(s)')
-+    wrongLength()
-+
-+    ctx.systemPrompt.tools(() => ({
-+      schemas: [schema],
-+      sourceIds: [undefined as unknown as HostSourceId],
-+    }))
-+    await expect(ctx.systemPrompt.assemble()).rejects.toThrow('omitted the source id corresponding to schema "alpha"')
-+  })
-+
-+  it('marks unowned and listener-created entries unknown', async () => {
-+    const ctx = await setup()
-+    ctx.systemPrompt.section({ name: 'direct', order: 1, text: 'direct' })
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections.push({ name: 'listener', text: 'listener' })
-+      return next()
-+    })
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(sourceOf(assembly, 'sections', 'direct')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(sourceOf(assembly, 'sections', 'listener')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(isUnknownHostSourceId(UNKNOWN_HOST_SOURCE_ID)).toBe(true)
-+  })
-+
-+  it('keeps inventory queryable across waterfall next and object spread without serializing metadata', async () => {
-+    const ctx = await setup()
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'owned', order: 1, text: 'owned' })
-+      inner.systemPrompt.context({ name: 'owned-context', order: 1, text: 'owned' })
-+      inner.systemPrompt.tools(() => ({ schemas: [{ name: 'owned-tool', description: 'owned', parameters: {} }] }))
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-waterfall', plugin)
-+    let before: ReturnType<typeof promptAssemblySourceInventory> | undefined
-+    let after: ReturnType<typeof promptAssemblySourceInventory> | undefined
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      before = promptAssemblySourceInventory(assembly)
-+      const transformed = await next()
-+      after = promptAssemblySourceInventory(transformed)
-+      return {
-+        ...transformed,
-+        sections: transformed.sections.map(section => section.name === 'owned' ? { ...section } : section),
-+      }
-+    })
-+    ctx.on('system-prompt/assemble', async (_assembly, _context, next) => ({ ...await next() }))
-+
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(before?.sections.find(entry => entry.name === 'owned')?.source).toBe(source)
-+    expect(after?.contexts.find(entry => entry.name === 'owned-context')?.source).toBe(source)
-+    expect(sourceOf(assembly, 'sections', 'owned')).toBe(UNKNOWN_HOST_SOURCE_ID)
-+    expect(sourceOf(assembly, 'tools', 'owned-tool')).toBe(source)
-+    expect(Object.keys(assembly).sort()).toEqual(['contexts', 'sections', 'tools', 'variables'])
-+    expect(JSON.stringify(assembly)).not.toContain('loader-entry:')
-+    expect(Object.keys(assembly.tools[0] ?? {}).sort()).toEqual(['description', 'name', 'parameters'])
-+  })
-+
-+  it('restores a complete section with its registration source after the waterfall', async () => {
-+    const ctx = await setup()
-+    const plugin = Object.assign((inner: Context) => {
-+      inner.systemPrompt.section({ name: 'complete', order: 1, text: 'owned', complete: true })
-+    }, { inject: ['systemPrompt'] })
-+    const source = await load(ctx, 'provenance-complete', plugin)
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections = [{ name: 'replacement', text: 'replacement' }]
-+      return next()
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(assembly.sections).toEqual([{ name: 'complete', text: 'owned' }])
-+    expect(sourceOf(assembly, 'sections', 'complete')).toBe(source)
-+  })
-+
-+  it('excludes a child-only complete source before selection and provider evaluation', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    let child: ReturnType<typeof createScope> | undefined
-+    let completeCalls = 0
-+    const source = await load(ctx, 'provenance-complete-admission', Object.assign((inner: Context) => {
-+      child = createScope(inner, key)
-+      child.ctx.systemPrompt.section({
-+        name: 'child-complete',
-+        order: 1,
-+        text: () => { completeCalls += 1; return 'complete' },
-+        complete: true,
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    if (child === undefined) throw new Error('test child scope was not created')
-+    child.ctx.systemPrompt.admitSources((_context, candidate) => candidate.source !== source)
-+    ctx.systemPrompt.section({ name: 'ordinary', order: 2, text: 'ordinary' })
-+    ctx.on('system-prompt/assemble', async (assembly, _context, next) => {
-+      assembly.sections.push({ name: 'listener', text: 'listener' })
-+      return next()
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble({ scope: key })
-+    expect(completeCalls).toBe(0)
-+    expect(assembly.sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'ordinary',
-+      'listener',
-+    ])
-+  })
-+
-+  it('filters contexts and dynamic tool schemas by effective source before assembly', async () => {
-+    const ctx = await setup()
-+    let allowedCalls = 0
-+    const allowedSource = await load(ctx, 'provenance-admission-allowed', Object.assign((inner: Context) => {
-+      inner.systemPrompt.context({
-+        name: 'allowed-context',
-+        order: 1,
-+        text: () => { allowedCalls += 1; return 'allowed' },
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    let blockedCalls = 0
-+    const blockedSource = await load(ctx, 'provenance-admission-blocked', Object.assign((inner: Context) => {
-+      inner.systemPrompt.context({
-+        name: 'blocked-context',
-+        order: 2,
-+        text: () => { blockedCalls += 1; return 'blocked' },
-+      })
-+    }, { inject: ['systemPrompt'] }))
-+    ctx.systemPrompt.tools(() => ({
-+      schemas: [
-+        { name: 'allowed-tool', description: 'allowed', parameters: {} },
-+        { name: 'blocked-tool', description: 'blocked', parameters: {} },
-+      ],
-+      sourceIds: [allowedSource, blockedSource],
-+    }))
-+    const firstSeen: string[] = []
-+    const secondSeen: string[] = []
-+    const assemblyContext = { inventory: 'request' } as AssembleContext
-+    const seenContexts: AssembleContext[] = []
-+    ctx.systemPrompt.admitSources((context, candidate) => {
-+      seenContexts.push(context)
-+      firstSeen.push(`${candidate.kind}:${candidate.name}`)
-+      return candidate.source !== blockedSource
-+    })
-+    ctx.systemPrompt.admitSources((_context, candidate) => {
-+      secondSeen.push(`${candidate.kind}:${candidate.name}`)
-+      return true
-+    })
-+
-+    const assembly = await ctx.systemPrompt.assemble(assemblyContext)
-+    expect(assembly.contexts).toEqual([{ name: 'allowed-context', text: 'allowed' }])
-+    expect(assembly.tools.map(tool => tool.name)).toEqual(['allowed-tool'])
-+    expect(allowedCalls).toBe(1)
-+    expect(blockedCalls).toBe(0)
-+    expect(firstSeen).toContain('context:blocked-context')
-+    expect(firstSeen).toContain('tool:blocked-tool')
-+    expect(secondSeen).toEqual(firstSeen)
-+    expect(seenContexts.every(context => context === assemblyContext)).toBe(true)
-+    expect(Object.keys(assembly).sort()).toEqual(['contexts', 'sections', 'tools', 'variables'])
-+    expect(Object.keys(assembly.tools[0] ?? {}).sort()).toEqual(['description', 'name', 'parameters'])
-+    expect(JSON.stringify(assembly)).not.toContain('loader-entry:')
-+  })
-+
-+  it('composes global and scoped admissions and disposes each exact effect', async () => {
-+    const ctx = await setup()
-+    const key = {}
-+    let scope: ReturnType<typeof createScope> | undefined
-+    await ctx.plugin(Object.assign((inner: Context) => {
-+      scope = createScope(inner, key)
-+    }, { inject: ['systemPrompt'] }))
-+    if (scope === undefined) throw new Error('test scope was not created')
-+    ctx.systemPrompt.section({ name: 'global-denied', order: 1, text: 'global denied' })
-+    ctx.systemPrompt.section({ name: 'global-kept', order: 2, text: 'global kept' })
-+    scope.ctx.systemPrompt.section({ name: 'scoped-denied', order: 3, text: 'scoped denied' })
-+    const disposeGlobal = ctx.systemPrompt.admitSources((_context, candidate) => candidate.name !== 'global-denied')
-+    const disposeScoped = scope.ctx.systemPrompt.admitSources((_context, candidate) => candidate.name !== 'scoped-denied')
-+
-+    expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+    ])
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+    ])
-+
-+    disposeScoped()
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-kept',
-+      'scoped-denied',
-+    ])
-+    disposeGlobal()
-+    expect((await ctx.systemPrompt.assemble({ scope: key })).sections.map(section => section.name)).toEqual([
-+      'deployment:persona',
-+      'global-denied',
-+      'global-kept',
-+      'scoped-denied',
-+    ])
-+  })
-+})
 diff --git a/packages/core/system-prompt/tsconfig.json b/packages/core/system-prompt/tsconfig.json
 index 6fe8d764a35d6a5913a5241d411f422430bbcf8a..3a1151e3039c84c58655af8a2b42322a511fe86e 100644
 --- a/packages/core/system-prompt/tsconfig.json
@@ -1126,33 +791,21 @@ index 5f422dd848ee9a6e8e0afe96d3dd03238ecc3857..1df09e9fa6677570800efb8270874598
  
  ### 源码地图
  
-diff --git a/packages/core/tools/package.json b/packages/core/tools/package.json
-index 741d82cc10fc23e43e94da70f1f3aadb928c17dc..de9cb3d979cba5e76b07a54e13c6f3486a466b22 100644
---- a/packages/core/tools/package.json
-+++ b/packages/core/tools/package.json
-@@ -55,6 +55,7 @@
-     "@deepseek-ai/schemastery": "workspace:^"
-   },
-   "devDependencies": {
-+    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-     "@deepseek-ai/dsh-agent": "workspace:^",
-     "@deepseek-ai/dsh-code-runtime": "workspace:^",
-     "@deepseek-ai/dsh-invariants": "workspace:^",
 diff --git a/packages/core/tools/src/index.ts b/packages/core/tools/src/index.ts
-index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b2931141b0b 100644
+index 1e6d7c3bab080c3189681c8fd08d362632e5b7eb..446ea8a3a80820b11f98576b2878e48628af19da 100644
 --- a/packages/core/tools/src/index.ts
 +++ b/packages/core/tools/src/index.ts
-@@ -13,7 +13,8 @@ import { assertNever, deepFreeze, HarnessError } from '@deepseek-ai/dsh-llm'
+@@ -13,7 +13,8 @@ import { HarnessError } from '@deepseek-ai/dsh-llm'
  import type { Agent } from '@deepseek-ai/dsh-agent'
- import { snapshotJsonValue } from '@deepseek-ai/dsh-session'
- import type { JsonValue, UserMessage } from '@deepseek-ai/dsh-session'
--import { FIRST_PARTY_SECTION_ORDER, type ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
-+import { FIRST_PARTY_SECTION_ORDER, hostSourceId } from '@deepseek-ai/dsh-system-prompt'
+ import type { UserMessage } from '@deepseek-ai/dsh-session'
+ import { assertNever, deepFreeze, snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
+-import type { ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
++import { hostSourceId } from '@deepseek-ai/dsh-system-prompt'
 +import type { HostSourceId, ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
  import type { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
  // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
  // augmentation. The seam stays optional at runtime — see `serviceAsk`.
-@@ -695,12 +696,19 @@ interface CompiledToolRestriction {
+@@ -687,12 +688,20 @@ interface CompiledToolRestriction {
  interface ToolView {
    /** Visible definitions after restrictions, scoped shadowing, and transport insertion. */
    readonly visible: ReadonlyMap<string, ToolDefinition>
@@ -1164,6 +817,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
    readonly restrictableNames: ReadonlySet<string>
  }
  
++// @meta-intent dsh-warm-minimal: source-aware tool registrations.
 +interface RegisteredTool {
 +  readonly definition: ToolDefinition
 +  readonly source: HostSourceId
@@ -1172,7 +826,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
  /**
   * A monotonic execution guard evaluated after every `tools/pre-execute`
   * listener and before the tool body. Returning a reason denies the call;
-@@ -713,7 +721,7 @@ export type ToolGuard = (execution: Readonly<ToolExecution>) => string | undefin
+@@ -705,7 +714,7 @@ export type ToolGuard = (execution: Readonly<ToolExecution>) => string | undefin
  
  /** One scope's complete tool-registry contribution. */
  class ToolLayer implements ScopeLayer {
@@ -1181,7 +835,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
    readonly restrictions = new AnonymousEntries<CompiledToolRestriction>()
    readonly guards = new AnonymousEntries<ToolGuard>()
    /**
-@@ -818,9 +826,9 @@ export class ToolRuntime extends Service {
+@@ -810,9 +819,9 @@ export class ToolRuntime extends Service {
    private readonly maxParallelSubCalls: number
    /**
     * Reserved presentation transport, kept outside the filterable registration
@@ -1194,10 +848,11 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
     */
    private ptcTransport: ToolDefinition | undefined
  
-@@ -980,9 +988,21 @@ export class ToolRuntime extends Service {
+@@ -972,9 +981,22 @@ export class ToolRuntime extends Service {
    private wireSchemas(scope?: ScopeKey): ToolProviderResult {
      const view = this.view(scope)
      const mode = this.modeFor(scope)
++    // @meta-intent dsh-warm-minimal: preserve per-tool source correspondence.
 +    const visible = [...view.visible.entries()]
 +    const sourceOf = (name: string): HostSourceId => {
 +      const source = view.sources.get(name)
@@ -1218,7 +873,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
      }
      // Validate the runtime language BEFORE projecting schemas: schemaOf reads
      // run_code's language-aware description/parameters getters, whose own
-@@ -990,14 +1010,23 @@ export class ToolRuntime extends Service {
+@@ -982,14 +1004,23 @@ export class ToolRuntime extends Service {
      // renderer-table rejection the canonical assembly-time error for a
      // language with no SDK renderer.
      this.requireCodeRuntime(mode)
@@ -1245,16 +900,17 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
    }
  
    /**
-@@ -1055,7 +1084,7 @@ export class ToolRuntime extends Service {
+@@ -1047,7 +1078,8 @@ export class ToolRuntime extends Service {
      }
      return this.layers.effect(
        this.ctx,
 -      layer => layer.tools.insert(name, definition),
++      // @meta-intent dsh-warm-minimal: capture the owning Loader entry.
 +      layer => layer.tools.insert(name, { definition, source: hostSourceId(this.ctx) }),
        { label: 'tools.register()' },
      )
    }
-@@ -1157,27 +1186,32 @@ export class ToolRuntime extends Service {
+@@ -1149,27 +1181,33 @@ export class ToolRuntime extends Service {
      const own = this.layers.peek(scope)
      // Inherited surface, nearest ancestor last: a nearer scope's same-name
      // entry shadows a farther one, and the global layer is the farthest.
@@ -1266,6 +922,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
 +      for (const [name, registration] of layer.tools.entries()) inherited.set(name, registration)
      }
      const visible = new Map<string, ToolDefinition>()
++    // @meta-intent dsh-warm-minimal: resolve sources alongside winning definitions.
 +    const sources = new Map<string, HostSourceId>()
      const knownNames = new Set<string>()
      const restrictableNames = new Set<string>()
@@ -1293,7 +950,7 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
        }
      }
      // Presentation infrastructure is resolved last and outside capability
-@@ -1187,8 +1221,9 @@ export class ToolRuntime extends Service {
+@@ -1179,8 +1217,9 @@ export class ToolRuntime extends Service {
      // dispatch table because some other agent in the process presents it.
      if (this.modeFor(scope) !== 'native') {
        visible.set(RUN_CODE_NAME, this.requireCodeTransport())
@@ -1304,108 +961,11 @@ index 9513fe0a3c4ac1099b42514c9d4ed4ef2042a631..b66a724f8749038c9d811fb94dda3b29
    }
  
    /**
-diff --git a/packages/core/tools/tests/provenance.spec.ts b/packages/core/tools/tests/provenance.spec.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..7f0784204492827713c57c880e0cb34423b14248
---- /dev/null
-+++ b/packages/core/tools/tests/provenance.spec.ts
-@@ -0,0 +1,91 @@
-+import { describe, expect, it } from 'vitest'
-+import { Context } from '@deepseek-ai/cordis'
-+import Loader from '@deepseek-ai/cordis-plugin-loader'
-+import { createScope } from '@deepseek-ai/dsh-scope'
-+import SystemPrompt, {
-+  UNKNOWN_HOST_SOURCE_ID,
-+  hostSourceId,
-+  promptAssemblySourceInventory,
-+} from '@deepseek-ai/dsh-system-prompt'
-+import type { HostSourceId } from '@deepseek-ai/dsh-system-prompt'
-+import { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
-+import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtime'
-+import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@deepseek-ai/dsh-tools'
-+
-+function tool(name: string, description: string) {
-+  return defineTool({
-+    name,
-+    description,
-+    parameters: {},
-+    output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
-+    execute: () => Promise.resolve(description),
-+  })
-+}
-+
-+async function load(ctx: Context, builtin: string, plugin: ((ctx: Context) => void) & { inject?: string[] }): Promise<HostSourceId> {
-+  ctx.loader.builtins[builtin] = plugin
-+  const id = await ctx.loader.create({ name: `cordis:${builtin}` })
-+  await ctx.loader.await()
-+  const fiber = ctx.loader.resolve(id).fiber
-+  if (fiber === undefined) throw new Error(`test Loader entry ${id} has no active fiber`)
-+  return hostSourceId(fiber.ctx)
-+}
-+
-+class FakeRuntime extends CodeRuntime {
-+  readonly language = 'typescript'
-+  readonly isolation = 'fake'
-+
-+  run(_request: CodeRunRequest): Promise<CodeRunResult> {
-+    return Promise.resolve({ logs: [] })
-+  }
-+}
-+
-+describe('tool registration host provenance', () => {
-+  it('projects per-tool sources for multiple registrations and a scoped shadow', async () => {
-+    const ctx = new Context()
-+    await ctx.plugin(Loader)
-+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
-+    await ctx.plugin(ToolRuntime)
-+    const key = {}
-+    const global = Object.assign((inner: Context) => {
-+      inner.tools.register(tool('shared', 'global'))
-+      inner.tools.register(tool('global-only', 'global'))
-+    }, { inject: ['tools'] })
-+    const globalSource = await load(ctx, 'tool-source-global', global)
-+    const scoped = Object.assign((inner: Context) => {
-+      const scope = createScope(inner, key)
-+      scope.ctx.tools.register(tool('shared', 'scoped'))
-+      scope.ctx.tools.register(tool('scoped-only', 'scoped'))
-+    }, { inject: ['tools', 'systemPrompt'] })
-+    const scopedSource = await load(ctx, 'tool-source-scoped', scoped)
-+
-+    const globalInventory = promptAssemblySourceInventory(await ctx.systemPrompt.assemble()).tools
-+    expect(globalInventory).toEqual([
-+      { name: 'global-only', source: globalSource },
-+      { name: 'shared', source: globalSource },
-+    ])
-+    const scopedInventory = promptAssemblySourceInventory(await ctx.systemPrompt.assemble({ scope: key })).tools
-+    expect(scopedInventory).toEqual([
-+      { name: 'global-only', source: globalSource },
-+      { name: 'scoped-only', source: scopedSource },
-+      { name: 'shared', source: scopedSource },
-+    ])
-+  })
-+
-+  it('keeps PTC transport provenance non-wire without restoring native schemas', async () => {
-+    const ctx = new Context()
-+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
-+    await ctx.plugin(ToolRuntime, { mode: 'ptc' })
-+    await ctx.plugin(FakeRuntime)
-+    ctx.tools.register(tool('native-only', 'native'))
-+
-+    const assembly = await ctx.systemPrompt.assemble()
-+    expect(assembly.tools.map(schema => schema.name)).toEqual([RUN_CODE_NAME])
-+    expect(promptAssemblySourceInventory(assembly).tools).toEqual([
-+      { name: RUN_CODE_NAME, source: UNKNOWN_HOST_SOURCE_ID },
-+    ])
-+    expect(assembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('native-only')
-+    expect(Object.keys(assembly.tools[0] ?? {}).sort()).toEqual(['description', 'name', 'parameters'])
-+    expect(JSON.stringify(assembly)).not.toContain('host-source:')
-+  })
-+})
 diff --git a/packages/extensions/tool-cordis/src/api-catalog.ts b/packages/extensions/tool-cordis/src/api-catalog.ts
-index 8edd7adb9d450ac949734687587e31bd20d0c3ee..5498970f7a707e46211c096167d6ffb2f308c411 100644
+index 2d2ee971886b9d2ca9ff08c2fde2d960a1684a60..b6a8560a3496eaf68ccc29263d70ba84fddfb210 100644
 --- a/packages/extensions/tool-cordis/src/api-catalog.ts
 +++ b/packages/extensions/tool-cordis/src/api-catalog.ts
-@@ -2332,6 +2332,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
+@@ -2361,6 +2361,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
          parameters: [{ name: 'provider', description: 'evaluated for each assembly with its context.' }],
          returns: 'the exact Cordis effect disposer.',
        },
@@ -1418,7 +978,7 @@ index 8edd7adb9d450ac949734687587e31bd20d0c3ee..5498970f7a707e46211c096167d6ffb2
        {
          signature: 'variable(name: string, provider: (context: AssembleContext) => string | undefined): () => void',
          description: 'Register a prompt variable in the calling context\'s scope. Scoped values shadow globals; invalid or duplicate names throw. A provider may return `undefined`, but rendering a section that references that value then fails.',
-@@ -4082,6 +4088,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+@@ -4131,6 +4137,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
      name: 'GrantRecord',
      declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
    },
@@ -1429,7 +989,7 @@ index 8edd7adb9d450ac949734687587e31bd20d0c3ee..5498970f7a707e46211c096167d6ffb2
    {
      name: 'ImageAttachmentLimits',
      declaration: 'export interface ImageAttachmentLimits {\n    maxImageBytes: number;\n    maxImagesPerMessage: number;\n    maxMessageImageBytes: number;\n    maxImagePixels: number;\n    maxImageDimension: number;\n    mediaTypes: readonly ImageMediaType[];\n}',
-@@ -4470,6 +4480,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+@@ -4519,6 +4529,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
      name: 'ModelReasoningEffort',
      declaration: 'export interface ModelReasoningEffort {\n    readonly id: string;\n    readonly name: string;\n    readonly description?: string;\n}',
    },
@@ -1444,16 +1004,16 @@ index 8edd7adb9d450ac949734687587e31bd20d0c3ee..5498970f7a707e46211c096167d6ffb2
    {
      name: 'ObjectJsonSchema',
      declaration: 'export type ObjectJsonSchema = JsonSchemaNode & {\n    type: \'object\';\n};',
-@@ -5512,7 +5530,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+@@ -5577,7 +5595,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
    },
    {
      name: 'SystemPrompt',
--    declaration: 'export class SystemPrompt extends Service {\n    static Config: z<Config>;\n    constructor(ctx: Context, config: Config);\n    section(section: PromptSection): () => void;\n    context(context: PromptContext): () => void;\n    suppressRuntimeContext(): () => void;\n    tools(provider: (context: AssembleContext) => ToolProviderResult): () => void;\n    variable(name: string, provider: (context: AssembleContext) => string | undefined): () => void;\n    async assemble(context: AssembleContext = {}): Promise<PromptAssembly>;\n}',
-+    declaration: 'export class SystemPrompt extends Service {\n    static Config: z<Config>;\n    constructor(ctx: Context, config: Config);\n    section(section: PromptSection): () => void;\n    context(context: PromptContext): () => void;\n    suppressRuntimeContext(): () => void;\n    tools(provider: (context: AssembleContext) => ToolProviderResult): () => void;\n    admitSources(predicate: ModelSourceAdmissionPredicate): () => void;\n    variable(name: string, provider: (context: AssembleContext) => string | undefined): () => void;\n    async assemble(context: AssembleContext = {}): Promise<PromptAssembly>;\n}',
+-    declaration: 'export class SystemPrompt extends Service {\n    static Config: z<Config>;\n    constructor(ctx: Context, config: Config);\n    section(section: PromptSection): () => void;\n    getSectionOrder(name: PromptSectionOrderName): number;\n    getContextOrder(name: PromptContextOrderName): number;\n    context(context: PromptContext): () => void;\n    suppressRuntimeContext(): () => void;\n    tools(provider: (context: AssembleContext) => ToolProviderResult): () => void;\n    variable(name: string, provider: (context: AssembleContext) => string | undefined): () => void;\n    async assemble(context: AssembleContext = {}): Promise<PromptAssembly>;\n}',
++    declaration: 'export class SystemPrompt extends Service {\n    static Config: z<Config>;\n    constructor(ctx: Context, config: Config);\n    section(section: PromptSection): () => void;\n    getSectionOrder(name: PromptSectionOrderName): number;\n    getContextOrder(name: PromptContextOrderName): number;\n    context(context: PromptContext): () => void;\n    suppressRuntimeContext(): () => void;\n    tools(provider: (context: AssembleContext) => ToolProviderResult): () => void;\n    admitSources(predicate: ModelSourceAdmissionPredicate): () => void;\n    variable(name: string, provider: (context: AssembleContext) => string | undefined): () => void;\n    async assemble(context: AssembleContext = {}): Promise<PromptAssembly>;\n}',
    },
    {
      name: 'TableKeyOf',
-@@ -5732,7 +5750,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+@@ -5797,7 +5815,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
    },
    {
      name: 'ToolProviderResult',
@@ -1463,34 +1023,21 @@ index 8edd7adb9d450ac949734687587e31bd20d0c3ee..5498970f7a707e46211c096167d6ffb2
    {
      name: 'ToolRestriction',
 diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
-index 06d5d75a109ab21a16a98f6fcfdb7bbda4e33f7d..5b55f0c07d12f429353e1ac9aa0052bd4b6fc272 100644
+index 828cd5971a872fe362f0255a10547c08128c6a70..cff76598ce31beb26a6284a7da3b58e9a072867c 100644
 --- a/pnpm-lock.yaml
 +++ b/pnpm-lock.yaml
-@@ -4352,6 +4352,12 @@ importers:
+@@ -4526,6 +4526,9 @@ importers:
        '@deepseek-ai/cordis':
          specifier: workspace:^
          version: link:../../../vendor/cordis
-+      '@deepseek-ai/cordis-plugin-loader':
-+        specifier: workspace:^
-+        version: link:../../../vendor/loader
 +      '@deepseek-ai/dsh-brand':
 +        specifier: workspace:^
 +        version: link:../../util/brand
        '@deepseek-ai/dsh-invariants':
          specifier: workspace:^
          version: link:../../runtime-diagnostics/invariants
-@@ -4371,6 +4377,9 @@ importers:
-       '@deepseek-ai/cordis':
-         specifier: workspace:^
-         version: link:../../../vendor/cordis
-+      '@deepseek-ai/cordis-plugin-loader':
-+        specifier: workspace:^
-+        version: link:../../../vendor/loader
-       '@deepseek-ai/dsh-agent':
-         specifier: workspace:^
-         version: link:../agent
 diff --git a/scripts/gen-cordis-catalog.ts b/scripts/gen-cordis-catalog.ts
-index 1bae81253b379591a9fd3c1ceab627f8e859c7a8..3c0d2456691df4aa398f50fdcd484fdc96504302 100644
+index eaaccfcb201abff7f725df26b22c37ff294b8edc..f00c06fd228dea6159f33fc704855c49c60a6606 100644
 --- a/scripts/gen-cordis-catalog.ts
 +++ b/scripts/gen-cordis-catalog.ts
 @@ -492,6 +492,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
@@ -1499,10 +1046,10 @@ index 1bae81253b379591a9fd3c1ceab627f8e859c7a8..3c0d2456691df4aa398f50fdcd484fdc
    AssembleContext: 'system-prompt.md',
 +  ModelSourceAdmissionPredicate: 'system-prompt.md',
    PromptContext: 'system-prompt.md',
+   PromptContextOrderName: 'system-prompt.md',
    PromptSection: 'system-prompt.md',
-   SystemPrompt: 'system-prompt.md',
 diff --git a/scripts/type-equiv.manifest.json b/scripts/type-equiv.manifest.json
-index 3820d48ea4e314381a0ad60b37381fc8b8770d8e..aed4825fdbf1ad97d3d72aba17153a28e9d018e9 100644
+index 010c35a3285a33e148e66dfcf93f78e4ed9c9ee7..3a52462cf80ae14f1c257f43c7c7172192759d7b 100644
 --- a/scripts/type-equiv.manifest.json
 +++ b/scripts/type-equiv.manifest.json
 @@ -367,6 +367,31 @@

@@ -48,7 +48,7 @@ Prompt/context 与工具列表可以独立展开。每个 prompt/context 来源�
 前置条件：
 
 - Node.js `^22.19.0 || >=24.0.0`；
-- 一个与本插件目标版本兼容的 DeepSeek Harness Git checkout。
+- DeepSeek Harness `dsh-v0.1.2-alpha.2`，commit `0a53fb55bea101816fa226bb964ae2bed71c343b` 的 Git checkout。
 
 ```bash
 git clone https://github.com/sch246/dsh-warm-minimal.git
@@ -60,11 +60,11 @@ DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
 # powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-安装器先验证并应用 `patches/deepseek-harness.patch`，再安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。精确匹配 package 0.1 发行内容的旧 preset 会自动升级，旧 marker 下发生过任何内容修改的 preset 仍会停止并要求显式复核。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
+安装器先验证 checkout 的 alpha.2 commit，再验证并应用 `patches/deepseek-harness.patch`，然后安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。精确匹配 package 0.1 发行内容的旧 preset 会自动升级，旧 marker 下发生过任何内容修改的 preset 仍会停止并要求显式复核。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
 
 ## 实现
 
-- Host 为 prompt section、context 和单个 tool schema 提供不进入模型 wire 的稳定来源 ID。
+- alpha.2 Host 补丁只为 prompt section、context 和单个 tool schema 增加不进入模型 wire 的稳定来源 ID 与准入；工具执行、settings、agent 和 subagent 生命周期继续由 Harness 原生实现拥有。
 - `SystemPrompt.admitSources()` 在 complete prompt 选择和动态内容求值前执行来源准入；工具按 schema 独立过滤。
 - preset projection 把 package-owned roster 的相对 Loader entry ID 接到当前 preset 的完整前缀；顶层与 group 内 entry 都不依赖插件激活顺序，工具默认值仍精确到 entry ID 与工具名，不会隐式授予后来出现的新工具。
 - 运行时根据当前 agent 关系区分主代理与子代理，并在 assembly waterfall 后处理监听器新加入的未知来源。

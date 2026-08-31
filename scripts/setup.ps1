@@ -10,6 +10,7 @@ $DshHome = if ($env:DSH_HOME) { $env:DSH_HOME } else { Join-Path $env:USERPROFIL
 $Profile = if ($env:DSH_PROFILE) { $env:DSH_PROFILE } else { "web" }
 $CheckoutInput = if ($env:DSH_CHECKOUT) { $env:DSH_CHECKOUT } else { "/root/deepseek-harness" }
 $Patch = Join-Path $RepoDir "patches\deepseek-harness.patch"
+$TargetRevision = "0a53fb55bea101816fa226bb964ae2bed71c343b"
 $Src = Join-Path $RepoDir "presets\warm-minimal"
 $Dest = Join-Path $DshHome ".agent-presets\warm-minimal"
 $OwnerMarker = ".dsh-warm-minimal-owned"
@@ -53,6 +54,10 @@ $Checkout = $Checkout.Trim()
 $HarnessPackage = Join-Path $Checkout "package.json"
 if (-not (Test-Path $HarnessPackage) -or -not (Select-String -Quiet -SimpleMatch '"name": "@deepseek-ai/dsh-root"' $HarnessPackage)) {
     throw "setup: DSH_CHECKOUT is not a DeepSeek Harness repository: $Checkout"
+}
+$ActualRevision = (& git -C $Checkout rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $ActualRevision -cne $TargetRevision) {
+    throw "setup: unsupported DeepSeek Harness revision: $ActualRevision; this package targets dsh-v0.1.2-alpha.2 at $TargetRevision"
 }
 if (-not (Test-Path $Patch)) {
     throw "setup: package-owned Harness patch not found: $Patch"
