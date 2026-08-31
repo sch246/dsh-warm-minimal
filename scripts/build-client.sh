@@ -33,6 +33,12 @@ ensure_link "$ROOT/node_modules/react-dom" "$CHECKOUT/packages/client/ui-rendere
 ensure_link "$ROOT/node_modules/@types/react" "$CHECKOUT/packages/client/ui-renderer/node_modules/@types/react"
 ensure_link "$ROOT/node_modules/@types/react-dom" "$CHECKOUT/packages/client/ui-renderer/node_modules/@types/react-dom"
 ensure_link "$ROOT/node_modules/zod" "$CHECKOUT/packages/api/gateway/node_modules/zod"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-api-remotes" "$CHECKOUT/packages/api/remotes"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-locale" "$CHECKOUT/packages/client/locale"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-renderer" "$CHECKOUT/packages/client/ui-renderer"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-settings" "$CHECKOUT/packages/client/ui-settings"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-settings-plugins" "$CHECKOUT/packages/client/ui-settings-plugins"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-slots" "$CHECKOUT/packages/client/ui-slots"
 ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-primitives" "$ROOT/scripts/fixtures/ui-primitives"
 
 "$CHECKOUT/node_modules/.bin/tsc" -p "$ROOT/tsconfig.client.json"

@@ -1,5 +1,4 @@
 import Schema from '@deepseek-ai/schemastery'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { promptAssemblySourceInventory } from '@deepseek-ai/dsh-system-prompt'
 import { ASSIGNMENTS, DEFAULT_CONFIG, parseToolSchemaId } from './config.mjs'
 import { createWarmRuntime } from './runtime.mjs'
@@ -21,7 +20,7 @@ export const Config = Schema.object({
 
 /** Register the one settings authority and install the Host-plane runtime. */
 export function applyHost(ctx, config) {
-  const settings = ctx.settings.register(settingsNamespace('warm-minimal'), Config, {
+  const settings = ctx.settings.register('warm-minimal', Config, {
     base: config,
     applies: 'live',
   })
