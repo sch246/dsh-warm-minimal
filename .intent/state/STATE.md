@@ -1,6 +1,6 @@
 # DSH warm-minimal
 
-Status: draft configurable coordinator/worker realization. The v4-pro initial face, native bootstrap, per-tool role projection, one compact delegate, package-owned defaults, readable Plugins manager, and managed Host patch have source and local installation evidence. Durable AGENTS role separation remains unrealized, and LSP remains outside the worker-safe roster. The realization is not accepted and no accepted realization lock is selected.
+Status: draft configurable coordinator/worker intent awaiting a DeepSeek Harness alpha.2 realization. Earlier source and local installation evidence is historical; no realization has been installed or verified against `dsh-v0.1.2-alpha.2`. Durable AGENTS role separation remains unrealized, LSP remains outside the worker-safe roster, and no accepted realization lock is selected.
 
 ## Intent
 
@@ -46,9 +46,10 @@ The official Plugins settings page is the preferred configuration surface. A pac
 
 ## Resources
 
-- The target runtime is DeepSeek Harness. Baseline revision `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` supplied the inspected settings, Plugins-page slot, prompt assembly, tool registry, agent ownership, and subagent composition behavior. Local target revision `1f8dd5ef4b` contains the managed provenance and admission realization; neither revision is a compatibility ceiling.
+- The next target runtime is DeepSeek Harness `dsh-v0.1.2-alpha.2` at revision `0a53fb55bea101816fa226bb964ae2bed71c343b`. No realization has been installed or verified against this target.
+- Baseline revision `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` and local target revision `1f8dd5ef4b1dd2811b03ef3e1ce0e2bb0c7487cc` supplied earlier implementation evidence. They do not establish alpha.2 compatibility.
 - The public `dsh-warm-minimal` implementation at revision `9961118802c5dd8627aeb794c812b1f42ea6fbf3` is the stale 0.1 realization baseline. Its native bootstrap and two-tool first-face evidence remain useful, but its fixed post-bootstrap behavior is not current authority.
-- Plugin revision `c68ac911bcff544af6656625cfdf5d5921a43b81` is the current implementation evidence for the self-contained declaration-time roster, per-tool configurable role projection, readable atomic inventory Remote, Plugins manager, and exact package-owned preset lifecycle. Documentation and intent records may follow it without changing runtime semantics.
+- Plugin revision `c68ac911bcff544af6656625cfdf5d5921a43b81` is historical implementation evidence for the self-contained roster, per-tool configurable role projection, readable inventory, Plugins manager, and package-owned preset lifecycle. It is not a selected alpha.2 realization.
 - The user-generated local sessions cited by selected LOGs remain local behavioral evidence. Their raw tool output may contain unrelated machine details and must not become published package artifacts.
 - DSH owns session persistence, agent execution, settings persistence, model request assembly, tool execution, and transcript lifecycle. The package composes those capabilities and must not create shadow authorities for them.
 
@@ -90,12 +91,12 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - Hiding broad tools may not by itself cause delegation because the shared shell remains powerful. The default delegate description carries the role distinction; acceptance must measure actual delegation rather than infer it from schema counts.
 - Current DSH assemblies preserve contribution names but not stable owners. The target realization must add or derive an identity that survives reload and reports unknown sources without exposing internal metadata to the model.
 - Parent-scoped complete prompts and restrictions are inherited by in-process children and cannot be widened. A realization must avoid encoding the main-agent face as an irreversible ancestor restriction when child agents require a broader face.
-- Candidate `0.1.0-candidate.6` is stale because it realizes draft.8's fixed second-turn catalog, permanent complete sentence, prohibition on AGENTS/skills/delegation, and zero-Host-modification rule. Its bootstrap evidence remains historical. The current local implementation realizes this STATE in source but is not an accepted candidate because live installation and observed request-header verification have not been authorized or completed.
+- Candidate `0.1.0-candidate.6` is stale because it realizes draft.8's fixed second-turn catalog, permanent complete sentence, prohibition on AGENTS/skills/delegation, and zero-Host-modification rule. Its bootstrap evidence remains historical. The earlier local implementation is not a current candidate; alpha.2 installation and request-header verification remain unperformed.
 - Host intrusion is a target realization choice, not a semantic coupling. Nearby purpose comments make ownership discoverable; the realization LOCK and current drift evidence govern maintenance and removal.
 - Copying selected DSH roster rows is deliberate duplication that buys semantic independence from Standard. Maintenance must compare and choose updates explicitly rather than treating Standard drift as warm behavior.
 - `agent-instructions` injects durable user-role messages outside the current system-prompt source inventory. Until Host model-input admission covers those messages, parent and child AGENTS content remains shared in effect; the settings inventory must not present a role split that runtime cannot enforce.
 - The current stdio LSP provider has no sandbox confinement. LSP remains outside the worker-safe default roster until a complete restricted provider is available and explicitly selected.
 - The current realization exposes one compact delegate plus the control and listing capability required to manage delegated work; worker children do not receive those coordination schemas.
 - Package-preset projection gives known defaults to package-owned entries but does not classify every DSH Host-global model-input source. A DSH-owned source is not semantically unknown merely because it was registered outside the warm preset.
-- The local Web profile links the source package and uses the exact package-owned 0.2 preset. Cold-browser evidence covers the Plugins editor and default assignment distribution after restart; provider request headers and actual delegation behavior remain separate acceptance evidence.
+- Earlier local Web evidence covers the Plugins editor and default assignment distribution on its recorded target only. Alpha.2 composed configuration, cold-browser behavior, provider request headers, actual delegation, persistence and resume behavior, and uninstall ownership remain unobserved.
 - The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; local locks are realizations of `dsh-warm-minimal` only.
