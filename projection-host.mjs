@@ -1,5 +1,5 @@
 import Schema from '@deepseek-ai/schemastery'
-import { hostSourceIdForEntry, PERSONA_ORDER } from '@deepseek-ai/dsh-system-prompt'
+import { hostSourceIdForEntry } from '@deepseek-ai/dsh-system-prompt'
 import { applyPresetProjection } from './projection.mjs'
 
 export const name = 'dsh-warm-minimal-roster-projection'
@@ -13,7 +13,7 @@ export const Config = Schema.object({
 export function apply(ctx, config) {
   ctx.effect(() => ctx.systemPrompt.section({
     name: 'dsh-warm-minimal:worker-persona',
-    order: PERSONA_ORDER,
+    order: ctx.systemPrompt.getSectionOrder('DEPLOYMENT_PERSONA'),
     text: config.workerPersona,
   }), 'dsh-warm-minimal: child-only worker persona')
   return applyPresetProjection(ctx, {
