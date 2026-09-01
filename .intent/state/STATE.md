@@ -1,6 +1,6 @@
 # DSH warm-minimal
 
-Status: draft configurable coordinator/worker intent awaiting a DeepSeek Harness alpha.2 realization. Earlier source and local installation evidence is historical; no realization has been installed or verified against `dsh-v0.1.2-alpha.2`. Durable AGENTS role separation remains unrealized, LSP remains outside the worker-safe roster, and no accepted realization lock is selected.
+Status: draft configurable coordinator/worker intent with an installed DeepSeek Harness alpha.2 candidate awaiting complete real-machine observation and user acceptance. Earlier source and installation evidence remains historical. Durable AGENTS role separation remains unrealized, LSP remains outside the worker-safe roster, and no accepted realization lock is selected.
 
 ## Intent
 
@@ -46,7 +46,7 @@ The official Plugins settings page is the preferred configuration surface. A pac
 
 ## Resources
 
-- The next target runtime is DeepSeek Harness `dsh-v0.1.2-alpha.2` at revision `0a53fb55bea101816fa226bb964ae2bed71c343b`. No realization has been installed or verified against this target.
+- The current target runtime is DeepSeek Harness `dsh-v0.1.2-alpha.2` at revision `0a53fb55bea101816fa226bb964ae2bed71c343b`. A candidate is installed, but complete browser behavior, provider request headers, persistence, resume, uninstall ownership, and user acceptance remain pending.
 - Baseline revision `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` and local target revision `1f8dd5ef4b1dd2811b03ef3e1ce0e2bb0c7487cc` supplied earlier implementation evidence. They do not establish alpha.2 compatibility.
 - The public `dsh-warm-minimal` implementation at revision `9961118802c5dd8627aeb794c812b1f42ea6fbf3` is the stale 0.1 realization baseline. Its native bootstrap and two-tool first-face evidence remain useful, but its fixed post-bootstrap behavior is not current authority.
 - Plugin revision `c68ac911bcff544af6656625cfdf5d5921a43b81` is historical implementation evidence for the self-contained roster, per-tool configurable role projection, readable inventory, Plugins manager, and package-owned preset lifecycle. It is not a selected alpha.2 realization.
@@ -98,5 +98,5 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - The current stdio LSP provider has no sandbox confinement. LSP remains outside the worker-safe default roster until a complete restricted provider is available and explicitly selected.
 - The current realization exposes one compact delegate plus the control and listing capability required to manage delegated work; worker children do not receive those coordination schemas.
 - Package-preset projection gives known defaults to package-owned entries but does not classify every DSH Host-global model-input source. A DSH-owned source is not semantically unknown merely because it was registered outside the warm preset.
-- Earlier local Web evidence covers the Plugins editor and default assignment distribution on its recorded target only. Alpha.2 composed configuration, cold-browser behavior, provider request headers, actual delegation, persistence and resume behavior, and uninstall ownership remain unobserved.
+- Earlier local Web evidence covers the Plugins editor and default assignment distribution on its recorded target only. The alpha.2 candidate has loaded in the running Web application, but complete cold-browser behavior, provider request headers, actual delegation, persistence and resume behavior, and uninstall ownership remain unobserved.
 - The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; local locks are realizations of `dsh-warm-minimal` only.
