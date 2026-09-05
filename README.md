@@ -43,24 +43,9 @@ Web UI 的 **设置 → 插件 → Warm minimal** 保留一个紧凑摘要卡；
 
 Prompt/context 与工具列表可以独立展开。每个 prompt/context 来源和每个单独工具 schema 都使用三个并列的单选项选择 `仅主代理`、`仅子代理` 或 `通用`，不使用下拉框；一个 provider 提供的多个工具仍各占一行、各自保存。工具行突出模型可见的工具名与说明预览，完整 provider source 只在展开详情中显示。保存值只包含 bootstrap 三项、稳定 prompt source ID 映射和绑定 `provider source + tool name` 的稳定 tool-schema ID 映射。已知项目的默认值由运行时 roster 的同一解析器提供，未知项目才回落为 `仅子代理`。来源名称、工具说明和其它 inventory 元数据由 Host 只读查询返回，不会被浏览器草稿写回配置。
 
-## 安装
+## 安装与维护
 
-前置条件：
-
-- Node.js `^22.19.0 || >=24.0.0`；
-- DeepSeek Harness `dsh-v0.1.2-alpha.2`，commit `0a53fb55bea101816fa226bb964ae2bed71c343b` 的 Git checkout。
-
-```bash
-git clone https://github.com/sch246/dsh-warm-minimal.git
-cd dsh-warm-minimal
-DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
-
-# Windows PowerShell:
-# $env:DSH_CHECKOUT = "C:\path\to\deepseek-harness"
-# powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
-```
-
-安装器先验证 checkout 的 alpha.2 commit，再验证并应用 `patches/deepseek-harness.patch`，然后安装 package-owned preset 并注册插件。补丁已经存在时不会重复应用；目标源码发生漂移且无法精确应用时会停止。精确匹配 package 0.1 发行内容的旧 preset 会自动升级，旧 marker 下发生过任何内容修改的 preset 仍会停止并要求显式复核。脚本不安装依赖、不构建 Harness，也不重启服务，完成后应按部署自己的流程构建并重启。
+构建顺序、profile 安装、Host 补丁与 preset 所有权、升级适配、卸载和验证入口见 [STATE 安装维护地图](.intent/state/STATE.md#installation-and-maintenance-map)。当前安装器只接受它声明的 alpha.2 commit；目标升级时先核实上游能力，再维护或移除相应补丁。安装器输出成功不等于 profile 已完整安装或运行效果已验证。
 
 ## 实现
 
@@ -70,30 +55,6 @@ DSH_CHECKOUT=/root/deepseek-harness bash scripts/setup.sh
 - 运行时根据当前 agent 关系区分主代理与子代理，并在 assembly waterfall 后处理监听器新加入的未知来源。
 - Plugins 配置卡通过 Typert Remote 做 scope-only assembly，读取 inventory 时不创建 session、turn 或模型请求。
 - bootstrap 的消息 ID 使用 `dsh-warm-minimal:bootstrap:` 前缀；Chat、Trajectory、持久化与恢复沿用 Harness 原生事件顺序。
-
-## 开发与聚焦验证
-
-```bash
-bash scripts/build-host.sh
-bash scripts/build-client.sh
-node --test \
-  tests/index.test.mjs \
-  tests/roster.test.mjs \
-  tests/remote.test.mjs \
-  tests/client/controller.test.mjs \
-  tests/client/component.test.mjs \
-  tests/lifecycle.test.mjs
-```
-
-这些测试只覆盖当前主线：bootstrap 与角色可见性、独立 roster、只读 inventory、官方 Plugins 配置卡，以及 Host 补丁安装/卸载生命周期。
-
-## 卸载
-
-```bash
-DSH_CHECKOUT=/root/deepseek-harness bash scripts/uninstall.sh
-```
-
-卸载器只有在能够证明目标源码仍与 package-owned 补丁精确匹配时才会反向应用补丁；发生漂移时会在移除插件和 preset 前停止。它不会删除不能证明属于本包的内容，也不会重启服务。
 
 ## 数据与限制
 

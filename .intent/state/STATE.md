@@ -1,6 +1,6 @@
 # DSH warm-minimal
 
-Status: draft configurable coordinator/worker intent with an installed DeepSeek Harness alpha.2 candidate awaiting complete real-machine observation and user acceptance. Earlier source and installation evidence remains historical. Durable AGENTS role separation remains unrealized, LSP remains outside the worker-safe roster, and no accepted realization lock is selected.
+Status: draft configurable coordinator/worker intent. Earlier records report an installed alpha.2 candidate; they do not establish the current deployment or complete acceptance. Durable AGENTS role separation remains unrealized in the recorded implementation, LSP remains outside its worker-safe roster, and no accepted realization lock is selected.
 
 ## Intent
 
@@ -44,14 +44,82 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - `WARM-013`: Installation, maintenance, and uninstall preserve unrelated profile, preset, session, source, and generated changes. A realization that modifies shared Harness source marks every managed region with nearby `@meta-intent` ownership comments, records exact target identity and paths, regenerates affected artifacts, stops on owned-region drift, and removes only effects still proven package-owned.
 - `WARM-014`: The warm mode's known roster is package-owned and self-contained. It has no preset inheritance, runtime composition, or implicit update dependency on Standard. Copied DSH rows and source defaults change only through an explicit package revision whose target compatibility is revalidated.
 
-## Resources
+## Installation and maintenance map
 
-- The current target runtime is DeepSeek Harness `dsh-v0.1.2-alpha.2` at revision `0a53fb55bea101816fa226bb964ae2bed71c343b`. A candidate is installed, but complete browser behavior, provider request headers, persistence, resume, uninstall ownership, and user acceptance remain pending.
-- Baseline revision `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` and local target revision `1f8dd5ef4b1dd2811b03ef3e1ce0e2bb0c7487cc` supplied earlier implementation evidence. They do not establish alpha.2 compatibility.
-- The public `dsh-warm-minimal` implementation at revision `9961118802c5dd8627aeb794c812b1f42ea6fbf3` is the stale 0.1 realization baseline. Its native bootstrap and two-tool first-face evidence remain useful, but its fixed post-bootstrap behavior is not current authority.
-- Plugin revision `c68ac911bcff544af6656625cfdf5d5921a43b81` is historical implementation evidence for the self-contained roster, per-tool configurable role projection, readable inventory, Plugins manager, and package-owned preset lifecycle. It is not a selected alpha.2 realization.
-- The user-generated local sessions cited by selected LOGs remain local behavioral evidence. Their raw tool output may contain unrelated machine details and must not become published package artifacts.
-- DSH owns session persistence, agent execution, settings persistence, model request assembly, tool execution, and transcript lifecycle. The package composes those capabilities and must not create shadow authorities for them.
+Read this STATE for the required effects and acceptance. `STATE.json` selects Protocol 0.2 and records historical resource identities; selected LOGs explain the relevant user decisions and failed approaches. No current realization lock is selected. Old bundles in `.intent/locks/` are optional recovery evidence and must not restore the superseded fixed second-turn roster or no-Host-change rule.
+
+### Current sources and ownership
+
+| Concern | Current owner and entry |
+| --- | --- |
+| Host registration, settings, bootstrap and phase projection | [index.mjs](../../index.mjs), [host.mjs](../../host.mjs), [runtime.mjs](../../runtime.mjs), [config.mjs](../../config.mjs) |
+| Self-contained capability roster and source defaults | [presets/warm-minimal](../../presets/warm-minimal), [projection-host.mjs](../../projection-host.mjs), [projection.mjs](../../projection.mjs) |
+| Read-only inventory and Plugins editor | [src/remote.ts](../../src/remote.ts), [src/client](../../src/client), Host settings namespace `warm-minimal` |
+| Profile membership and browser entry | [package.json](../../package.json), [cordis.patch.yml](../../cordis.patch.yml); Host row `native-bootstrap-host`, package `dsh-warm-minimal` |
+| Host changes and exact application/removal | [patches/deepseek-harness.patch](../../patches/deepseek-harness.patch), [scripts/setup.sh](../../scripts/setup.sh), [scripts/uninstall.sh](../../scripts/uninstall.sh), corresponding `.ps1` scripts |
+| Generated package outputs | `lib/remote.js`, `lib/typert.*`, declarations and `lib/client.js`, produced by [build-host.sh](../../scripts/build-host.sh) then [build-client.sh](../../scripts/build-client.sh) |
+
+The checked installer and uninstaller require Harness HEAD exactly `0a53fb55bea101816fa226bb964ae2bed71c343b` (`dsh-v0.1.2-alpha.2`). This is a limit of these scripts, not a requirement that the product stay on alpha.2. The patch changes system-prompt/tool provenance and admission, their package/compiler declarations, Cordis catalog sources/output, dependency lockfile and associated documentation. Inspect its complete file list and hunks before applying or removing it; nearby `@meta-intent` comments identify managed code. There is no separate installation receipt in the current scripts. A marker alone does not prove that later upstream or third-party code belongs to this package.
+
+The installed preset is `$DSH_HOME/.agent-presets/warm-minimal`, copied from the package with `.dsh-warm-minimal-owned`. The current marker is `dsh-warm-minimal@0.2.0`. Setup recognizes the exact 0.1 preset bytes for automatic upgrade; modified or unowned presets require a reviewed ownership/content decision. `DSH_WARM_ADOPT_PRESET` and `DSH_WARM_REPLACE_DRIFTED_PRESET` are explicit override switches, not normal update flags. Preserve Host settings, sessions and raw local evidence; none are plugin build output or material to publish.
+
+### Prepare, install and activate
+
+Use an isolated candidate checkout and private `DSH_HOME` with the intended deployment’s package set for first install or changed composition. The runtime must meet [package.json](../../package.json) engines and the target Harness requirements. Set absolute paths explicitly; `DSH_PROFILE` defaults to `web` and `DSH_HOME` to the OS home’s `.dsh` in the scripts.
+
+```bash
+export DSH_CHECKOUT=/absolute/path/to/deepseek-harness
+export DSH_HOME=/absolute/path/to/dsh-home
+export DSH_PROFILE=web
+PLUGIN=/absolute/path/to/dsh-warm-minimal
+cd "$PLUGIN"
+bash scripts/setup.sh
+# After patch application, prepare the selected Harness dependencies/artifacts:
+cd "$DSH_CHECKOUT"
+pnpm install
+pnpm run build
+cd "$PLUGIN"
+bash scripts/build-host.sh
+bash scripts/build-client.sh
+# Explicit registration also completes setup when no global dsh was available:
+cd "$DSH_CHECKOUT"
+pnpm dsh plugin --profile "$DSH_PROFILE" add "$PLUGIN"
+pnpm dsh plugin --profile "$DSH_PROFILE" why dsh-warm-minimal
+pnpm dsh --profile "$DSH_PROFILE" --dump-config
+```
+
+Read the target checkout’s `docs/development.md` and `apps/cli/reference/README.md` before running its build/profile commands. Host build must provide the Typert generator and peer artifacts before the package Host build; package Host generation precedes Client compilation. The build scripts link into the selected Harness and generate local outputs, so rebuilding a live linked checkout may be observed by its running client. These are realization commands, not checks run for this documentation change.
+
+Setup applies the exact patch, copies the preset, then calls a global `dsh plugin … add .` if `dsh` is available on PATH. Verify that executable belongs to the intended Harness before relying on it. Without it, setup can finish after patch/preset writes while only printing a manual registration instruction. A later failure can also leave earlier writes in place; setup is not an atomic transaction across Host, preset and profile. Its final message is not proof of a complete installation. The source launcher above completes the profile transaction on the selected checkout; do not hand-edit Bundle membership.
+
+After registration, inspect `$DSH_HOME/profiles/$DSH_PROFILE/package.json`, `pnpm-lock.yaml`, resolved `node_modules/dsh-warm-minimal`, and `dsh.profile.bundles`, plus the composed config. Require the intended package path and exactly one Host row. Compare the installed preset with the source; a fresh browser bundle cannot repair a stale copied preset. Later profile/home patches replace complete config values, so retain unrelated overrides. Neither setup nor builds restart a service. Activate only under the operation’s existing authorization, then select `温暖极简模式` and cold-load the Plugins editor; one client boot entry and a loaded script are startup evidence only.
+
+Windows uses `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1` and the corresponding `uninstall.ps1`, with the same environment variables and pinned target. Package build entry points remain Bash scripts. The PowerShell setup does not explicitly reject a nonzero native `dsh` registration exit, making the profile checks necessary even when it prints completion. Do not infer Windows end-to-end compatibility from the presence of those wrappers.
+
+### Adapt after a Harness change
+
+Compare the new target’s stable source identity, prompt/context admission, per-tool schema projection, settings/Remote APIs, preset composition and agent/inbox lifecycle with WARM acceptance. When upstream already provides an effect, adapt the plugin to that API and retire the corresponding patch hunk and generated derivative; do not claim upstream source as package-owned because an old patch or comment names it. When a required effect has no native extension, a package-owned Host change remains permitted: identify the missing effect, mark maintained source regions, retain attributable revision/path evidence, update forward/removal scripts and regenerate affected artifacts. A successful `git apply --check` alone does not establish continued behavior or ownership.
+
+The current installer refuses a different HEAD even if the patch would apply. Update the supported target, patch and lifecycle verification together after investigation; bypassing that guard or blindly reversing the historical patch is not an adaptation. Review new Standard roster entries deliberately, copying only desired worker-safe capabilities into the package rather than adding a runtime inheritance dependency. Preserve saved per-schema assignments and the user’s prompt values through any identity/API transition.
+
+### Verification and removal
+
+After building the relevant package faces, run the focused checks from this repository:
+
+```bash
+node --test tests/index.test.mjs tests/roster.test.mjs tests/remote.test.mjs tests/client/controller.test.mjs tests/client/component.test.mjs tests/lifecycle.test.mjs
+```
+
+Use WARM-001–014 for runtime acceptance: inspect actual bootstrap, normal-parent and child request headers; test bootstrap off, mode changes, multiple held inputs and failure restoration; test two tools from one provider with different assignments, unknown inputs and an explicitly formed hidden-tool call. Cold-load the real Plugins editor, save/reload settings, and check persistence/resume and actual delegation. Run focused Harness tests for any changed source/lifecycle API. Build, structural validation, schema counts and historical reasoning-style observations do not establish this acceptance.
+
+Before removal, leave active sessions/settings intact and inspect patch/preset ownership and drift. With the matching global `dsh` on PATH and the same environment variables:
+
+```bash
+cd "$PLUGIN"
+bash scripts/uninstall.sh
+```
+
+Uninstall requires the pinned Harness HEAD, an exactly owned current preset and an exactly removable or absent patch. It checks these before calling `dsh plugin --profile "$DSH_PROFILE" remove dsh-warm-minimal`, then reverses the patch if present and removes the preset. It refuses missing `dsh`; direct Bundle removal alone does not remove Host changes or the preset. Drift or a partially removed deployment needs ownership investigation, preserving unrelated edits and reconciling remaining owned effects. Rebuild the affected Harness artifacts after source removal and verify profile resolution/Bundle absence, preset removal and absence of the browser contribution after authorized activation. Ordinary modes, unrelated plugins, settings and sessions must remain usable.
 
 ## Constraints and permissions
 
@@ -60,8 +128,7 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - Model visibility is not execution authority. The package may project different schemas to main and child agents but must leave ordinary sandbox, permission, approval, validation, and tool execution ownership intact.
 - Unknown sources default to child-only. Missing source identity, ambiguous ownership, or conflicting saved assignments fail closed for main-agent visibility rather than using filesystem, registration, or discovery order.
 - Tool settings use stable per-schema contribution identities. A new tool under a known provider receives no provider-wide privilege; malformed or legacy provider-scoped tool assignment keys fail loud rather than being guessed or expanded against the current inventory.
-- Harness source changes are permitted when needed to realize stable source identity, role-aware assembly, official settings UI, or lifecycle support. Shared-source regions require nearby meta-intent markers plus LOCK/receipt evidence; generated outputs are traced to their maintained sources.
-- Installing into or restarting a live profile, publishing, pushing, changing remotes, adopting a realization, or changing external services requires authority for that operation. The user has not accepted a realization through this STATE revision.
+- Harness source changes are permitted when needed to realize stable source identity, role-aware assembly, official settings UI, or lifecycle support. Shared-source regions require nearby meta-intent markers and attributable ownership evidence; generated outputs are traced to their maintained sources. A retained realization lock may preserve that evidence but is not required to discover or reconstruct the desired behavior.
 - Verification defaults to focused checks that directly distinguish the requested product behavior from plausible failures. Repository-wide, coverage, documentation-site, and peripheral suites run only when a demonstrated mainline benefit or explicit user request justifies them.
 - Supported realizations declare and verify their runtime requirements. Credentials and raw private session data never enter LOG, STATE, LOCK, source, tests, or browser configuration payloads.
 
@@ -77,26 +144,11 @@ The official Plugins settings page is the preferred configuration surface. A pac
 - Depending on the Standard preset for the warm roster, defaults, source inventory, or update behavior.
 - Reproducing the stale 0.1 realization byte-for-byte when another realization satisfies current acceptance more safely.
 
-## Implementation hints
+## Known limits and decisions
 
-- A package-owned capability roster with role-aware provider-request projection is a closer substrate than a minimal preset that never mounted those capabilities. Keep one resolved assignment model and derive both main and child views from it.
-- The `system-prompt/assemble` waterfall already permits model-visible filtering without changing executable lookup. Stable contribution identity and a configuration inventory may require Host metadata retained alongside model-facing sections, contexts, and tool schemas.
-- Runtime ownership and durable lineage answer different questions. Role projection should use the live agent relation for active requests and durable, logged configuration/phase facts for resume rather than inferring ownership from one field.
-- A browser client can contribute a card to the official Plugins settings page while the Host settings namespace remains the persistence authority. Dynamic inventory belongs to a Host query or descriptor, not browser local storage.
-- Default guidance should remain short enough to preserve the intended minimal coordinator face. Delegation behavior and v4-pro response quality require model-visible request-header evidence rather than documentation-only acceptance.
-
-## Known tensions and decisions
-
-- The exact initial face remains a user-selected requirement even though prior donor evidence suggests reasoning effort can also influence `We need` versus `Let me` behavior. Evidence must keep those variables distinct.
-- Hiding broad tools may not by itself cause delegation because the shared shell remains powerful. The default delegate description carries the role distinction; acceptance must measure actual delegation rather than infer it from schema counts.
-- Current DSH assemblies preserve contribution names but not stable owners. The target realization must add or derive an identity that survives reload and reports unknown sources without exposing internal metadata to the model.
-- Parent-scoped complete prompts and restrictions are inherited by in-process children and cannot be widened. A realization must avoid encoding the main-agent face as an irreversible ancestor restriction when child agents require a broader face.
-- Candidate `0.1.0-candidate.6` is stale because it realizes draft.8's fixed second-turn catalog, permanent complete sentence, prohibition on AGENTS/skills/delegation, and zero-Host-modification rule. Its bootstrap evidence remains historical. The earlier local implementation is not a current candidate; alpha.2 installation and request-header verification remain unperformed.
-- Host intrusion is a target realization choice, not a semantic coupling. Nearby purpose comments make ownership discoverable; the realization LOCK and current drift evidence govern maintenance and removal.
-- Copying selected DSH roster rows is deliberate duplication that buys semantic independence from Standard. Maintenance must compare and choose updates explicitly rather than treating Standard drift as warm behavior.
-- `agent-instructions` injects durable user-role messages outside the current system-prompt source inventory. Until Host model-input admission covers those messages, parent and child AGENTS content remains shared in effect; the settings inventory must not present a role split that runtime cannot enforce.
-- The current stdio LSP provider has no sandbox confinement. LSP remains outside the worker-safe default roster until a complete restricted provider is available and explicitly selected.
-- The current realization exposes one compact delegate plus the control and listing capability required to manage delegated work; worker children do not receive those coordination schemas.
-- Package-preset projection gives known defaults to package-owned entries but does not classify every DSH Host-global model-input source. A DSH-owned source is not semantically unknown merely because it was registered outside the warm preset.
-- Earlier local Web evidence covers the Plugins editor and default assignment distribution on its recorded target only. The alpha.2 candidate has loaded in the running Web application, but complete cold-browser behavior, provider request headers, actual delegation, persistence and resume behavior, and uninstall ownership remain unobserved.
-- The selected Protocol 0.2 lock is owned by the external `meta-intent` package identified in `STATE.json`; local locks are realizations of `dsh-warm-minimal` only.
+- The exact initial prompt and two-tool face remain user-selected even though earlier donor evidence also implicated reasoning effort. Actual delegation and response quality need provider-request and behavioral evidence; hiding broad tool schemas alone does not force delegation while the shared shell remains powerful.
+- The recorded implementation admits system-prompt/context and tool schemas but does not role-filter durable AGENTS user messages. It must not present AGENTS as independently assignable until the target’s durable model-input admission enforces it. This remains a missing part of WARM-006/009, not a reason to narrow their source-family coverage.
+- Known defaults cover package-owned preset entries; Host-global DSH inputs still need classification. A DSH-owned source is not semantically unknown merely because it comes from outside the warm preset.
+- Parent-scoped complete prompts/restrictions inherited by children cannot be widened there. Any new realization must preserve the child’s broader face across the target’s actual inheritance model.
+- The recorded stdio LSP provider has no sandbox confinement and remains excluded from the worker-safe default roster. Include language tooling only when a suitable restricted provider exists; do not claim the requested execution roster complete while this gap remains.
+- Earlier local Web observations and stale locks prove only their recorded targets. Alpha.2 loading and a subsequent persona-placement API repair are recorded; full cold-browser, three-phase request, actual delegation, persistence/resume and uninstall acceptance remain pending. No live target was checked in this document update.
