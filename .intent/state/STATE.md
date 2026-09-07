@@ -1,6 +1,6 @@
 # DSH warm-minimal
 
-Status: draft configurable coordinator/worker intent. Earlier records report an installed alpha.2 candidate; they do not establish the current deployment or complete acceptance. Durable AGENTS role separation remains unrealized in the recorded implementation, LSP remains outside its worker-safe roster, and no accepted realization lock is selected.
+Status: draft configurable coordinator/worker intent. No accepted realization lock is selected.
 
 ## Intent
 
@@ -119,11 +119,10 @@ For a newer Harness, compare native source identity/admission, per-schema projec
 - Depending on the Standard preset for the warm roster, defaults, source inventory, or update behavior.
 - Reproducing the stale 0.1 realization byte-for-byte when another realization satisfies current acceptance more safely.
 
-## Known limits and decisions
+## Adaptation requirements
 
-- The exact initial prompt and two-tool face remain user-selected even though earlier donor evidence also implicated reasoning effort. Actual delegation and response quality need provider-request and behavioral evidence; hiding broad tool schemas alone does not force delegation while the shared shell remains powerful.
-- The recorded implementation admits system-prompt/context and tool schemas but does not role-filter durable AGENTS user messages. It must not present AGENTS as independently assignable until the target’s durable model-input admission enforces it. This remains a missing part of WARM-006/009, not a reason to narrow their source-family coverage.
-- Known defaults cover package-owned preset entries; Host-global DSH inputs still need classification. A DSH-owned source is not semantically unknown merely because it comes from outside the warm preset.
-- Parent-scoped complete prompts/restrictions inherited by children cannot be widened there. Any new realization must preserve the child’s broader face across the target’s actual inheritance model.
-- The recorded stdio LSP provider has no sandbox confinement and remains excluded from the worker-safe default roster. Include language tooling only when a suitable restricted provider exists; do not claim the requested execution roster complete while this gap remains.
-- Earlier local Web observations and stale locks prove only their recorded targets. Alpha.2 loading and a subsequent persona-placement API repair are recorded; full cold-browser, three-phase request, actual delegation, persistence/resume and uninstall acceptance remain pending. No live target was checked in this document update.
+- Preserve the selected exact initial prompt and two-tool face. Verify actual delegation and response quality through provider requests and behavior; hiding broad tool schemas alone does not force delegation while the shared shell remains available.
+- Expose AGENTS role assignments only when the target enforces them through durable model-input admission. Preserve the complete source-family coverage required by WARM-006/009.
+- Classify Host-global DSH inputs as well as package-owned preset entries. A DSH-owned source is not unknown merely because it comes from outside the warm preset.
+- Preserve the child’s broader model interface across the target’s inheritance model. Parent-scoped complete prompts or restrictions inherited by children cannot be widened within the child scope.
+- Include LSP in the worker-safe roster only when a suitable restricted provider enforces sandbox confinement.
