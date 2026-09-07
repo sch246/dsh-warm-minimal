@@ -1,3 +1,4 @@
+import { inspectProfile } from './profile-inspect.mjs'
 /** Repository maintenance entry; profile mutations require an explicit operation flag. */
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
@@ -20,6 +21,9 @@ function run(program, args, options = {}) {
 try {
   if (!Object.hasOwn(allowed, command) || flags.length > 1 || flags.some(flag => !allowed[command].includes(flag))) {
     throw new Error('Usage: node scripts/workspace.mjs build|typecheck|inspect|setup [--install]|remove [--remove]')
+  }
+  if (['inspect', 'setup', 'remove'].includes(command) && flags.length === 0) {
+    console.log(JSON.stringify(inspectProfile('dsh-warm-minimal', packageDir), null, 2))
   }
   const checkout = process.env.DSH_CHECKOUT
   if (!checkout || !isAbsolute(checkout)) throw new Error('Set DSH_CHECKOUT to an absolute Harness checkout path')

@@ -126,3 +126,5 @@ For a newer Harness, compare native source identity/admission, per-schema projec
 - Classify Host-global DSH inputs as well as package-owned preset entries. A DSH-owned source is not unknown merely because it comes from outside the warm preset.
 - Preserve the child’s broader model interface across the target’s inheritance model. Parent-scoped complete prompts or restrictions inherited by children cannot be widened within the child scope.
 - Include LSP in the worker-safe roster only when a suitable restricted provider enforces sandbox confinement.
+
+Default inspection compares the selected profile dependency with its exact root lock importer, checks the installed package realpath and identity and the Bundle count, and reports any patch receipt summary. Installation consistency and matching this candidate package path are separate observations. Missing target variables report not-inspected; the lock reader uses the selected checkout CLI's installed js-yaml dependency.
