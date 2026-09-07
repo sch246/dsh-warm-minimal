@@ -1,7 +1,7 @@
 {
   "$schema": "meta-intent/0.2/state",
   "id": "dsh-warm-minimal",
-  "revision": "0.2.0-draft.9",
+  "revision": "0.2.0-draft.10",
   "status": "draft",
   "document": "STATE.md",
   "logs": [
@@ -22,7 +22,8 @@
     "../logs/2026-08-29-tool-schema-granularity-and-stale-preset.md",
     "../logs/2026-09-01-harness-alpha2-recomposition.md",
     "../logs/2026-09-01-alpha2-persona-placement-api.md",
-    "../logs/2026-09-06-maintenance-map.md"
+    "../logs/2026-09-06-maintenance-map.md",
+    "../logs/2026-09-07-private-workspace.md"
   ],
   "protocol": {
     "id": "meta-intent",

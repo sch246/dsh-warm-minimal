@@ -2,12 +2,15 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
-PROFILE="${DSH_PROFILE:-web}"
-CHECKOUT_INPUT="${DSH_CHECKOUT:-/root/deepseek-harness}"
+if [ "$#" = 0 ]; then exec node "$REPO_DIR/scripts/workspace.mjs" inspect; fi
+if [ "$#" != 1 ] || [ "$1" != "--remove" ]; then echo "expected --remove" >&2; exit 1; fi
+DSH_HOME_DIR="${DSH_HOME:?set DSH_HOME explicitly}"
+PROFILE="${DSH_PROFILE:?set DSH_PROFILE explicitly}"
+CHECKOUT_INPUT="${DSH_CHECKOUT:?set DSH_CHECKOUT explicitly}"
 PATCH="$REPO_DIR/patches/deepseek-harness.patch"
-TARGET_REVISION="0a53fb55bea101816fa226bb964ae2bed71c343b"
-SRC="$REPO_DIR/presets/warm-minimal"
+TARGET_REVISION="$(cat "$REPO_DIR/scripts/host-revision")"
+PACKAGE_DIR="$REPO_DIR/packages/dsh-warm-minimal"
+SRC="$PACKAGE_DIR/presets/warm-minimal"
 DEST="$DSH_HOME_DIR/.agent-presets/warm-minimal"
 OWNER_MARKER=".dsh-warm-minimal-owned"
 CURRENT_OWNER="dsh-warm-minimal@0.2.0"
@@ -32,6 +35,8 @@ if [ ! -f "$CHECKOUT/package.json" ] \
   echo "uninstall: DSH_CHECKOUT is not a DeepSeek Harness repository: $CHECKOUT" >&2
   exit 1
 fi
+CLI="$CHECKOUT/apps/cli/lib/bin.js"
+[ -f "$CLI" ] || { echo "built checkout CLI missing: $CLI" >&2; exit 1; }
 ACTUAL_REVISION="$(git -C "$CHECKOUT" rev-parse HEAD)"
 if [ "$ACTUAL_REVISION" != "$TARGET_REVISION" ]; then
   echo "uninstall: unsupported DeepSeek Harness revision: $ACTUAL_REVISION" >&2
@@ -74,12 +79,7 @@ if ! diff -qr "$SRC" "$DEST" >/dev/null; then
   echo "uninstall: package-owned preset has drifted; refusing to remove later edits: $DEST" >&2
   exit 1
 fi
-if command -v dsh >/dev/null 2>&1; then
-  dsh plugin --profile "$PROFILE" remove dsh-warm-minimal
-else
-  echo "dsh CLI not found; refusing a partial uninstall" >&2
-  exit 1
-fi
+node "$CLI" plugin --profile "$PROFILE" remove dsh-warm-minimal
 
 if [ "$PATCH_PRESENT" = true ]; then
   git -C "$CHECKOUT" apply --reverse "$PATCH"

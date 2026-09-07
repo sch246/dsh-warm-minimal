@@ -45,6 +45,23 @@ Prompt/context 与工具列表可以独立展开。每个 prompt/context 来源�
 
 ## 安装与维护
 
+本仓库根目录是私有维护工作区；实际安装包位于 [`packages/dsh-warm-minimal`](packages/dsh-warm-minimal)，身份仍为 `dsh-warm-minimal@0.2.0`。原根目录运行时、`src/`、`lib/`、preset、Bundle 和构建配置均归入该包；`.intent/`、Host 补丁、维护脚本与文档留在根目录。根目录不再提供运行时入口。
+
+根脚本提供 `build`、`typecheck`、`test`、`setup`、`inspect`、`remove`。先显式准备 pnpm 10.17.1、TypeScript 5.9.3、tsdown 0.22.14 和所选 Host 构建产物；测试沿用 Node test runner。构建需要 `DSH_CHECKOUT`，profile 操作还必须设置 `DSH_HOME` 和 `DSH_PROFILE`：
+
+```bash
+node scripts/workspace.mjs build
+node scripts/workspace.mjs typecheck
+node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs
+node scripts/workspace.mjs setup            # 只检查
+node scripts/workspace.mjs inspect          # 只检查
+node scripts/workspace.mjs setup --install
+node scripts/workspace.mjs remove           # 只检查
+node scripts/workspace.mjs remove --remove
+```
+
+安装与移除直接调用指定 checkout 的 built CLI，安装路径必须是实际包目录。维护入口不会自动准备依赖、调用全局 dsh 或重启服务。PowerShell 包装器复用同一 Node 入口；构建和修改操作仍需要 Bash。安装器固定 Host revision，不能据构建成功推断支持当前 Host HEAD。
+
 构建顺序、profile 安装、Host 补丁与 preset 所有权、升级适配、卸载和验证入口见 [STATE 安装维护地图](.intent/state/STATE.md#installation-and-maintenance-map)。当前安装器只接受它声明的 alpha.2 commit；目标升级时先核实上游能力，再维护或移除相应补丁。安装器输出成功不等于 profile 已完整安装或运行效果已验证。
 
 ## 实现

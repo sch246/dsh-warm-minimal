@@ -33,8 +33,10 @@ var __esDecorate = function(ctor, descriptorIn, decorators, contextIn, initializ
 			if (_ = accept(result.get)) descriptor.get = _;
 			if (_ = accept(result.set)) descriptor.set = _;
 			if (_ = accept(result.init)) initializers.unshift(_);
-		} else if (_ = accept(result)) if (kind === "field") initializers.unshift(_);
-		else descriptor[key] = _;
+		} else if (_ = accept(result)) {
+			if (kind === "field") initializers.unshift(_);
+			else descriptor[key] = _;
+		}
 	}
 	if (target) Object.defineProperty(target, contextIn.name, descriptor);
 	done = true;

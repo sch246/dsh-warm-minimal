@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let react = require("react");
 		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/core.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/core.js
 		var _a$1;
 		function $constructor(name, initializer, params) {
 			function init(inst, def) {
@@ -66,7 +66,7 @@ window.__ModuleLoader__.load({
 			return globalConfig;
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/util.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/util.js
 		function getEnumValues(entries) {
 			const numericValues = Object.values(entries).filter((v) => typeof v === "number");
 			return Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
@@ -82,7 +82,6 @@ window.__ModuleLoader__.load({
 					Object.defineProperty(this, "value", { value });
 					return value;
 				}
-				throw new Error("cached value already set");
 			} };
 		}
 		function nullish(input) {
@@ -121,7 +120,10 @@ window.__ModuleLoader__.load({
 		}
 		function mergeDefs(...defs) {
 			const mergedDescriptors = {};
-			for (const def of defs) Object.assign(mergedDescriptors, Object.getOwnPropertyDescriptors(def));
+			for (const def of defs) {
+				const descriptors = Object.getOwnPropertyDescriptors(def);
+				Object.assign(mergedDescriptors, descriptors);
+			}
 			return Object.defineProperties({}, mergedDescriptors);
 		}
 		function esc(str) {
@@ -365,7 +367,7 @@ window.__ModuleLoader__.load({
 			return { ...iss };
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/errors.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/errors.js
 		const initializer$1 = (inst, def) => {
 			inst.name = "$ZodError";
 			Object.defineProperty(inst, "_zod", {
@@ -425,7 +427,7 @@ window.__ModuleLoader__.load({
 			return fieldErrors;
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/parse.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/parse.js
 		const _parse = (_Err) => (schema, value, _ctx, _params) => {
 			const ctx = _ctx ? {
 				..._ctx,
@@ -539,7 +541,7 @@ window.__ModuleLoader__.load({
 			return _safeParseAsync(_Err)(schema, value, _ctx);
 		};
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/regexes.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/regexes.js
 		/**
 		* @deprecated CUID v1 is deprecated by its authors due to information leakage
 		* (timestamps embedded in the id). Use {@link cuid2} instead.
@@ -600,7 +602,7 @@ window.__ModuleLoader__.load({
 		const lowercase = /^[^A-Z]*$/;
 		const uppercase = /^[^a-z]*$/;
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/checks.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/checks.js
 		const $ZodCheck = /*@__PURE__*/ $constructor("$ZodCheck", (inst, def) => {
 			var _a;
 			inst._zod ?? (inst._zod = {});
@@ -819,7 +821,7 @@ window.__ModuleLoader__.load({
 			};
 		});
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/doc.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/doc.js
 		var Doc = class {
 			constructor(args = []) {
 				this.content = [];
@@ -850,14 +852,14 @@ window.__ModuleLoader__.load({
 			}
 		};
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/versions.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/versions.js
 		const version = {
 			major: 4,
 			minor: 4,
 			patch: 3
 		};
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/schemas.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/schemas.js
 		const $ZodType = /*@__PURE__*/ $constructor("$ZodType", (inst, def) => {
 			var _a;
 			inst ?? (inst = {});
@@ -1736,7 +1738,7 @@ window.__ModuleLoader__.load({
 			inst._zod.optin = "optional";
 			inst._zod.optout = "optional";
 			defineLazy(inst._zod, "values", () => {
-				return def.innerType._zod.values ? new Set([...def.innerType._zod.values, void 0]) : void 0;
+				return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
 			});
 			defineLazy(inst._zod, "pattern", () => {
 				const pattern = def.innerType._zod.pattern;
@@ -1770,7 +1772,7 @@ window.__ModuleLoader__.load({
 				return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
 			});
 			defineLazy(inst._zod, "values", () => {
-				return def.innerType._zod.values ? new Set([...def.innerType._zod.values, null]) : void 0;
+				return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
 			});
 			inst._zod.parse = (payload, ctx) => {
 				if (payload.value === null) return payload;
@@ -1936,7 +1938,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/registries.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/registries.js
 		var _a;
 		var $ZodRegistry = class {
 			constructor() {
@@ -1983,7 +1985,7 @@ window.__ModuleLoader__.load({
 		(_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry());
 		const globalRegistry = globalThis.__zod_globalRegistry;
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/api.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/api.js
 		// @__NO_SIDE_EFFECTS__
 		function _string(Class, params) {
 			return new Class({
@@ -2419,7 +2421,7 @@ window.__ModuleLoader__.load({
 			return ch;
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/to-json-schema.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/to-json-schema.js
 		function initializeContext(params) {
 			let target = params?.target ?? "draft-2020-12";
 			if (target === "draft-4") target = "draft-04";
@@ -2635,8 +2637,10 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 					defs[seen.defId] = seen.def;
 				}
 			}
-			if (ctx.external) {} else if (Object.keys(defs).length > 0) if (ctx.target === "draft-2020-12") result.$defs = defs;
-			else result.definitions = defs;
+			if (ctx.external) {} else if (Object.keys(defs).length > 0) {
+				if (ctx.target === "draft-2020-12") result.$defs = defs;
+				else result.definitions = defs;
+			}
 			try {
 				const finalized = JSON.parse(JSON.stringify(result));
 				Object.defineProperty(finalized, "~standard", {
@@ -2712,7 +2716,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			return finalize(ctx, schema);
 		};
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/json-schema-processors.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/json-schema-processors.js
 		const formatMap = {
 			guid: "uuid",
 			url: "uri",
@@ -2756,9 +2760,10 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			const vals = [];
 			for (const val of def.values) if (val === void 0) {
 				if (ctx.unrepresentable === "throw") throw new Error("Literal `undefined` cannot be represented in JSON Schema");
-			} else if (typeof val === "bigint") if (ctx.unrepresentable === "throw") throw new Error("BigInt literals cannot be represented in JSON Schema");
-			else vals.push(Number(val));
-			else vals.push(val);
+			} else if (typeof val === "bigint") {
+				if (ctx.unrepresentable === "throw") throw new Error("BigInt literals cannot be represented in JSON Schema");
+				else vals.push(Number(val));
+			} else vals.push(val);
 			if (vals.length === 0) {} else if (vals.length === 1) {
 				const val = vals[0];
 				json.type = val === null ? "null" : typeof val;
@@ -2918,7 +2923,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			seen.ref = def.innerType;
 		};
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/iso.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/iso.js
 		const ZodISODateTime = /*@__PURE__*/ $constructor("ZodISODateTime", (inst, def) => {
 			$ZodISODateTime.init(inst, def);
 			ZodStringFormat.init(inst, def);
@@ -2948,7 +2953,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			return /* @__PURE__ */ _isoDuration(ZodISODuration, params);
 		}
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/errors.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/errors.js
 		const initializer = (inst, issues) => {
 			$ZodError.init(inst, issues);
 			inst.name = "ZodError";
@@ -2970,7 +2975,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 		};
 		const ZodRealError = /*@__PURE__*/ $constructor("ZodError", initializer, { Parent: Error });
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/parse.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/parse.js
 		const parse = /* @__PURE__ */ _parse(ZodRealError);
 		const parseAsync = /* @__PURE__ */ _parseAsync(ZodRealError);
 		const safeParse = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -2984,7 +2989,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 		const safeEncodeAsync = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 		const safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 		//#endregion
-		//#region ../worktrees/harness-alpha2-candidate/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/schemas.js
+		//#region ../../../../../deepseek-harness/node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/schemas.js
 		const _installedGroups = /* @__PURE__ */ new WeakMap();
 		function _installLazyMethods(inst, group, methods) {
 			const proto = Object.getPrototypeOf(inst);
@@ -3429,11 +3434,12 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			});
 		});
 		function object(shape, params) {
-			return new ZodObject({
+			const def = {
 				type: "object",
 				shape: shape ?? {},
 				...normalizeParams(params)
-			});
+			};
+			return new ZodObject(def);
 		}
 		const ZodUnion = /*@__PURE__*/ $constructor("ZodUnion", (inst, def) => {
 			$ZodUnion.init(inst, def);
@@ -3491,9 +3497,10 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 			};
 		});
 		function _enum(values, params) {
+			const entries = Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values;
 			return new ZodEnum({
 				type: "enum",
-				entries: Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values,
+				entries,
 				...normalizeParams(params)
 			});
 		}

@@ -46,80 +46,55 @@ The official Plugins settings page is the preferred configuration surface. A pac
 
 ## Installation and maintenance map
 
-Read this STATE for the required effects and acceptance. `STATE.json` selects Protocol 0.2 and records historical resource identities; selected LOGs explain the relevant user decisions and failed approaches. No current realization lock is selected. Old bundles in `.intent/locks/` are optional recovery evidence and must not restore the superseded fixed second-turn roster or no-Host-change rule.
+`STATE.json` selects Protocol 0.2; no current realization lock is selected. Root `.intent/`, `AGENTS.md`, documentation, `patches/`, `scripts/`, tests and investigation tools belong to this private workspace. The installable package is [packages/dsh-warm-minimal](../../packages/dsh-warm-minimal). Root runtime files, `src/`, `lib/`, `presets/`, Bundle YAML and compiler/bundler configuration map to that directory; the root manifest has no runtime exports or forwarding implementation. Package name/version `dsh-warm-minimal@0.2.0`, settings namespace `warm-minimal`, bootstrap IDs, Remote namespace, preset marker and Loader row IDs retain their identities.
 
 ### Current sources and ownership
 
-| Concern | Current owner and entry |
+| Concern | Owner |
 | --- | --- |
-| Host registration, settings, bootstrap and phase projection | [index.mjs](../../index.mjs), [host.mjs](../../host.mjs), [runtime.mjs](../../runtime.mjs), [config.mjs](../../config.mjs) |
-| Self-contained capability roster and source defaults | [presets/warm-minimal](../../presets/warm-minimal), [projection-host.mjs](../../projection-host.mjs), [projection.mjs](../../projection.mjs) |
-| Read-only inventory and Plugins editor | [src/remote.ts](../../src/remote.ts), [src/client](../../src/client), Host settings namespace `warm-minimal` |
-| Profile membership and browser entry | [package.json](../../package.json), [cordis.patch.yml](../../cordis.patch.yml); Host row `native-bootstrap-host`, package `dsh-warm-minimal` |
-| Host changes and exact application/removal | [patches/deepseek-harness.patch](../../patches/deepseek-harness.patch), [scripts/setup.sh](../../scripts/setup.sh), [scripts/uninstall.sh](../../scripts/uninstall.sh), corresponding `.ps1` scripts |
-| Generated package outputs | `lib/remote.js`, `lib/typert.*`, declarations and `lib/client.js`, produced by [build-host.sh](../../scripts/build-host.sh) then [build-client.sh](../../scripts/build-client.sh) |
+| Host registration, settings and bootstrap | Package `index.mjs`, `host.mjs`, `runtime.mjs`, `config.mjs` |
+| Capability roster and source defaults | Package `presets/warm-minimal`, `projection-host.mjs`, `projection.mjs` |
+| Read-only inventory and Plugins editor | Package `src/remote.ts`, `src/client` |
+| Profile Bundle and browser contribution | Package `package.json`, `cordis.patch.yml`, generated `lib/` |
+| Host patch and preset lifecycle | Root `patches/deepseek-harness.patch`, `scripts/setup.sh`, `scripts/uninstall.sh` |
+| Maintenance commands | Root `scripts/workspace.mjs`; PowerShell wrappers invoke the same entry |
 
-The checked installer and uninstaller require Harness HEAD exactly `0a53fb55bea101816fa226bb964ae2bed71c343b` (`dsh-v0.1.2-alpha.2`). This is a limit of these scripts, not a requirement that the product stay on alpha.2. The patch changes system-prompt/tool provenance and admission, their package/compiler declarations, Cordis catalog sources/output, dependency lockfile and associated documentation. Inspect its complete file list and hunks before applying or removing it; nearby `@meta-intent` comments identify managed code. There is no separate installation receipt in the current scripts. A marker alone does not prove that later upstream or third-party code belongs to this package.
+Installation and removal require Harness HEAD exactly `0a53fb55bea101816fa226bb964ae2bed71c343b` (`dsh-v0.1.2-alpha.2`). Current Harness HEAD installation is unsupported. The patch owns prompt/tool provenance and admission plus associated declarations, catalogs, lockfile and documentation. Review the full patch before applying or reversing it. Nearby `@meta-intent` comments identify maintained code; there is no separate installation receipt. Both lifecycle commands require the complete patch to match either its absent or exact applied state, and refuse drift.
 
-The installed preset is `$DSH_HOME/.agent-presets/warm-minimal`, copied from the package with `.dsh-warm-minimal-owned`. The current marker is `dsh-warm-minimal@0.2.0`. Setup recognizes the exact 0.1 preset bytes for automatic upgrade; modified or unowned presets require a reviewed ownership/content decision. `DSH_WARM_ADOPT_PRESET` and `DSH_WARM_REPLACE_DRIFTED_PRESET` are explicit override switches, not normal update flags. Preserve Host settings, sessions and raw local evidence; none are plugin build output or material to publish.
+The installed preset is `$DSH_HOME/.agent-presets/warm-minimal`, copied from the actual package with marker `dsh-warm-minimal@0.2.0`. Setup automatically upgrades only the exact owned 0.1 preset bytes. `DSH_WARM_ADOPT_PRESET=1` and `DSH_WARM_REPLACE_DRIFTED_PRESET=1` permit reviewed ownership/content replacement; unknown owners still fail. Removal requires an exact current owned preset. Settings, sessions and unrelated presets remain outside removal ownership.
 
-### Prepare, install and activate
+### Build and operate
 
-Use an isolated candidate checkout and private `DSH_HOME` with the intended deployment’s package set for first install or changed composition. The runtime must meet [package.json](../../package.json) engines and the target Harness requirements. Set absolute paths explicitly; `DSH_PROFILE` defaults to `web` and `DSH_HOME` to the OS home’s `.dsh` in the scripts.
+The root pins pnpm 10.17.1, TypeScript 5.9.3 and tsdown 0.22.14. Existing tests use Node's test runner. Prepare root dependencies explicitly; scripts never install build tools or dependencies automatically. Local `node_modules` directories may contain individual links to existing dependency packages, but may not be shared writable directory links. Builds validate the pinned tools and invoke their Node entry files directly. The selected Harness must already provide peer artifacts and its built Typert generator. Package Host compilation/generation precedes Client compilation; the existing UI-primitives fixture supplies the isolated component-test runtime. Build compatibility does not establish installation compatibility.
 
 ```bash
 export DSH_CHECKOUT=/absolute/path/to/deepseek-harness
-export DSH_HOME=/absolute/path/to/dsh-home
+export DSH_HOME=/absolute/path/to/private-dsh-home
 export DSH_PROFILE=web
-PLUGIN=/absolute/path/to/dsh-warm-minimal
-cd "$PLUGIN"
-bash scripts/setup.sh
-# After patch application, prepare the selected Harness dependencies/artifacts:
-cd "$DSH_CHECKOUT"
-pnpm install
-pnpm run build
-cd "$PLUGIN"
-bash scripts/build-host.sh
-bash scripts/build-client.sh
-# Explicit registration also completes setup when no global dsh was available:
-cd "$DSH_CHECKOUT"
-pnpm dsh plugin --profile "$DSH_PROFILE" add "$PLUGIN"
-pnpm dsh plugin --profile "$DSH_PROFILE" why dsh-warm-minimal
-pnpm dsh --profile "$DSH_PROFILE" --dump-config
+cd /absolute/path/to/dsh-warm-minimal
+node scripts/workspace.mjs build
+node scripts/workspace.mjs typecheck
+node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs
+node scripts/workspace.mjs inspect
+node scripts/workspace.mjs setup          # inspection only
+node scripts/workspace.mjs setup --install
+node scripts/workspace.mjs remove         # inspection only
+node scripts/workspace.mjs remove --remove
 ```
 
-Read the target checkout’s `docs/development.md` and `apps/cli/reference/README.md` before running its build/profile commands. Host build must provide the Typert generator and peer artifacts before the package Host build; package Host generation precedes Client compilation. The build scripts link into the selected Harness and generate local outputs, so rebuilding a live linked checkout may be observed by its running client. These are realization commands, not checks run for this documentation change.
+Root package scripts expose `build`, `typecheck`, `test`, `setup`, `inspect` and `remove`. Build/typecheck require explicit `DSH_CHECKOUT`; profile operations additionally require explicit `DSH_HOME` and `DSH_PROFILE`. No profile/Home defaults are inferred. Inspection reports the selected revision, patch state, package and preset paths, then invokes the selected checkout's built `apps/cli/lib/bin.js plugin … why`. It does not apply patches, copy presets or change profile membership. Installation/removal flags are mandatory for mutations. Bash `setup.sh`/`uninstall.sh` default to the same inspection and accept `--install`/`--remove` respectively.
 
-Setup applies the exact patch, copies the preset, then calls a global `dsh plugin … add .` if `dsh` is available on PATH. Verify that executable belongs to the intended Harness before relying on it. Without it, setup can finish after patch/preset writes while only printing a manual registration instruction. A later failure can also leave earlier writes in place; setup is not an atomic transaction across Host, preset and profile. Its final message is not proof of a complete installation. The source launcher above completes the profile transaction on the selected checkout; do not hand-edit Bundle membership.
+Setup validates revision, built CLI, patch and preset ownership, applies the patch, copies the preset, and invokes `node "$DSH_CHECKOUT/apps/cli/lib/bin.js" plugin --profile "$DSH_PROFILE" add <absolute-workspace>/packages/dsh-warm-minimal`. Removal validates ownership/drift, completes that CLI's profile remove transaction, then reverses the exact patch and removes the preset. Neither command uses global `dsh`, pnpm launch wrappers, automatic dependency preparation or service restarts. CLI failures produce nonzero exits. Host, preset and profile changes are not one atomic transaction: a failed installation can leave earlier patch/preset writes and must be inspected before retrying.
 
-After registration, inspect `$DSH_HOME/profiles/$DSH_PROFILE/package.json`, `pnpm-lock.yaml`, resolved `node_modules/dsh-warm-minimal`, and `dsh.profile.bundles`, plus the composed config. Require the intended package path and exactly one Host row. Compare the installed preset with the source; a fresh browser bundle cannot repair a stale copied preset. Later profile/home patches replace complete config values, so retain unrelated overrides. Neither setup nor builds restart a service. Activate only under the operation’s existing authorization, then select `温暖极简模式` and cold-load the Plugins editor; one client boot entry and a loaded script are startup evidence only.
+PowerShell entry points are `scripts/setup.ps1` and `scripts/uninstall.ps1`, with the same flags and environment. They call the shared Node entry and propagate its exit status. Build and mutation commands require Bash plus the shell utilities used by the retained patch/preset scripts on Windows; wrapper presence does not prove Windows end-to-end compatibility.
 
-Windows uses `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1` and the corresponding `uninstall.ps1`, with the same environment variables and pinned target. Package build entry points remain Bash scripts. The PowerShell setup does not explicitly reject a nonzero native `dsh` registration exit, making the profile checks necessary even when it prints completion. Do not infer Windows end-to-end compatibility from the presence of those wrappers.
+### Maintenance, validation and removal
 
-### Adapt after a Harness change
+Use an isolated candidate and a private Home with the intended deployment's package set before first installation or changed composition. Inspect the complete patch and target development/profile documentation. Prepare and regenerate the affected Harness artifacts explicitly after patch application or removal. A linked package rebuild can be observed by a running client, so build only an isolated candidate unless updating those artifacts is authorized.
 
-Compare the new target’s stable source identity, prompt/context admission, per-tool schema projection, settings/Remote APIs, preset composition and agent/inbox lifecycle with WARM acceptance. When upstream already provides an effect, adapt the plugin to that API and retire the corresponding patch hunk and generated derivative; do not claim upstream source as package-owned because an old patch or comment names it. When a required effect has no native extension, a package-owned Host change remains permitted: identify the missing effect, mark maintained source regions, retain attributable revision/path evidence, update forward/removal scripts and regenerate affected artifacts. A successful `git apply --check` alone does not establish continued behavior or ownership.
+After a profile transaction, inspect the profile manifest, lockfile, resolved `node_modules/dsh-warm-minimal`, Bundle membership and composed configuration using the selected checkout CLI. Require the actual package directory and exactly one Host row when installed, and their absence when removed. Compare copied preset contents. Preserve unrelated overrides, settings and sessions. Activation requires its own authorization; cold-load the Plugins editor after activation and require one client boot entry. Startup and build evidence do not establish WARM-001–014 acceptance: validate actual bootstrap/parent/child request headers, bootstrap-off and failure restoration, per-schema assignments, saved settings, persistence/resume and actual delegation.
 
-The current installer refuses a different HEAD even if the patch would apply. Update the supported target, patch and lifecycle verification together after investigation; bypassing that guard or blindly reversing the historical patch is not an adaptation. Review new Standard roster entries deliberately, copying only desired worker-safe capabilities into the package rather than adding a runtime inheritance dependency. Preserve saved per-schema assignments and the user’s prompt values through any identity/API transition.
-
-### Verification and removal
-
-After building the relevant package faces, run the focused checks from this repository:
-
-```bash
-node --test tests/index.test.mjs tests/roster.test.mjs tests/remote.test.mjs tests/client/controller.test.mjs tests/client/component.test.mjs tests/lifecycle.test.mjs
-```
-
-Use WARM-001–014 for runtime acceptance: inspect actual bootstrap, normal-parent and child request headers; test bootstrap off, mode changes, multiple held inputs and failure restoration; test two tools from one provider with different assignments, unknown inputs and an explicitly formed hidden-tool call. Cold-load the real Plugins editor, save/reload settings, and check persistence/resume and actual delegation. Run focused Harness tests for any changed source/lifecycle API. Build, structural validation, schema counts and historical reasoning-style observations do not establish this acceptance.
-
-Before removal, leave active sessions/settings intact and inspect patch/preset ownership and drift. With the matching global `dsh` on PATH and the same environment variables:
-
-```bash
-cd "$PLUGIN"
-bash scripts/uninstall.sh
-```
-
-Uninstall requires the pinned Harness HEAD, an exactly owned current preset and an exactly removable or absent patch. It checks these before calling `dsh plugin --profile "$DSH_PROFILE" remove dsh-warm-minimal`, then reverses the patch if present and removes the preset. It refuses missing `dsh`; direct Bundle removal alone does not remove Host changes or the preset. Drift or a partially removed deployment needs ownership investigation, preserving unrelated edits and reconciling remaining owned effects. Rebuild the affected Harness artifacts after source removal and verify profile resolution/Bundle absence, preset removal and absence of the browser contribution after authorized activation. Ordinary modes, unrelated plugins, settings and sessions must remain usable.
+For a newer Harness, compare native source identity/admission, per-schema projection, settings/Remote APIs, roster composition and agent lifecycle with acceptance. Retire patch hunks when upstream owns their effects; retain attributable ownership for required Host changes. Update the supported revision, patch and lifecycle verification together. Do not bypass the revision guard or reverse historical hunks against drifted upstream code. Review copied Standard capabilities explicitly without introducing preset inheritance. A partial removal requires ownership investigation and profile reconciliation before activation.
 
 ## Constraints and permissions
 

@@ -2,14 +2,15 @@
 # Build the external browser contribution against one Harness checkout.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CHECKOUT="${DSH_CHECKOUT:-/root/deepseek-harness}"
+WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$WORKSPACE_ROOT/packages/dsh-warm-minimal"
+CHECKOUT="${DSH_CHECKOUT:?set DSH_CHECKOUT explicitly}"
 
 if [ ! -d "$CHECKOUT/packages" ]; then
   echo "build-client: cannot locate Harness checkout at $CHECKOUT" >&2
   exit 1
 fi
-if [ ! -x "$CHECKOUT/node_modules/.bin/tsc" ] || [ ! -x "$CHECKOUT/node_modules/.bin/tsdown" ]; then
+if [ ! -f "$WORKSPACE_ROOT/node_modules/typescript/bin/tsc" ] || [ ! -f "$WORKSPACE_ROOT/node_modules/tsdown/dist/run.mjs" ]; then
   echo "build-client: Harness TypeScript build tools are unavailable" >&2
   exit 1
 fi
@@ -39,7 +40,7 @@ ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-renderer" "$CHECKOUT/
 ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-settings" "$CHECKOUT/packages/client/ui-settings"
 ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-settings-plugins" "$CHECKOUT/packages/client/ui-settings-plugins"
 ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-slots" "$CHECKOUT/packages/client/ui-slots"
-ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-primitives" "$ROOT/scripts/fixtures/ui-primitives"
+ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-client-ui-primitives" "$ROOT/tests/fixtures/ui-primitives"
 
-"$CHECKOUT/node_modules/.bin/tsc" -p "$ROOT/tsconfig.client.json"
-(cd "$ROOT" && "$CHECKOUT/node_modules/.bin/tsdown" --config tsdown.client.config.ts)
+node "$WORKSPACE_ROOT/node_modules/typescript/bin/tsc" -p "$ROOT/tsconfig.client.json"
+(cd "$ROOT" && node "$WORKSPACE_ROOT/node_modules/tsdown/dist/run.mjs" --config tsdown.client.config.ts)

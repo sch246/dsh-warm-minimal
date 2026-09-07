@@ -1,130 +1,22 @@
 {
-  "name": "dsh-warm-minimal",
-  "version": "0.2.0",
-  "description": "DSH warm-minimal mode with an optional minimal bootstrap and configurable coordinator/worker model visibility.",
+  "name": "dsh-warm-minimal-workspace",
+  "private": true,
   "type": "module",
-  "main": "index.mjs",
-  "imports": {
-    "#warm-minimal-remote": {
-      "types": "./src/remote.ts",
-      "default": "./lib/remote.js"
-    }
-  },
-  "exports": {
-    ".": "./index.mjs",
-    "./config": "./config.mjs",
-    "./projection": "./projection-host.mjs",
-    "./runtime": "./runtime.mjs",
-    "./host": {
-      "types": "./lib/types/remote.d.ts",
-      "default": "./lib/remote.js"
-    },
-    "./types": {
-      "types": "./lib/types/types.d.ts",
-      "default": "./lib/types/types.js"
-    },
-    "./typert": {
-      "types": "./lib/typert.host.d.ts",
-      "default": "./lib/typert.host.js"
-    },
-    "./remote": {
-      "types": "./lib/typert.remote-client.d.ts",
-      "default": "./lib/typert.remote-client.js"
-    },
-    "./client": {
-      "types": "./lib/types/client/index.d.ts",
-      "default": "./lib/client.js"
-    },
-    "./cordis.patch.yml": "./cordis.patch.yml",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    ".intent",
-    "AGENTS.md",
-    "index.mjs",
-    "config.mjs",
-    "host.mjs",
-    "projection.mjs",
-    "projection-host.mjs",
-    "runtime.mjs",
-    "lib/remote.js",
-    "lib/client.js",
-    "lib/types/client/**/*.js",
-    "lib/types/client/**/*.d.ts",
-    "lib/types/remote.d.ts",
-    "lib/types/types.js",
-    "lib/types/types.d.ts",
-    "lib/typert.host.js",
-    "lib/typert.host.d.ts",
-    "lib/typert.remote-client.js",
-    "lib/typert.remote-client.d.ts",
-    "cordis.patch.yml",
-    "presets",
-    "patches",
-    "scripts",
-    "README.md",
-    "LICENSE"
+  "license": "MIT",
+  "packageManager": "pnpm@10.17.1",
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "setup": "bash scripts/setup.sh",
-    "setup:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
-    "uninstall": "bash scripts/uninstall.sh",
-    "uninstall:win": "powershell -ExecutionPolicy Bypass -File scripts/uninstall.ps1",
-    "build:host": "bash scripts/build-host.sh",
-    "build:client": "bash scripts/build-client.sh",
-    "test": "node --test"
+    "build": "node scripts/workspace.mjs build",
+    "typecheck": "node scripts/workspace.mjs typecheck",
+    "setup": "node scripts/workspace.mjs setup",
+    "inspect": "node scripts/workspace.mjs inspect",
+    "remove": "node scripts/workspace.mjs remove",
+    "test": "node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs"
   },
-  "keywords": [
-    "dsh",
-    "dsh-plugin",
-    "deepseek-harness",
-    "agent-preset",
-    "warm-start",
-    "minimal"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sch246/dsh-warm-minimal.git"
-  },
-  "bugs": {
-    "url": "https://github.com/sch246/dsh-warm-minimal/issues"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": "^22.19.0 || >=24.0.0"
-  },
-  "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-api-remotes": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-locale": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.0.1-rc <2",
-    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-settings": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-settings": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-system-prompt": "^0.1.2-alpha.2",
-    "@deepseek-ai/dsh-typert-protocol": "^0.1.2-alpha.2",
-    "@deepseek-ai/schemastery": "^3.18.2",
-    "react": "^18.2.0"
-  },
-  "dependencies": {
-    "zod": "^4.4.3"
-  },
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-api-remotes",
-        "@deepseek-ai/dsh-client-ui-primitives",
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-ui-settings-plugins",
-        "@deepseek-ai/dsh-client-locale"
-      ]
-    }
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "tsdown": "0.22.14"
   }
 }

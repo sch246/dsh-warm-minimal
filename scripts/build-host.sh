@@ -2,14 +2,15 @@
 # Build the external Host Remote and generate its Typert faces against one Harness checkout.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CHECKOUT="${DSH_CHECKOUT:-/root/deepseek-harness}"
+WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$WORKSPACE_ROOT/packages/dsh-warm-minimal"
+CHECKOUT="${DSH_CHECKOUT:?set DSH_CHECKOUT explicitly}"
 
 if [ ! -d "$CHECKOUT/packages" ]; then
   echo "build-host: cannot locate Harness checkout at $CHECKOUT" >&2
   exit 1
 fi
-if [ ! -x "$CHECKOUT/node_modules/.bin/tsc" ] || [ ! -x "$CHECKOUT/node_modules/.bin/tsdown" ]; then
+if [ ! -f "$WORKSPACE_ROOT/node_modules/typescript/bin/tsc" ] || [ ! -f "$WORKSPACE_ROOT/node_modules/tsdown/dist/run.mjs" ]; then
   echo "build-host: Harness TypeScript build tools are unavailable" >&2
   exit 1
 fi
@@ -40,9 +41,8 @@ elif [ -e "$ROOT/node_modules" ] && [ ! -d "$ROOT/node_modules" ]; then
 fi
 mkdir -p "$ROOT/node_modules/@deepseek-ai"
 mkdir -p "$ROOT/node_modules/@types"
-ensure_link "$ROOT/node_modules/tsdown" "$CHECKOUT/node_modules/tsdown"
-ensure_link "$ROOT/node_modules/tsx" "$CHECKOUT/node_modules/tsx"
-ensure_link "$ROOT/node_modules/typescript" "$CHECKOUT/node_modules/typescript"
+ensure_link "$ROOT/node_modules/tsdown" "$WORKSPACE_ROOT/node_modules/tsdown"
+ensure_link "$ROOT/node_modules/typescript" "$WORKSPACE_ROOT/node_modules/typescript"
 ensure_link "$ROOT/node_modules/zod" "$CHECKOUT/packages/api/gateway/node_modules/zod"
 ensure_link "$ROOT/node_modules/@types/node" "$CHECKOUT/node_modules/@types/node"
 ensure_link "$ROOT/node_modules/@deepseek-ai/cordis" "$CHECKOUT/vendor/cordis"
@@ -52,10 +52,10 @@ ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-system-prompt" "$CHECKOUT/packa
 ensure_link "$ROOT/node_modules/@deepseek-ai/dsh-typert-protocol" "$CHECKOUT/packages/typert/protocol"
 
 echo "building Host declarations..."
-"$CHECKOUT/node_modules/.bin/tsc" -p "$ROOT/tsconfig.host.json"
+node "$WORKSPACE_ROOT/node_modules/typescript/bin/tsc" -p "$ROOT/tsconfig.host.json"
 
 echo "bundling Host Remote..."
-(cd "$ROOT" && "$CHECKOUT/node_modules/.bin/tsdown" --config tsdown.host.config.ts)
+(cd "$ROOT" && node "$WORKSPACE_ROOT/node_modules/tsdown/dist/run.mjs" --config tsdown.host.config.ts)
 
 WORKSPACE="$(mktemp -d)"
 trap 'rm -rf "$WORKSPACE"' EXIT
@@ -69,7 +69,10 @@ cp "$ROOT/src/remote.ts" "$ROOT/src/types.ts" "$PACKAGE/src/"
 cp "$CHECKOUT/packages/typert/protocol/package.json" "$PROTOCOL_PACKAGE/"
 cp -R "$CHECKOUT/packages/typert/protocol/src/." "$PROTOCOL_PACKAGE/src/"
 ln -s "$CHECKOUT" "$WORKSPACE/harness"
-ln -s "$CHECKOUT/node_modules" "$WORKSPACE/node_modules"
+mkdir -p "$WORKSPACE/node_modules"
+for dependency in typescript tsdown; do
+  ln -s "$WORKSPACE_ROOT/node_modules/$dependency" "$WORKSPACE/node_modules/$dependency"
+done
 
 node --input-type=module - "$WORKSPACE" "$CHECKOUT" <<'NODE'
 import { writeFileSync } from 'node:fs'

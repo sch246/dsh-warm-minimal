@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
-# Apply the package-owned Harness patch, install the warm-minimal preset, and
-# register this package as a bundle when the dsh CLI is available.
-#
-# Honors DSH_CHECKOUT, DSH_HOME, and DSH_PROFILE. The Harness checkout defaults
-# to /root/deepseek-harness; set DSH_CHECKOUT on other hosts.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
-PROFILE="${DSH_PROFILE:-web}"
-CHECKOUT_INPUT="${DSH_CHECKOUT:-/root/deepseek-harness}"
+if [ "$#" = 0 ]; then exec node "$REPO_DIR/scripts/workspace.mjs" inspect; fi
+if [ "$#" != 1 ] || [ "$1" != "--install" ]; then echo "expected --install" >&2; exit 1; fi
+DSH_HOME_DIR="${DSH_HOME:?set DSH_HOME explicitly}"
+PROFILE="${DSH_PROFILE:?set DSH_PROFILE explicitly}"
+CHECKOUT_INPUT="${DSH_CHECKOUT:?set DSH_CHECKOUT explicitly}"
 PATCH="$REPO_DIR/patches/deepseek-harness.patch"
-TARGET_REVISION="0a53fb55bea101816fa226bb964ae2bed71c343b"
-SRC="$REPO_DIR/presets/warm-minimal"
+TARGET_REVISION="$(cat "$REPO_DIR/scripts/host-revision")"
+PACKAGE_DIR="$REPO_DIR/packages/dsh-warm-minimal"
+SRC="$PACKAGE_DIR/presets/warm-minimal"
 DEST="$DSH_HOME_DIR/.agent-presets/warm-minimal"
 OWNER_MARKER=".dsh-warm-minimal-owned"
 CURRENT_OWNER="dsh-warm-minimal@0.2.0"
@@ -64,6 +62,8 @@ if [ ! -f "$CHECKOUT/package.json" ] \
   echo "setup: DSH_CHECKOUT is not a DeepSeek Harness repository: $CHECKOUT" >&2
   exit 1
 fi
+CLI="$CHECKOUT/apps/cli/lib/bin.js"
+[ -f "$CLI" ] || { echo "built checkout CLI missing: $CLI" >&2; exit 1; }
 ACTUAL_REVISION="$(git -C "$CHECKOUT" rev-parse HEAD)"
 if [ "$ACTUAL_REVISION" != "$TARGET_REVISION" ]; then
   echo "setup: unsupported DeepSeek Harness revision: $ACTUAL_REVISION" >&2
@@ -145,14 +145,6 @@ rm -rf "$DEST"
 cp -R "$SRC" "$DEST"
 echo "preset installed -> $DEST"
 
-if command -v dsh >/dev/null 2>&1; then
-  echo "registering bundle into profile '$PROFILE'..."
-  (cd "$REPO_DIR" && dsh plugin --profile "$PROFILE" add .)
-else
-  echo "dsh CLI not found; register the bundle manually from this repo:"
-  echo "  dsh plugin --profile $PROFILE add ."
-fi
+node "$CLI" plugin --profile "$PROFILE" add "$PACKAGE_DIR"
 
-echo
-echo "No dependencies, artifacts, or services were changed automatically."
-echo "Build and restart dsh web when appropriate, then pick '温暖极简模式' in the preset picker."
+echo "Installation commands completed; verify profile and Host artifacts before activation. No service was restarted."
