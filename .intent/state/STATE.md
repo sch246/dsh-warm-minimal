@@ -65,7 +65,7 @@ The installed preset is `$DSH_HOME/.agent-presets/warm-minimal`, copied from the
 
 ### Build and operate
 
-The root pins pnpm 10.17.1, TypeScript 5.9.3 and tsdown 0.22.14. Existing tests use Node's test runner. Prepare root dependencies explicitly; scripts never install build tools or dependencies automatically. Local `node_modules` directories may contain individual links to existing dependency packages, but may not be shared writable directory links. Builds validate the pinned tools and invoke their Node entry files directly. The selected Harness must already provide peer artifacts and its built Typert generator. Package Host compilation/generation precedes Client compilation; the existing UI-primitives fixture supplies the isolated component-test runtime. Build compatibility does not establish installation compatibility.
+The root pins pnpm 10.17.1, TypeScript 5.9.3 and tsdown 0.22.14. The retained installation-lifecycle checks use Node's test runner. Prepare root dependencies explicitly; scripts never install build tools or dependencies automatically. Local `node_modules` directories may contain individual links to existing dependency packages, but may not be shared writable directory links. Builds validate the pinned tools and invoke their Node entry files directly. The selected Harness must already provide peer artifacts and its built Typert generator. Package Host compilation/generation precedes Client compilation; the build script currently resolves UI-primitives through its retained local fixture. Build compatibility does not establish installation compatibility.
 
 ```bash
 export DSH_CHECKOUT=/absolute/path/to/deepseek-harness
@@ -74,7 +74,7 @@ export DSH_PROFILE=web
 cd /absolute/path/to/dsh-warm-minimal
 node scripts/workspace.mjs build
 node scripts/workspace.mjs typecheck
-node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs
+node --test tests/lifecycle.test.mjs
 node scripts/workspace.mjs inspect
 node scripts/workspace.mjs setup          # inspection only
 node scripts/workspace.mjs setup --install
@@ -128,3 +128,7 @@ For a newer Harness, compare native source identity/admission, per-schema projec
 - Include LSP in the worker-safe roster only when a suitable restricted provider enforces sandbox confinement.
 
 Default inspection compares the selected profile dependency with its exact root lock importer, checks the installed package realpath and identity and the Bundle count, and reports any patch receipt summary. Installation consistency and matching this candidate package path are separate observations. Missing target variables report not-inspected; the lock reader uses the selected checkout CLI's installed js-yaml dependency.
+
+## Maintenance verification
+
+Confirmed product behavior is maintained in this map. Do not regenerate a parallel UI, routing or service-workflow test suite from it. Use direct observation for the affected interaction; retain only useful external-contract, artifact-compatibility and mechanical-integrity checks, selecting them when that surface changes. The root manifest lists any retained check entry; it is not a mandatory maintenance gate. [The cleanup record](../logs/2026-09-08-test-authority-cleanup.md) explains the selection and what was actually checked.

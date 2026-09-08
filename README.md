@@ -52,7 +52,7 @@ Prompt/context 与工具列表可以独立展开。每个 prompt/context 来源�
 ```bash
 node scripts/workspace.mjs build
 node scripts/workspace.mjs typecheck
-node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs
+node --test tests/lifecycle.test.mjs
 node scripts/workspace.mjs setup            # 只检查
 node scripts/workspace.mjs inspect          # 只检查
 node scripts/workspace.mjs setup --install

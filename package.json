@@ -13,7 +13,7 @@
     "setup": "node scripts/workspace.mjs setup",
     "inspect": "node scripts/workspace.mjs inspect",
     "remove": "node scripts/workspace.mjs remove",
-    "test": "node --test tests/*.test.mjs packages/dsh-warm-minimal/tests/*.test.mjs packages/dsh-warm-minimal/tests/client/*.test.mjs"
+    "test": "node --test tests/lifecycle.test.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3",
